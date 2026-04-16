@@ -88,14 +88,14 @@ Em conjunto:
 ---
 
 ## 6) Pontos de atenção observados
-- O backlog detalhado mostra `01.05` (CODEOWNERS), enquanto versões anteriores do planejamento citavam `02.03`; manter um único identificador canônico evita ruído operacional.
+- Em `take_your_pills_issues_detalhados.md`, o item de CODEOWNERS aparece como `01.05`, enquanto em planejamentos anteriores da integração de pipeline o mesmo tema apareceu como `02.03`; manter um único identificador canônico evita ruído operacional.
 - A execução depende de padronização prévia dos templates; sem isso, parsing de issue/PR fica frágil.
 - Alguns itens de qualidade (ex.: suíte de testes) estão planejados, mas ainda dependem de estrutura técnica futura para entrar como check obrigatório.
 
 ---
 
 ## 7) Ordem recomendada de preparação (sem implementação agora)
-0. Padronizar templates/metadados (issue/PR) como pré-requisito de parsing e automação.
+Pré-requisito: padronizar templates/metadados (issue/PR) para garantir parsing e automação.
 1. Fechar convenções (`01.04`) e taxonomia de labels.
 2. Definir CODEOWNERS e responsáveis por área (`01.05`).
 3. Consolidar branch policy (`main`/`dev`) e board.
