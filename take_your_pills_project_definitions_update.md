@@ -143,15 +143,17 @@ Pontos finais = Pontos base do coletável × Multiplicador do cenário × Multip
 ## 6. Sistema de velocidade
 
 ### Estados
+- **Super Lento**
 - **Lento**
 - **Normal**
 - **Rápido**
+- **Super Rápido**
 
 ### Regras
 - a cada 3 coletas do grupo de aceleração, o jogador sobe 1 estado
 - a cada 3 coletas do grupo de desaceleração, o jogador desce 1 estado
-- ultrapassar o limite superior causa derrota por queda / machucado
-- ultrapassar o limite inferior causa derrota por sonolência / queda dormindo
+- tentar subir acima de **Super Rápido** causa derrota por queda / machucado
+- tentar descer abaixo de **Super Lento** causa derrota por sonolência / queda dormindo
 
 ### Regra de implementação
 O sistema de velocidade deve ser tratado como **máquina de estados**, não como simples valor solto de velocidade.

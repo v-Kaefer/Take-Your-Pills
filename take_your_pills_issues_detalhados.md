@@ -49,6 +49,12 @@ Toda sub-issue deverá conter:
 - vínculo explícito com a issue-pai
 - critério de conclusão observável
 
+### Regra obrigatória de dependências
+- issues de implementação não podem depender de issues de teste
+- issues de implementação não podem depender de issues de polish
+- issues de teste dependem de issues de implementação
+- issues de polish dependem de bases funcionais
+
 ---
 
 ## 4. EPIC 01 — Governança do projeto
@@ -308,7 +314,7 @@ O jogador consegue morrer de forma consistente e o jogo reage corretamente.
 - derrota por velocidade baixa extrema funciona
 - a run encerra corretamente em qualquer derrota válida
 
-**Dependências:** 03.01, 03.02 e 07.02.
+**Dependências:** 03.01 e 03.02.
 
 **Prioridade:** high  
 **Área:** player / speed-system  
@@ -410,7 +416,7 @@ Todos os coletáveis usam a mesma base de código e mudam apenas por configuraç
 **Objetivo:** tratar velocidade como sistema fechado e previsível.
 
 **Descrição exata:**
-Criar os estados lento, normal e rápido, com transições baseadas no acúmulo dos coletáveis corretos.
+Criar os estados super lento, lento, normal, rápido e super rápido, com transições baseadas no acúmulo dos coletáveis corretos.
 
 **Resultado esperado:**
 O jogo consegue subir e descer níveis de velocidade de forma controlada.
@@ -419,6 +425,8 @@ O jogo consegue subir e descer níveis de velocidade de forma controlada.
 - o jogador começa em estado normal
 - o estado sobe com 3 coletas de aceleração
 - o estado desce com 3 coletas de desaceleração
+- tentar subir acima de super rápido causa derrota
+- tentar descer abaixo de super lento causa derrota
 - o sistema impede estados inválidos fora da regra
 
 **Dependências:** 04.02.
@@ -449,9 +457,11 @@ O valor final de cada coleta respeita a fórmula do projeto.
 - laboratório usa 0.5x
 - ruas usam 1x
 - casa usa 2x
-- lento usa 0.5x
+- super lento usa 0.5x
+- lento usa 0.75x
 - normal usa 1x
-- rápido usa 2x
+- rápido usa 1.5x
+- super rápido usa 2x
 - o score final segue a fórmula registrada
 
 **Dependências:** 01.02, 04.01 e 04.03.
@@ -482,7 +492,7 @@ O jogador entende em que estado está e percebe risco antes da derrota.
 - há feedback de mudança de estado
 - o estado extremo é perceptível antes da derrota
 
-**Dependências:** 04.03 e 08.01.
+**Dependências:** 04.03.
 
 **Prioridade:** high  
 **Área:** speed-system / ui / audio  
@@ -856,7 +866,7 @@ O jogador percebe melhor risco, recompensa e status da run.
 - coleta e derrota possuem retorno visual
 - legibilidade geral melhorou em relação ao MVP base
 
-**Dependências:** 04.05, 06.01 e 08.01.
+**Dependências:** 04.05 e 06.01.
 
 **Prioridade:** medium  
 **Área:** ui / polish  
