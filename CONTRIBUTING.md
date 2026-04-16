@@ -7,7 +7,7 @@ This document defines how contributors/admins should work on **repository prepar
 Main planning references:
 - `análise_geral_preparacao_repositorio.md`
 - `plano_implementacao_preparacao_repositorio.md`
-- `docs/checklist-consolidada-implementacoes.md` (repository-preparation checklist)
+- `docs/checklist-preparacao-repositorio.md` (repository-preparation checklist)
 
 Operational support docs:
 - `docs/repo-admin-checklist.md`
@@ -76,11 +76,12 @@ Execution guidance:
 
 ## 4) Recommended execution order
 
-1. Onda 0 — document normalization
-2. Onda 1 — governance and conventions
-3. Onda 2 — taxonomy, milestones, board
-4. Onda 3 — pre-push and check policy
-5. Onda 4 — review pipeline planning
+Wave model (mapped to the planning checklist sections):
+1. Wave 0 (Onda 0) — document normalization
+2. Wave 1 (Onda 1) — governance and conventions
+3. Wave 2 (Onda 2) — taxonomy, milestones, board
+4. Wave 3 (Onda 3) — pre-push and check policy
+5. Wave 4 (Onda 4) — review pipeline planning
 
 ## 5) Contribution rules for this phase
 
