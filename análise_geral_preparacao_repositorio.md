@@ -95,6 +95,7 @@ Em conjunto:
 ---
 
 ## 7) Ordem recomendada de preparação (sem implementação agora)
+0. Padronizar templates/metadados (issue/PR) como pré-requisito de parsing e automação.
 1. Fechar convenções (`01.04`) e taxonomia de labels.
 2. Definir CODEOWNERS e responsáveis por área (`01.05`).
 3. Consolidar branch policy (`main`/`dev`) e board.
@@ -112,3 +113,6 @@ Os três arquivos se complementam de forma consistente para a preparação do re
 - **arquitetura de automação de review** (`pipeline_review_automation_plan.md`).
 
 A base documental está apta para organizar a preparação administrativa/técnica do repositório, desde que a nomenclatura canônica das issues de preparação seja mantida consistente entre os documentos.
+
+## 9) Ação de normalização recomendada
+- Definir um identificador canônico único para a frente de pipeline/review (`01.05` **ou** `02.03`) e atualizar todos os documentos de planejamento para a mesma referência.
