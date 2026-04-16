@@ -116,6 +116,3 @@ Os três arquivos se complementam de forma consistente para a preparação do re
 A base documental está apta para organizar a preparação administrativa/técnica do repositório.
 
 > **Requisito crítico:** manter a nomenclatura canônica das issues de preparação consistente entre todos os documentos.
-
-## 9) Ação de normalização recomendada
-- Adotar `01.05` como identificador canônico único da frente de pipeline/review e atualizar todos os documentos de planejamento para a mesma referência.
