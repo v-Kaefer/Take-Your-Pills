@@ -88,7 +88,7 @@ Em conjunto:
 ---
 
 ## 6) Pontos de atenção observados
-- Em `take_your_pills_issues_detalhados.md`, o item de CODEOWNERS aparece como `01.05`, enquanto em planejamentos anteriores da integração de pipeline o mesmo tema apareceu como `02.03`; manter um único identificador canônico evita ruído operacional.
+- Em `take_your_pills_issues_detalhados.md`, o item de CODEOWNERS aparece como `01.05`, enquanto em planejamentos anteriores da integração de pipeline o mesmo tema apareceu como `02.03`; para evitar ruído operacional, adotar `01.05` como identificador canônico e atualizar as demais referências.
 - A execução depende de padronização prévia dos templates; sem isso, parsing de issue/PR fica frágil.
 - Alguns itens de qualidade (ex.: suíte de testes) estão planejados, mas ainda dependem de estrutura técnica futura para entrar como check obrigatório.
 
@@ -115,4 +115,4 @@ Os três arquivos se complementam de forma consistente para a preparação do re
 A base documental está apta para organizar a preparação administrativa/técnica do repositório, desde que a nomenclatura canônica das issues de preparação seja mantida consistente entre os documentos.
 
 ## 9) Ação de normalização recomendada
-- Definir um identificador canônico único para a frente de pipeline/review (`01.05` **ou** `02.03`) e atualizar todos os documentos de planejamento para a mesma referência.
+- Adotar `01.05` como identificador canônico único da frente de pipeline/review e atualizar todos os documentos de planejamento para a mesma referência.
