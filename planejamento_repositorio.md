@@ -45,7 +45,7 @@
 - Planejar arquivos de metadados em `.github/` (templates, routing, labels versionadas).
 - Planejar workflows de validação de vínculo e solicitação automática de review.
 
-## 3) Divisão planejada para 4 integrantes (Integrante A, B, C e D)
+## 3) Divisão planejada para 4 integrantes (Integrantes 1, 2, 3 e 4)
 
 ### Integrante 1 — Convenções e metadados
 - Convenções de branch/commit/PR.
