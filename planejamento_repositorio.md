@@ -16,7 +16,7 @@
 ## 2) Escopo consolidado de preparação do repositório
 
 ### 2.1 Governança e convenções
-- Definir padrão de branches (`main`, `dev`, branches de trabalho saindo de `dev`).
+- Definir padrão de branches (`main`, `dev`, branches de trabalho derivadas de `dev`).
 - Definir padrão de commits e PRs.
 - Definir regra de handoff entre responsáveis.
 
@@ -45,7 +45,7 @@
 - Planejar arquivos de metadados em `.github/` (templates, routing, labels versionadas).
 - Planejar workflows de validação de vínculo e solicitação automática de review.
 
-## 3) Divisão planejada para 4 integrantes (nomes a definir)
+## 3) Divisão planejada para 4 integrantes (Integrante A, B, C e D)
 
 ### Integrante 1 — Convenções e metadados
 - Convenções de branch/commit/PR.
@@ -73,7 +73,7 @@
 - [ ] Garantir branch `dev` e política de integração.
 - [ ] Configurar proteção de branch para `main`.
 - [ ] Configurar proteção de branch para `dev`.
-- [ ] Definir checks obrigatórios sugeridos para proteção.
+- [ ] Definir checks de proteção recomendados.
 - [ ] Estruturar board com colunas padrão.
 - [ ] Definir regras operacionais do board.
 - [ ] Planejar fluxo de validação `pre-push` (conflitos/arquivos proibidos/smoke/testes).
