@@ -47,21 +47,21 @@
 
 ## 3) Divisão planejada para 4 integrantes (papéis e responsáveis a definir)
 
-### Papel 1 — Líder de Convenções e Metadados (Integrante 1)
+### Papel 1 — Líder de Convenções e Metadados (Assignee TBD)
 - Convenções de branch/commit/PR.
 - Templates de issue/PR e estrutura de metadados.
 - Versionamento de labels/review routing.
 
-### Papel 2 — Líder de Administração do Repositório (Integrante 2)
+### Papel 2 — Líder de Administração do Repositório (Assignee TBD)
 - Labels e milestones.
 - Branch `dev`, proteção de `main`/`dev`.
 - Estrutura e regras do board.
 
-### Papel 3 — Líder de Quality Gates e Validações de Push (Integrante 3)
+### Papel 3 — Líder de Quality Gates e Validações de Push (Assignee TBD)
 - Plano de `pre-push` e checks básicos.
 - Definição documental de critérios mínimos de validação.
 
-### Papel 4 — Líder da Pipeline de Review Automático (Fase A) (Integrante 4)
+### Papel 4 — Líder da Pipeline de Review Automático (Fase A) (Assignee TBD)
 - Planejamento de `CODEOWNERS`.
 - Planejamento de validação PR↔issue.
 - Planejamento de roteamento automático de reviewers.
@@ -86,3 +86,9 @@
 3. Planejamento de qualidade de push.
 4. Planejamento da pipeline de review da Fase A.
 5. Revisão final de consistência (sem implementação nesta etapa).
+
+### Dependências entre etapas
+- Etapa 2 depende da Etapa 1 (convenções definem padrão de labels/PR/branch para configuração administrativa).
+- Etapa 3 depende da Etapa 1 e da Etapa 2 (gates de push devem refletir convenções e políticas de branch).
+- Etapa 4 depende da Etapa 1 e da Etapa 2 (metadados, labels e governança base precisam estar definidos).
+- Etapa 5 depende da conclusão das Etapas 1–4.
