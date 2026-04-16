@@ -45,23 +45,23 @@
 - Planejar arquivos de metadados em `.github/` (templates, routing, labels versionadas).
 - Planejar workflows de validação de vínculo e solicitação automática de review.
 
-## 3) Divisão planejada para 4 integrantes (Integrantes 1, 2, 3 e 4)
+## 3) Divisão planejada para 4 integrantes (papéis e responsáveis a definir)
 
-### Integrante 1 — Convenções e metadados
+### Papel 1 — Líder de Convenções e Metadados (Integrante 1)
 - Convenções de branch/commit/PR.
 - Templates de issue/PR e estrutura de metadados.
 - Versionamento de labels/review routing.
 
-### Integrante 2 — Administração de repositório
+### Papel 2 — Líder de Administração do Repositório (Integrante 2)
 - Labels e milestones.
 - Branch `dev`, proteção de `main`/`dev`.
 - Estrutura e regras do board.
 
-### Integrante 3 — Qualidade de push e gates básicos
+### Papel 3 — Líder de Quality Gates e Validações de Push (Integrante 3)
 - Plano de `pre-push` e checks básicos.
 - Definição documental de critérios mínimos de validação.
 
-### Integrante 4 — Pipeline de review automático (Fase A)
+### Papel 4 — Líder da Pipeline de Review Automático (Fase A) (Integrante 4)
 - Planejamento de `CODEOWNERS`.
 - Planejamento de validação PR↔issue.
 - Planejamento de roteamento automático de reviewers.
