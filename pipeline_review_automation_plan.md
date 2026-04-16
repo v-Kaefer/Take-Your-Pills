@@ -1,5 +1,8 @@
 # Planejamento — Pipeline de Review Automático por CODEOWNERS + Issue/Sub-Issue + Labels
 
+> Escopo deste documento: **apenas planejamento e configuração do repositório**.
+> Não inclui implementação de features do jogo.
+
 ## 1. Objetivo
 
 Este documento descreve o planejamento da pipeline de automação de review para o repositório `v-Kaefer/Take-Your-Pills`, combinando:
@@ -15,7 +18,7 @@ Este documento **não implementa** nada. Ele serve como plano técnico e como re
 
 ---
 
-## 2. Premissas do repositório
+## 2) Premissas e Escopo consolidado de preparação do repositório
 
 ### Situação atual considerada
 - o repositório ainda está em fase inicial
@@ -28,10 +31,48 @@ Enquanto o repositório estiver sob usuário pessoal, a pipeline deve ser planej
 - `CODEOWNERS` por usuário
 - roteamento por usernames
 
-Se o repositório for migrado para uma organização no futuro, a arquitetura poderá ser expandida para:
-- team reviewers
-- regras por times
-- owners de times no lugar de usuários individuais
+### 2.1 Governança e convenções
+- Definir padrão de branches (`main`, `dev`, branches de trabalho derivadas de `dev`).
+- Definir padrão de commits e PRs.
+- Definir regra de handoff entre responsáveis.
+
+### 2.2 Taxonomia administrativa
+- Padronizar labels (`priority:*`, `type:*`, `area:*`, `status:*`).
+- Criar milestones Fase A–G.
+
+Referência das fases (escopo macro):
+- Fase A: fundação técnica
+- Fase B: MVP jogável (Entrega 2)
+- Fase C: playtesting e revisão estrutural
+- Fase D: estilização e design
+- Fase E: MVP completo
+- Fase F: refinamento
+- Fase G: entrega final
+
+### 2.3 Fluxo de trabalho do time
+- Garantir branch `dev` como branch de integração.
+- Definir/confirmar board com colunas: Backlog, Ready, In Progress, Review, QA, Done.
+- Definir regras mínimas de transição no board (PR vinculada para Review, aceite completo para Done).
+
+### 2.4 Proteção de branches
+- `main`: sem push direto, merge por PR, mínimo 1 review, checks obrigatórios.
+- `dev`: integração por PR, evitar merge sem revisão, checks básicos quando existirem.
+
+### 2.5 Qualidade operacional de repositório (planejamento)
+- Planejar fluxo de `pre-push` com:
+  - detecção de conflitos de merge
+  - bloqueio de arquivos indevidos
+  - smoke test do Godot (verificação rápida de integridade/importação)
+  - execução de testes (quando existirem)
+- Definição documental de critérios mínimos de validação.
+
+### 2.6 Integração da pipeline de review (Fase A)
+- Planejar automação com `CODEOWNERS` + vínculo PR↔issue + roteamento automático de reviewers.
+- Planejar arquivos de metadados em `.github/` (templates, routing, labels versionadas).
+- Planejar workflows de validação de vínculo e solicitação automática de review.
+
+
+O repositório não será migrado para uma organização no futuro, ele serve para formular, desenvolver e apresentar um trabalho para a faculdade.
 
 ---
 
@@ -42,7 +83,7 @@ A pipeline deve cobrir estes cenários:
 - se a PR tocar determinada área do código, pedir review aos owners técnicos daquela área
 - se a PR estiver vinculada à issue/sub-issue X, pedir review ao líder funcional daquela task
 - se a PR tocar UI e também fechar uma sub-issue de gameplay, pedir review técnico de UI **e** review funcional de gameplay
-- se uma sub-issue não tiver líder próprio, herdar o líder da issue pai
+- se uma sub-issue não tiver líder próprio, herdar o líder da issue pai, de acordo com seu contexto
 - se a issue estiver em determinado status de projeto, permitir ajustes futuros no reviewer preferencial
 
 A regra principal será:

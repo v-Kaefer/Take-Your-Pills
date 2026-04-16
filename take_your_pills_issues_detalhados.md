@@ -13,19 +13,22 @@ Este documento não cria nenhuma issue automaticamente. Ele define o backlog a s
 
 ---
 
-## 2. Janela de execução adotada
+## 2. Janela de execução adotada (Estipulação)
 
 ### Fase 1 — Base técnica
 **15/04 até 29/04**
 
 ### Fase 2 — MVP para Parte 2
-**30/04 até 03/06**
+**30/04 até 01/06**
 
 ### Fase 3 — Revisão e playtesting
-**08/06 até 17/06**
+**03/06 até 17/06**
 
 ### Fase 4 — Refinamento para Parte 3
-**18/06 até 08/07**
+**22/06 até 29/06**
+
+### Fase 5 - Bugfixes e Entrega Parte 3 (Entrega Final)
+**01/07 até 06/07**
 
 ---
 
@@ -176,6 +179,17 @@ O grupo passa a trabalhar sob uma convenção única.
 - 01.04.3 definir padrão de PR
 - 01.04.4 definir labels
 - 01.04.5 definir prioridades
+
+---
+
+## Issue 01.05 - Definir os CODEOWNERS e áreas responsáveis
+**Objetivo:** padronizar um responsável e um sub-responsável por cada área a ser desenvolvida.
+
+**Descrição exata:**
+Registrar dois 'CODEOWNERS', sendo um como reponsável e outro como sub-responsável, para determinada área. Para que determinados PRs daquela área, tenham a solicitação de review automática por aquele membro.
+
+**Resultado esperado:**
+O grupo passa a se coordenar melhor, com os determinados responsáveis das áreas, sem o impedimento de uma pessoa, por ter um sub-responsável. Mas não perde a autonomia de cada membro poder pegar qualquer task/issue para realizar, com a preocupação de "passar sem ver".
 
 ---
 
