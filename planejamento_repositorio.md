@@ -24,6 +24,14 @@
 - Padronizar labels (`priority:*`, `type:*`, `area:*`, `status:*`).
 - Criar milestones Fase A–F.
 
+Referência das fases (escopo macro):
+- Fase A: fundação técnica
+- Fase B: MVP jogável
+- Fase C: MVP completo
+- Fase D: playtesting e revisão estrutural
+- Fase E: refinamento
+- Fase F: entrega final
+
 ### 2.3 Fluxo de trabalho do time
 - Garantir branch `dev` como branch de integração.
 - Definir/confirmar board com colunas: Backlog, Ready, In Progress, Review, QA, Done.
@@ -37,7 +45,7 @@
 - Planejar fluxo de `pre-push` com:
   - detecção de conflitos de merge
   - bloqueio de arquivos indevidos
-  - smoke check Godot
+  - smoke test do Godot (verificação rápida de integridade/importação)
   - execução de testes (quando existirem)
 
 ### 2.6 Integração da pipeline de review (Fase A)
