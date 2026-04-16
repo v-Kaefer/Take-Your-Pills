@@ -45,12 +45,12 @@
 ---
 
 ## 2) Milestones (fases)
-- `Fase A — Fundação técnica (16/04–29/04)`
-- `Fase B — MVP jogável para Parte 2 (30/04–13/05)`
-- `Fase C — MVP completo para Parte 2 (14/05–03/06)`
-- `Fase D — Playtesting e revisão estrutural (08/06–17/06)`
-- `Fase E — Refinamento para Parte 3 (18/06–22/06)`
-- `Fase F — Entrega final da Parte 3 (23/06–08/07)`
+- Criar os milestones **exatamente** conforme definidos em `take_your_pills_issues_detalhados.md`.
+- Usar o documento canônico como fonte de verdade para:
+  - nome da fase;
+  - faixa de datas;
+  - ordem/estrutura das fases.
+- **Não** recriar nesta checklist uma lista paralela de fases/datas, para evitar inconsistências ao criar milestones no GitHub.
 
 ---
 
