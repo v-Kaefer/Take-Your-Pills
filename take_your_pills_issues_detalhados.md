@@ -188,11 +188,36 @@ O grupo passa a trabalhar sob uma convenção única.
 **Objetivo:** padronizar um responsável e um sub-responsável por cada área a ser desenvolvida.
 
 **Descrição exata:**
-Registrar dois 'CODEOWNERS', sendo um como reponsável e outro como sub-responsável, para determinada área. Para que determinados PRs daquela área, tenham a solicitação de review automática por aquele membro.
+Registrar dois 'CODEOWNERS', sendo um como responsável e outro como sub-responsável, para determinada área. Para que determinados PRs daquela área tenham a solicitação de review automática por aquele membro.
 
 **Resultado esperado:**
-O grupo passa a se coordenar melhor, com os determinados responsáveis das áreas, sem o impedimento de uma pessoa, por ter um sub-responsável. Mas não perde a autonomia de cada membro poder pegar qualquer task/issue para realizar, com a preocupação de "passar sem ver".
+O grupo passa a se coordenar melhor, com os determinados responsáveis das áreas, sem o impedimento de uma pessoa por ter um sub-responsável. Mas não perde a autonomia de cada membro poder pegar qualquer task/issue para realizar, com a preocupação de "passar sem ver".
 
+**Critérios de aceite:**
+- existe definição explícita das áreas do projeto que terão ownership
+- cada área possui um responsável principal e um responsável sombra
+- o arquivo/padrão de CODEOWNERS está documentado de forma compatível com a estrutura do repositório
+- ficou definido como a revisão automática será solicitada nos PRs relacionados a cada área
+- a convenção adotada foi registrada de forma clara para uso futuro do time
+
+**Dependências:** Issue 01.04 - Definir padrão mínimo de fluxo no GitHub
+
+**Prioridade:** alta
+
+**Área:** gestão / GitHub / processo de desenvolvimento
+
+**Período alvo:** Fase 1 — Base técnica (15/04 até 29/04)
+
+**Responsável principal:** a definir
+
+**Responsável sombra:** a definir
+
+### Sub-issues
+- 01.05.1 mapear áreas do projeto que exigem ownership
+- 01.05.2 definir responsável principal por área
+- 01.05.3 definir responsável sombra por área
+- 01.05.4 registrar convenção de CODEOWNERS no repositório
+- 01.05.5 validar impacto no fluxo de PR e revisão
 ---
 
 ## 5. EPIC 02 — Base técnica do projeto Godot
