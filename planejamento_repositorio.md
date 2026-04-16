@@ -25,7 +25,7 @@
 - Criar milestones Fase A–F.
 
 ### 2.3 Fluxo de trabalho do time
-- Garantir branch `dev` como integração.
+- Garantir branch `dev` como branch de integração.
 - Definir/confirmar board com colunas: Backlog, Ready, In Progress, Review, QA, Done.
 - Definir regras mínimas de transição no board (PR vinculada para Review, aceite completo para Done).
 
