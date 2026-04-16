@@ -15,6 +15,8 @@ Este documento não cria nenhuma issue automaticamente. Ele define o backlog a s
 
 ## 2. Janela de execução adotada (Estipulação)
 
+Requer verificação com o "2. Contexto acadêmico e prazo real", do documento "take_your_pills_project_definitions_update.md".
+
 ### Fase 1 — Base técnica
 **15/04 até 29/04**
 
