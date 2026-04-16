@@ -16,6 +16,7 @@
 | 01.04 | Definir convenções de repositório | docs | medium | repo | Fase A | nenhuma | `type:docs`, `priority:medium`, `area:repo` | TBD | TBD |
 | 02.01 | Estruturar projeto Godot | chore | high | repo/build | Fase A | 01.01 | `type:chore`, `priority:high`, `area:repo`, `area:build` | TBD | TBD |
 | 02.02 | Configurar scripts de verificação antes do push | chore | high | repo/test | Fase A | 01.04, 02.01 | `type:chore`, `priority:high`, `area:repo` | TBD | TBD |
+| 02.03 | Integrar pipeline de review automático (CODEOWNERS + vínculo PR/issue + roteamento) | chore | high | repo/qa/build | Fase A | 01.04, 02.02 | `type:chore`, `priority:high`, `area:repo`, `area:qa`, `area:build` | TBD | TBD |
 | 03.01 | Implementar corrida automática | feature | high | player | Fase A | 02.01 | `type:feature`, `priority:high`, `area:player` | TBD | TBD |
 | 03.02 | Implementar pulo | feature | high | player | Fase A | 03.01 | `type:feature`, `priority:high`, `area:player` | TBD | TBD |
 | 03.03 | Implementar colisão e derrota | feature | high | player/speed-system | Fase A | 03.01, 03.02 | `type:feature`, `priority:high`, `area:player`, `area:speed-system` | TBD | TBD |

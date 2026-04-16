@@ -9,6 +9,7 @@
 - [ ] 01.04 — Definir convenções de repositório
 - [ ] 02.01 — Estruturar projeto Godot
 - [ ] 02.02 — Configurar scripts de verificação antes do push
+- [ ] 02.03 — Integrar pipeline de review automático (planejamento + implementação base em Fase A)
 - [ ] 03.01 — Implementar corrida automática
 - [ ] 03.02 — Implementar pulo
 - [ ] 03.03 — Implementar colisão e derrota

@@ -19,13 +19,17 @@ Saída esperada: ambiente pronto para triagem e execução.
 ## Lote 1 — Fundação (Fase A)
 Abrir e priorizar:
 - 01.01, 01.02, 01.03, 01.04
-- 02.01, 02.02
+- 02.01, 02.02, 02.03
 - 03.01, 03.02, 03.03, 03.04
 - 04.01
 
 Regra de prioridade:
 - Primeiro `priority:high` com dependência zero.
 - Depois itens que destravam múltiplas issues seguintes.
+
+Planejamento da integração de pipeline na Fase A:
+- Executar conforme `pipeline_review_automation_plan.md`.
+- Distribuir implementação entre 4 integrantes (papéis em `docs/pipeline-review-implementation-phase-a.md`).
 
 ---
 
