@@ -14,6 +14,7 @@ Operational support docs:
 - `docs/issues-creation-matrix.md`
 - `docs/issues-rollout-plan.md`
 - `docs/pipeline-review-implementation-phase-a.md`
+- `docs/repo-quality-policy.md`
 
 Canonical rule:
 - Use `01.05` as the canonical identifier for the CODEOWNERS/pipeline preparation front.
@@ -29,6 +30,14 @@ PR requirements for admin tasks:
 - describe repository-only scope
 - include checklist updates when applicable
 - do not mix gameplay feature changes with repository admin changes
+- use branch naming pattern: `<admin|chore|ci|docs|automation|copilot>/<slug>`
+- use Conventional Commit prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`, etc.)
+
+Local pre-push hook (recommended):
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-push
+```
 
 ## 3) How each admin should execute tasks
 

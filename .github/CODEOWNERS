@@ -1,0 +1,10 @@
+# Core repository administration ownership
+* @v-Kaefer
+
+# Administrative docs and planning
+/docs/ @v-Kaefer
+/*.md @v-Kaefer
+
+# GitHub automation and governance
+/.github/ @v-Kaefer
+

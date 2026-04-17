@@ -1,0 +1,91 @@
+name: PR Request Reviewers
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, ready_for_review, synchronize]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+jobs:
+  request-reviewers:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Resolve and request reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { extractLinkedIssueNumber } = require('./.github/scripts/extract-linked-issue.js');
+            const { parseIssueMetadata } = require('./.github/scripts/parse-issue-metadata.js');
+            const { resolveTechnicalReviewers, resolveFunctionalReviewers, filterOutAuthor } = require('./.github/scripts/resolve-reviewers.js');
+            const { requestReviewers } = require('./.github/scripts/request-reviewers.js');
+
+            const routing = JSON.parse(fs.readFileSync('.github/review-routing.yml', 'utf8'));
+            const pr = context.payload.pull_request;
+            const issueNumber = extractLinkedIssueNumber(pr.body);
+
+            if (!issueNumber) {
+              core.info('No linked issue found in PR body. Skipping reviewer request.');
+              return;
+            }
+
+            const issueResponse = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+            const issue = issueResponse.data;
+            const metadata = parseIssueMetadata(issue);
+
+            let parentMetadata = null;
+            if (metadata.parentIssue) {
+              try {
+                const parentResponse = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: metadata.parentIssue
+                });
+                parentMetadata = parseIssueMetadata(parentResponse.data);
+              } catch (error) {
+                core.warning(`Unable to load parent issue #${metadata.parentIssue}: ${error.message}`);
+              }
+            }
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100
+            });
+            const changedFiles = files.map((f) => f.filename);
+
+            const { technicalReviewers } = resolveTechnicalReviewers(changedFiles, routing);
+            const functionalReviewers = resolveFunctionalReviewers({
+              metadata,
+              parentMetadata,
+              routingConfig: routing
+            });
+
+            const reviewers = filterOutAuthor(
+              [...new Set([...technicalReviewers, ...functionalReviewers])],
+              pr.user.login
+            );
+
+            await requestReviewers({
+              github,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pullNumber: pr.number,
+              reviewers,
+              core
+            });
+

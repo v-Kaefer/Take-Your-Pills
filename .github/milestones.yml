@@ -1,0 +1,11 @@
+{
+  "milestones": [
+    {"title":"Fase A","description":"Fundação técnica","state":"open"},
+    {"title":"Fase B","description":"MVP jogável (Entrega 2)","state":"open"},
+    {"title":"Fase C","description":"Playtesting e revisão estrutural","state":"open"},
+    {"title":"Fase D","description":"Estilização e design","state":"open"},
+    {"title":"Fase E","description":"MVP completo","state":"open"},
+    {"title":"Fase F","description":"Refinamento","state":"open"}
+  ]
+}
+

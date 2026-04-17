@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-push] Running repository preparation checks..."
+
+# 1) Block common generated/dependency paths
+if git diff --cached --name-only | grep -E '(^|/)(node_modules|dist|build|tmp|\.DS_Store)(/|$)' >/dev/null; then
+  echo "[pre-push] Forbidden generated/dependency paths detected in staged files."
+  exit 1
+fi
+
+# 2) Block oversized staged files (>1MB)
+oversized=""
+while IFS= read -r file; do
+  [ -f "$file" ] || continue
+  size=$(wc -c < "$file")
+  if [ "$size" -gt 1048576 ]; then
+    oversized+="$file"$'\n'
+  fi
+done < <(git diff --cached --name-only)
+
+if [ -n "$oversized" ]; then
+  echo "[pre-push] Oversized files detected (>1MB):"
+  echo "$oversized"
+  exit 1
+fi
+
+# 3) Smoke-check workflow yaml syntax
+for file in .github/workflows/*.yml; do
+  ruby -e "require 'yaml'; YAML.load_file('${file}')"
+done
+
+echo "[pre-push] All checks passed."
+

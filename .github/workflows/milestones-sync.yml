@@ -1,0 +1,59 @@
+name: Milestones Sync
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/milestones.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync-milestones:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync milestones from .github/milestones.yml
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const raw = fs.readFileSync('.github/milestones.yml', 'utf8');
+            const config = JSON.parse(raw);
+            const desiredMilestones = config.milestones || [];
+
+            const existing = await github.paginate(github.rest.issues.listMilestones, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            });
+
+            for (const milestone of desiredMilestones) {
+              const found = existing.find((m) => m.title === milestone.title);
+              if (!found) {
+                await github.rest.issues.createMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: milestone.title,
+                  state: milestone.state || 'open',
+                  description: milestone.description || ''
+                });
+                core.info(`Created milestone: ${milestone.title}`);
+              } else {
+                await github.rest.issues.updateMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  milestone_number: found.number,
+                  title: milestone.title,
+                  state: milestone.state || found.state,
+                  description: milestone.description || found.description || ''
+                });
+                core.info(`Updated milestone: ${milestone.title}`);
+              }
+            }
+

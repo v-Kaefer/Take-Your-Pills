@@ -1,0 +1,45 @@
+name: PR Validate Link
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  validate-pr-issue-link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate linked issue in PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { extractLinkedIssueNumber } = require('./.github/scripts/extract-linked-issue.js');
+
+            const pr = context.payload.pull_request;
+            const issueNumber = extractLinkedIssueNumber(pr.body);
+
+            if (!issueNumber) {
+              core.setFailed(
+                "PR must include a linked issue in the body (e.g. 'Closes #123')."
+              );
+              return;
+            }
+
+            try {
+              await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              core.info(`Linked issue validated: #${issueNumber}`);
+            } catch (error) {
+              core.setFailed(`Linked issue #${issueNumber} is invalid or inaccessible.`);
+            }
+

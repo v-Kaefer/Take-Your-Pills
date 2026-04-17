@@ -1,0 +1,41 @@
+name: Repository Quality Checks
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for forbidden paths and oversized files
+        run: |
+          set -euo pipefail
+
+          if git ls-files | grep -E '(^|/)(node_modules|dist|build|tmp|\.DS_Store)(/|$)' >/dev/null; then
+            echo "Forbidden generated/dependency paths detected in repository."
+            exit 1
+          fi
+
+          oversized="$(git ls-files -z | xargs -0 -I{} sh -c 'size=$(wc -c < "{}"); if [ "$size" -gt 1048576 ]; then echo "{}"; fi')"
+          if [ -n "${oversized}" ]; then
+            echo "Files > 1MB detected (requires explicit approval):"
+            echo "${oversized}"
+            exit 1
+          fi
+
+      - name: Validate workflow YAML structure
+        run: |
+          set -euo pipefail
+          for file in .github/workflows/*.yml; do
+            ruby -e "require 'yaml'; YAML.load_file('${file}')"
+          done
+          echo "Workflow YAML parse check passed."

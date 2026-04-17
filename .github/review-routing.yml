@@ -1,0 +1,21 @@
+{
+  "fallback_reviewer": "v-Kaefer",
+  "areas": {
+    "repo": ["v-Kaefer"],
+    "qa": ["v-Kaefer"],
+    "build": ["v-Kaefer"],
+    "ui": ["v-Kaefer"],
+    "audio": ["v-Kaefer"],
+    "player": ["v-Kaefer"],
+    "runner": ["v-Kaefer"],
+    "collectables": ["v-Kaefer"],
+    "speed-system": ["v-Kaefer"],
+    "scenario": ["v-Kaefer"]
+  },
+  "path_reviewers": [
+    {"path_prefix": ".github/", "reviewers": ["v-Kaefer"], "area": "repo"},
+    {"path_prefix": "docs/", "reviewers": ["v-Kaefer"], "area": "repo"},
+    {"path_prefix": "", "reviewers": ["v-Kaefer"], "area": "repo"}
+  ]
+}
+

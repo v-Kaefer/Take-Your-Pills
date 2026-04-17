@@ -1,0 +1,16 @@
+{
+  "columns": ["Backlog", "Ready", "In Progress", "Review", "QA", "Done"],
+  "transitions": {
+    "Backlog": ["Ready"],
+    "Ready": ["In Progress"],
+    "In Progress": ["Review"],
+    "Review": ["In Progress", "QA"],
+    "QA": ["In Progress", "Done"],
+    "Done": []
+  },
+  "rules": {
+    "to_review_requires": ["linked_pr"],
+    "to_done_requires": ["acceptance_criteria_met"]
+  }
+}
+

@@ -1,0 +1,30 @@
+{
+  "labels": [
+    {"name":"priority:low","color":"1D76DB","description":"Low priority"},
+    {"name":"priority:medium","color":"FBCA04","description":"Medium priority"},
+    {"name":"priority:high","color":"D93F0B","description":"High priority"},
+
+    {"name":"type:feature","color":"0E8A16","description":"Feature work"},
+    {"name":"type:bug","color":"B60205","description":"Bug fix"},
+    {"name":"type:chore","color":"5319E7","description":"Maintenance/admin task"},
+    {"name":"type:docs","color":"0075CA","description":"Documentation change"},
+    {"name":"type:test","color":"C2E0C6","description":"Testing-related task"},
+    {"name":"type:polish","color":"F9D0C4","description":"Polish/refinement task"},
+
+    {"name":"area:player","color":"0052CC","description":"Player area"},
+    {"name":"area:runner","color":"0052CC","description":"Runner area"},
+    {"name":"area:collectables","color":"0052CC","description":"Collectables area"},
+    {"name":"area:speed-system","color":"0052CC","description":"Speed system area"},
+    {"name":"area:scenario","color":"0052CC","description":"Scenario area"},
+    {"name":"area:ui","color":"0052CC","description":"UI area"},
+    {"name":"area:audio","color":"0052CC","description":"Audio area"},
+    {"name":"area:build","color":"0052CC","description":"Build/CI area"},
+    {"name":"area:qa","color":"0052CC","description":"QA area"},
+    {"name":"area:repo","color":"0052CC","description":"Repository admin area"},
+
+    {"name":"status:blocked","color":"B60205","description":"Blocked"},
+    {"name":"status:needs-review","color":"FBCA04","description":"Needs review"},
+    {"name":"status:ready-for-qa","color":"0E8A16","description":"Ready for QA"}
+  ]
+}
+

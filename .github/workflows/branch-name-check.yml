@@ -1,0 +1,26 @@
+name: Branch Name Check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch naming convention
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.payload.pull_request.head.ref;
+            const allowed = /^(admin|chore|ci|docs|automation|copilot)\/[a-z0-9._-]+$/;
+
+            if (!allowed.test(branch)) {
+              core.setFailed(
+                `Invalid branch name '${branch}'. Use pattern: <admin|chore|ci|docs|automation|copilot>/<slug>.`
+              );
+            }
+

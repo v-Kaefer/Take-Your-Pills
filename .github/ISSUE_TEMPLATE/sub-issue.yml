@@ -1,0 +1,82 @@
+name: Administrative Sub-issue
+description: Sub-issue linked to a parent administrative issue
+title: "[sub-issue] "
+labels: []
+body:
+  - type: input
+    id: parent_issue
+    attributes:
+      label: Parent issue
+      description: Referência obrigatória no formato #123
+      placeholder: "#123"
+    validations:
+      required: true
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Tipo da task
+      options:
+        - feature
+        - bug
+        - chore
+        - docs
+        - test
+        - polish
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - player
+        - runner
+        - collectables
+        - speed-system
+        - scenario
+        - ui
+        - audio
+        - build
+        - qa
+        - repo
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+  - type: input
+    id: funcional_lead
+    attributes:
+      label: Líder funcional
+      description: GitHub username (ex. @v-Kaefer)
+      placeholder: "@username"
+    validations:
+      required: true
+  - type: input
+    id: additional_reviewers
+    attributes:
+      label: Reviewers adicionais (opcional)
+      description: Lista separada por vírgula (ex. @user1,@user2)
+      placeholder: "@user1,@user2"
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+    validations:
+      required: true
+
