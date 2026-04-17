@@ -24,7 +24,15 @@ jobs:
             try {
               ({ extractLinkedIssueNumber } = require('./.github/scripts/extract-linked-issue.js'));
             } catch (error) {
-              core.setFailed(`Required script missing: .github/scripts/extract-linked-issue.js (${error.message})`);
+              if (error.code === "MODULE_NOT_FOUND") {
+                core.setFailed(
+                  "Required script not found: .github/scripts/extract-linked-issue.js. Ensure the file exists on the PR base branch."
+                );
+              } else {
+                core.setFailed(
+                  `Failed to load .github/scripts/extract-linked-issue.js due to script/runtime error: ${error.message}`
+                );
+              }
               return;
             }
 

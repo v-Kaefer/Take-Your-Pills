@@ -28,7 +28,7 @@ fi
 # 3) Smoke-check workflow yaml syntax
 if command -v ruby >/dev/null 2>&1; then
   for file in .github/workflows/*.yml; do
-    ruby -e "require 'yaml'; YAML.safe_load_file('${file}', permitted_classes: [], aliases: false)"
+    ruby -e "require 'yaml'; YAML.safe_load_file(ARGV[0], permitted_classes: [], aliases: false)" "$file"
   done
 else
   echo "[pre-push] Ruby not found. Skipping workflow YAML parse check."
