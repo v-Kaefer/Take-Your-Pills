@@ -497,7 +497,7 @@ Objetivo:
 
 ## Conteúdo planejado para `.github/labels.json`
 
-```yaml
+```json
 labels:
   - name: "priority:high"
     color: "B60205"
