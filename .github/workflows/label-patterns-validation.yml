@@ -1,0 +1,69 @@
+name: Label Patterns Validation
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened, edited, labeled, unlabeled, reopened]
+  pull_request_target:
+    types: [opened, edited, labeled, unlabeled, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate repository label patterns
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rules = {
+              priority: ['priority:low', 'priority:medium', 'priority:high'],
+              type: ['type:feature', 'type:bug', 'type:chore', 'type:docs', 'type:test', 'type:polish'],
+              area: [
+                'area:player',
+                'area:runner',
+                'area:collectables',
+                'area:speed-system',
+                'area:scenario',
+                'area:ui',
+                'area:audio',
+                'area:build',
+                'area:qa',
+                'area:repo'
+              ],
+              status: ['status:blocked', 'status:needs-review', 'status:ready-for-qa']
+            };
+
+            const labelSource = context.payload.issue || context.payload.pull_request;
+            const labels = (labelSource?.labels || []).map((label) => label.name);
+
+            const invalidLabels = [];
+            const namespaceCount = { priority: 0, type: 0, area: 0, status: 0 };
+
+            for (const label of labels) {
+              for (const namespace of Object.keys(rules)) {
+                if (label.startsWith(`${namespace}:`)) {
+                  namespaceCount[namespace] += 1;
+                  if (!rules[namespace].includes(label)) {
+                    invalidLabels.push(label);
+                  }
+                }
+              }
+            }
+
+            const duplicateNamespaces = Object.entries(namespaceCount)
+              .filter(([, count]) => count > 1)
+              .map(([namespace]) => namespace);
+
+            if (invalidLabels.length > 0 || duplicateNamespaces.length > 0) {
+              const parts = [];
+              if (invalidLabels.length > 0) {
+                parts.push(`Invalid managed labels: ${[...new Set(invalidLabels)].join(', ')}`);
+              }
+              if (duplicateNamespaces.length > 0) {
+                parts.push(`More than one label from namespace(s): ${duplicateNamespaces.join(', ')}`);
+              }
+              core.setFailed(`${parts.join(' | ')}. Allowed managed labels are defined in docs/labels-patterns.md.`);
+            }
