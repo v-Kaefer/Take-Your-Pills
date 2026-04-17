@@ -12,6 +12,8 @@
 
 ## 1) Labels (taxonomia final)
 
+Fonte modular: `docs/labels-patterns.md`
+
 ### Prioridade
 - `priority:low`
 - `priority:medium`
