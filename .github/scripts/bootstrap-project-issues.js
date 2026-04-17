@@ -1,5 +1,10 @@
 const fs = require("fs");
 
+// Parent issue ID format: 01.01
+const ISSUE_ID_PATTERN = /^\d+\.\d+$/;
+// Sub-issue ID format: 01.01.1
+const SUB_ISSUE_ID_PATTERN = /^\d+\.\d+\.\d+$/;
+
 function normalize(text) {
   return (text || "").replace(/\r\n/g, "\n").trim();
 }
@@ -21,7 +26,7 @@ function parseLabelsByIssueId(matrixText) {
     if (!line.trim().startsWith("|")) continue;
     const cells = line.split("|").map((cell) => cell.trim());
     const issueId = cells[1];
-    if (!/^\d+\.\d+$/.test(issueId)) continue;
+    if (!ISSUE_ID_PATTERN.test(issueId)) continue;
 
     const labelsCell = cells[8] || "";
     const insideBackticks = labelsCell.match(/`([^`]+)`/);
@@ -66,6 +71,7 @@ function parseBacklog(backlogText, labelsByIssueId) {
     if (subIssueSectionIndex >= 0) {
       const subIssueSection = block.slice(subIssueSectionIndex);
       for (const subMatch of subIssueSection.matchAll(subIssueLineRegex)) {
+        if (!SUB_ISSUE_ID_PATTERN.test(subMatch[1])) continue;
         subIssues.push({
           id: subMatch[1],
           title: normalize(subMatch[2])
@@ -170,8 +176,21 @@ async function run({ github, core, context, dryRun = true, includeSubIssues = tr
   const owner = context.repo.owner;
   const repo = context.repo.repo;
 
-  const backlogText = fs.readFileSync("take_your_pills_issues_detalhados.md", "utf8");
-  const matrixText = fs.readFileSync("docs/issues-creation-matrix.md", "utf8");
+  let backlogText;
+  let matrixText;
+  try {
+    backlogText = fs.readFileSync("take_your_pills_issues_detalhados.md", "utf8");
+  } catch (error) {
+    throw new Error(
+      `Failed to read take_your_pills_issues_detalhados.md: ${error.message}`
+    );
+  }
+
+  try {
+    matrixText = fs.readFileSync("docs/issues-creation-matrix.md", "utf8");
+  } catch (error) {
+    throw new Error(`Failed to read docs/issues-creation-matrix.md: ${error.message}`);
+  }
   const labelsByIssueId = parseLabelsByIssueId(matrixText);
   const parsedIssues = parseBacklog(backlogText, labelsByIssueId);
 
@@ -262,4 +281,3 @@ module.exports = {
   parseBacklog,
   parseLabelsByIssueId
 };
-
