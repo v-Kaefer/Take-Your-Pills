@@ -52,7 +52,7 @@ body:
     validations:
       required: true
   - type: input
-    id: funcional_lead
+    id: functional_lead
     attributes:
       label: Líder funcional
       description: GitHub username (ex. @v-Kaefer)
@@ -79,4 +79,3 @@ body:
       label: Critérios de aceite
     validations:
       required: true
-
