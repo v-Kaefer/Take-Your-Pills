@@ -20,7 +20,13 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { extractLinkedIssueNumber } = require('./.github/scripts/extract-linked-issue.js');
+            let extractLinkedIssueNumber;
+            try {
+              ({ extractLinkedIssueNumber } = require('./.github/scripts/extract-linked-issue.js'));
+            } catch (error) {
+              core.setFailed(`Required script missing: .github/scripts/extract-linked-issue.js (${error.message})`);
+              return;
+            }
 
             const pr = context.payload.pull_request;
             const issueNumber = extractLinkedIssueNumber(pr.body);
@@ -42,4 +48,3 @@ jobs:
             } catch (error) {
               core.setFailed(`Linked issue #${issueNumber} is invalid or inaccessible.`);
             }
-
