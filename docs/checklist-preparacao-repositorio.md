@@ -30,6 +30,7 @@ Escopo desta checklist:
 - [x] **O2.3** Consolidar estrutura de board (Backlog → Ready → In Progress → Review → QA → Done).
 - [x] **O2.4** Definir regras de entrada/saída por coluna do board.
 - [x] **O2.5** Definir padrão para abertura e rastreio de issues administrativas/sub-issues.
+  - Implementado com `project-issues-bootstrap.yml` + `.github/scripts/bootstrap-project-issues.js` para criação das issues/sub-issues planejadas.
 
 ## Onda 3 — Qualidade operacional (pre-push e checks)
 - [x] **O3.1** Formalizar plano de validações de `pre-push` (conflitos, arquivos proibidos, smoke tests básicos, testes quando houver).

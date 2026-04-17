@@ -1,0 +1,41 @@
+name: Project Issues Bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "When true, only logs planned creations"
+        required: true
+        type: boolean
+        default: true
+      include_sub_issues:
+        description: "Create sub-issues in addition to parent issues"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create planned issues and sub-issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { run } = require('./.github/scripts/bootstrap-project-issues.js');
+
+            await run({
+              github,
+              core,
+              context,
+              dryRun: ${{ inputs.dry_run }},
+              includeSubIssues: ${{ inputs.include_sub_issues }}
+            });
+

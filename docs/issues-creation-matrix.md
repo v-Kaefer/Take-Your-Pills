@@ -46,3 +46,13 @@
 - Evitar múltiplas labels `type:*` por issue.
 - Em issues de múltiplas áreas, manter no máximo 2–3 labels `area:*`.
 - Sempre preencher responsável principal e sombra antes de mover para **Ready**.
+
+## Criação automatizada (issues e sub-issues)
+- Workflow: `.github/workflows/project-issues-bootstrap.yml`
+- Script: `.github/scripts/bootstrap-project-issues.js`
+- Fonte de issues/sub-issues: `take_your_pills_issues_detalhados.md`
+- Fonte de labels por issue: esta matriz (`docs/issues-creation-matrix.md`)
+
+Execução recomendada:
+1. Rodar com `dry_run=true` para validar o plano de criação.
+2. Rodar com `dry_run=false` para criar issues e sub-issues.
