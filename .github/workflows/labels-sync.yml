@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - ".github/labels.yml"
+      - ".github/labels.json"
 
 permissions:
   contents: read
@@ -17,12 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Sync labels from .github/labels.yml
+      - name: Sync labels from .github/labels.json
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const raw = fs.readFileSync('.github/labels.yml', 'utf8');
+            const raw = fs.readFileSync('.github/labels.json', 'utf8');
             const config = JSON.parse(raw);
             const desiredLabels = config.labels || [];
 

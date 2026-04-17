@@ -36,6 +36,6 @@ jobs:
         run: |
           set -euo pipefail
           for file in .github/workflows/*.yml; do
-            ruby -e "require 'yaml'; YAML.load_file('${file}')"
+            ruby -e "require 'yaml'; YAML.safe_load_file('${file}', permitted_classes: [], aliases: false)"
           done
           echo "Workflow YAML parse check passed."

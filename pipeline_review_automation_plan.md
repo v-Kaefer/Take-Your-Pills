@@ -100,8 +100,8 @@ Arquivos planejados:
 - `.github/ISSUE_TEMPLATE/feature.yml`
 - `.github/ISSUE_TEMPLATE/sub-issue.yml`
 - `.github/pull_request_template.md`
-- `.github/review-routing.yml`
-- `.github/labels.yml`
+- `.github/review-routing.json`
+- `.github/labels.json`
 
 Função:
 - garantir que issues e PRs tenham metadados parseáveis
@@ -157,8 +157,8 @@ Esta camada deve entrar **por último**, depois que a base estiver estável.
 .github/
   CODEOWNERS
   pull_request_template.md
-  review-routing.yml
-  labels.yml
+  review-routing.json
+  labels.json
   ISSUE_TEMPLATE/
     feature.yml
     sub-issue.yml
@@ -220,7 +220,7 @@ Campos planejados:
 - notas de teste
 - observações de risco
 
-## 6.4 `review-routing.yml`
+## 6.4 `review-routing.json`
 Função:
 - centralizar a lógica de roteamento por área e fallback
 
@@ -230,7 +230,7 @@ Conteúdo planejado:
 - regras de herança de parent issue
 - regras para múltiplas áreas
 
-## 6.5 `labels.yml`
+## 6.5 `labels.json`
 Função:
 - padronizar labels em arquivo versionado
 - permitir sincronização/recriação consistente das labels
@@ -307,7 +307,7 @@ Pedir reviewers automaticamente com base em:
 
 ## 7.4 `labels-sync.yml`
 ### Objetivo
-Sincronizar labels a partir de `.github/labels.yml`.
+Sincronizar labels a partir de `.github/labels.json`.
 
 ### Uso planejado
 - execução manual (`workflow_dispatch`) inicialmente
@@ -396,7 +396,7 @@ Quando ambos existirem, a combinação deve ser **aditiva**, não excludente.
 Se a sub-issue não tiver líder funcional explícito, herdar da issue pai.
 
 ## Regra 5 — Fallback obrigatório
-Se nenhum reviewer funcional puder ser resolvido, usar fallback definido em `review-routing.yml`.
+Se nenhum reviewer funcional puder ser resolvido, usar fallback definido em `review-routing.json`.
 
 ## Regra 6 — Autor nunca aprova a si mesmo
 O autor da PR não deve entrar na lista final de requested reviewers.
@@ -489,13 +489,13 @@ Motivo:
 ## 11. Planejamento do arquivo de labels padronizadas
 
 Arquivo planejado:
-- `.github/labels.yml`
+- `.github/labels.json`
 
 Objetivo:
 - servir como fonte versionada das labels do projeto
 - permitir sincronização por workflow ou ferramenta dedicada
 
-## Conteúdo planejado para `.github/labels.yml`
+## Conteúdo planejado para `.github/labels.json`
 
 ```yaml
 labels:
@@ -604,8 +604,8 @@ Criar:
 - `feature.yml`
 - `sub-issue.yml`
 - `pull_request_template.md`
-- `review-routing.yml`
-- `labels.yml`
+- `review-routing.json`
+- `labels.json`
 
 ### Etapa 2
 Criar workflow:

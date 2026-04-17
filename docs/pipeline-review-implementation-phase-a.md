@@ -19,8 +19,8 @@ Implementar a base operacional da automação de review (técnico + funcional) j
 - `.github/ISSUE_TEMPLATE/feature.yml`
 - `.github/ISSUE_TEMPLATE/sub-issue.yml`
 - `.github/pull_request_template.md`
-- `.github/labels.yml`
-- `.github/review-routing.yml` (estrutura inicial)
+- `.github/labels.json`
+- `.github/review-routing.json` (estrutura inicial)
 
 **Entregáveis:**
 - Templates validados para obrigar campos mínimos.
