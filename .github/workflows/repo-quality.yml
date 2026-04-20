@@ -28,7 +28,7 @@ jobs:
 
       - name: Run actionlint
         run: |
-          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/go/bin:$PATH"
           actionlint
 
       - name: Run yamllint

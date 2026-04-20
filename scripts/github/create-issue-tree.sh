@@ -50,12 +50,12 @@ fi
 
 mapfile -t ITEMS < <(python3 - "$CONFIG_FILE" <<'PY'
 import base64
-import json
 import sys
+import yaml
 
 path = sys.argv[1]
 with open(path, "r", encoding="utf-8") as f:
-    data = json.load(f)
+    data = yaml.safe_load(f)
 
 epic = data.get("epic", {})
 if not epic:
