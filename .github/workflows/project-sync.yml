@@ -1,0 +1,118 @@
+name: Project Sync
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_OWNER: ${{ vars.PROJECT_OWNER }}
+      PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync item with GitHub Project
+        if: env.PROJECT_OWNER != '' && env.PROJECT_NUMBER != '' && env.PROJECT_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ env.PROJECT_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION_NAME: ${{ github.event.action }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          ITEM_URL=""
+          ITEM_NUMBER=""
+
+          if [[ "$EVENT_NAME" == "issues" ]]; then
+            ITEM_URL="$ISSUE_URL"
+            ITEM_NUMBER="$ISSUE_NUMBER"
+          else
+            ITEM_URL="$PR_URL"
+            ITEM_NUMBER="$PR_NUMBER"
+          fi
+          export ITEM_NUMBER
+          export EVENT_NAME
+
+          if [[ -n "$ITEM_URL" && ( "$ACTION_NAME" == "opened" || "$ACTION_NAME" == "reopened" ) ]]; then
+            gh project item-add "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --url "$ITEM_URL" || true
+          fi
+
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          project_owner = os.environ["PROJECT_OWNER"]
+          project_number = os.environ["PROJECT_NUMBER"]
+          action_name = os.environ["ACTION_NAME"]
+          event_name = os.environ.get("EVENT_NAME", "")
+          item_number = os.environ.get("ITEM_NUMBER", "")
+
+          if not item_number:
+              raise SystemExit(0)
+
+          with open(".github/project/fields.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          project_id = data.get("project_id", "")
+          status_field = data.get("fields", {}).get("Status", {})
+          field_id = status_field.get("id", "")
+          options = status_field.get("options", {})
+
+          if not project_id or not field_id:
+              raise SystemExit(0)
+
+          if action_name == "closed":
+              target = "Done"
+          elif event_name == "pull_request":
+              target = "In Review"
+          else:
+              target = "Backlog"
+
+          option_id = options.get(target, "")
+          if not option_id:
+              raise SystemExit(0)
+
+          items_raw = subprocess.check_output(
+              ["gh", "project", "item-list", project_number, "--owner", project_owner, "--format", "json", "--limit", "200"],
+              text=True,
+          )
+          items = json.loads(items_raw).get("items", [])
+          item_id = ""
+          for entry in items:
+              content = entry.get("content", {})
+              if str(content.get("number", "")) == str(item_number):
+                  item_id = entry.get("id", "")
+                  break
+
+          if not item_id:
+              raise SystemExit(0)
+
+          subprocess.check_call([
+              "gh", "project", "item-edit",
+              "--id", item_id,
+              "--project-id", project_id,
+              "--field-id", field_id,
+              "--single-select-option-id", option_id,
+          ])
+          PY
+
+      - name: Skip when project integration is not configured
+        if: env.PROJECT_OWNER == '' || env.PROJECT_NUMBER == '' || env.PROJECT_TOKEN == ''
+        run: echo "Skipping project sync (missing PROJECT_OWNER/PROJECT_NUMBER/PROJECT_TOKEN)."

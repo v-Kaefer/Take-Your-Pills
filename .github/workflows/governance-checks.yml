@@ -45,9 +45,9 @@ jobs:
         env:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
-          if [[ ! "$BRANCH_NAME" =~ ^(feat|fix|chore|docs|refactor|test|hotfix)\/[a-z0-9._-]+$ ]]; then
+          if [[ ! "$BRANCH_NAME" =~ ^(feat|fix|chore|docs|refactor|test|hotfix|copilot)\/[a-z0-9._-]+$ ]]; then
             echo "Invalid branch name: $BRANCH_NAME"
-            echo "Expected: <type>/<slug>, where type is feat|fix|chore|docs|refactor|test|hotfix"
+            echo "Expected: <type>/<slug>, where type is feat|fix|chore|docs|refactor|test|hotfix|copilot"
             exit 1
           fi
 

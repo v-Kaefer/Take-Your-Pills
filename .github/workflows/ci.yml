@@ -19,3 +19,7 @@ jobs:
   governance-checks:
     name: Governance checks
     uses: ./.github/workflows/governance-checks.yml
+
+  engine-ci:
+    name: Engine checks
+    uses: ./.github/workflows/engine-ci.yml
