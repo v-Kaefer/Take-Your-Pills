@@ -1,6 +1,6 @@
 # Contributing
 
-Guia simples e direto para rodar os scripts de automação do repositório.
+Um guia simples e direto para rodar os scripts de automação do repositório.
 
 ## Pré-requisitos
 
@@ -146,7 +146,7 @@ Criando e vinculando ao repositório:
   --output .github/project/fields.json
 ```
 
-## Dica rápida de destino padrão
+## Configuração de repositório padrão
 
 Defina um repositório padrão para evitar repetir `--repo`:
 
