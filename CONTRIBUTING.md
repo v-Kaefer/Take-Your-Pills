@@ -98,6 +98,8 @@ Validar manifesto:
   --validate-only
 ```
 
+Nota: `--validate-only` valida apenas o JSON e o schema, sem acessar repositório.
+
 Simular criação:
 
 ```bash
