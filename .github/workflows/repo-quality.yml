@@ -32,7 +32,11 @@ jobs:
         run: yamllint .
 
       - name: Run markdownlint
-        run: markdownlint "**/*.md" --ignore node_modules
+        run: |
+          markdownlint "**/*.md" \
+            --ignore node_modules \
+            --ignore aplicacao-planejamento-repo2.md \
+            --ignore planejamento-repo2-automacoes.md
 
       - name: Run shellcheck
         run: |

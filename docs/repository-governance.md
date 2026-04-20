@@ -14,6 +14,8 @@ Formato:
 
 `<type>/<slug>`
 
+O `slug` aceita letras minúsculas, números, hífen (`-`), underscore (`_`) e ponto (`.`).
+
 Tipos aceitos:
 
 - `feat`

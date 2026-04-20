@@ -11,8 +11,9 @@ Uso:
 
 Descrição:
   Sincroniza labels no GitHub com base em um arquivo versionado.
-  O arquivo .github/labels.yml deve conter JSON válido (compatível com YAML 1.2)
-  no formato: { "labels": [ { "name": "...", "color": "...", "description": "..." } ] }
+  O arquivo .github/labels.yml, apesar da extensão .yml, usa formato JSON
+  (válido em YAML 1.2) no padrão:
+  { "labels": [ { "name": "...", "color": "...", "description": "..." } ] }
 EOF
 }
 
@@ -60,13 +61,17 @@ fi
 echo "Sincronizando labels para o repositório: $REPO"
 echo "Fonte de dados: $LABELS_FILE"
 
-python3 - "$LABELS_FILE" <<'PY' | while IFS=$'\t' read -r name color description; do
+mapfile -t LABEL_ROWS < <(python3 - "$LABELS_FILE" <<'PY'
 import json
 import sys
 
 path = sys.argv[1]
-with open(path, "r", encoding="utf-8") as f:
-    data = json.load(f)
+try:
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+except Exception as exc:
+    print(f"Failed to parse labels file: {path} ({exc})", file=sys.stderr)
+    sys.exit(1)
 
 labels = data.get("labels", [])
 for item in labels:
@@ -77,7 +82,11 @@ for item in labels:
         continue
     print(f"{name}\t{color}\t{description}")
 PY
-  if [[ -z "$name" || -z "$color" ]]; then
+)
+
+for row in "${LABEL_ROWS[@]}"; do
+  IFS=$'\t' read -r name color description <<< "$row"
+  if [[ -z "${name:-}" || -z "${color:-}" ]]; then
     continue
   fi
 
