@@ -4,7 +4,6 @@ set -euo pipefail
 REPO="${GH_REPO:-}"
 CONFIG_FILE=""
 SCHEMA_FILE="config/issues/schema.json"
-APPLY=false
 DRY_RUN=true
 VALIDATE_ONLY=false
 
@@ -42,13 +41,11 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --apply)
-      APPLY=true
       DRY_RUN=false
       shift
       ;;
     --dry-run)
       DRY_RUN=true
-      APPLY=false
       shift
       ;;
     --validate-only)
@@ -684,7 +681,7 @@ for ((i=0; i<total_items; i++)); do
           fi
 
           type_field_id="$(jq -r '.fields.Type.id // ""' <<<"$project_fields_json")"
-          type_option_name="$(echo "$issue_type" | tr '[:lower:]' '[:upper:]' | sed 's/^./\U&/')"
+          type_option_name="$(echo "$issue_type" | tr '[:lower:]' '[:upper:]')"
           type_option_id="$(jq -r --arg name "$type_option_name" '.fields.Type.options[$name] // ""' <<<"$project_fields_json")"
           if [[ -n "$type_field_id" && -n "$type_option_id" ]]; then
             gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$type_field_id" --single-select-option-id "$type_option_id" >/dev/null 2>&1 || true
@@ -796,8 +793,6 @@ for ((i=0; i<total_items; i++)); do
 
   action="$(jq -r '.action // ""' <<<"$result_json")"
   child_number="$(jq -r '.childNumber // ""' <<<"$result_json")"
-  child_url="$(jq -r '.childUrl // ""' <<<"$result_json")"
-
   if [[ "$action" == "linked" || "$action" == "linked_with_fallback" || "$action" == "already_linked_with_fallback" ]]; then
     linked_count=$((linked_count + 1))
   fi
