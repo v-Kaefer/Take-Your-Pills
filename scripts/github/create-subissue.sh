@@ -12,6 +12,8 @@ BODY_FILE=""
 EXTRA_LABELS=""
 ASSIGNEE=""
 MILESTONE=""
+APPLY=false
+DRY_RUN=true
 
 usage() {
   cat <<'USAGE'
@@ -30,7 +32,34 @@ Opções:
   --labels "label-a,label-b"
   --milestone text|number
   --assignee login
+  --apply
+  --dry-run
 USAGE
+}
+
+json_escape() {
+  python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+emit_result() {
+  local action="$1"
+  local child_number="$2"
+  local child_url="$3"
+  local link_method="$4"
+  local message="$5"
+  {
+    printf '{'
+    printf '"repo":%s,' "$(printf '%s' "$REPO" | json_escape)"
+    printf '"parent":%s,' "$(printf '%s' "$PARENT" | json_escape)"
+    printf '"title":%s,' "$(printf '%s' "$TITLE" | json_escape)"
+    printf '"action":%s,' "$(printf '%s' "$action" | json_escape)"
+    printf '"childNumber":%s,' "$(printf '%s' "$child_number" | json_escape)"
+    printf '"childUrl":%s,' "$(printf '%s' "$child_url" | json_escape)"
+    printf '"linkMethod":%s,' "$(printf '%s' "$link_method" | json_escape)"
+    printf '"dryRun":%s,' "$DRY_RUN"
+    printf '"message":%s' "$(printf '%s' "$message" | json_escape)"
+    printf '}\n'
+  }
 }
 
 while [[ $# -gt 0 ]]; do
@@ -79,6 +108,16 @@ while [[ $# -gt 0 ]]; do
       MILESTONE="$2"
       shift 2
       ;;
+    --apply)
+      APPLY=true
+      DRY_RUN=false
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      APPLY=false
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -99,6 +138,11 @@ fi
 
 if [[ -z "$REPO" ]]; then
   REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq não encontrado."
+  exit 1
 fi
 
 if [[ -n "$BODY_FILE" ]]; then
@@ -137,11 +181,25 @@ if [[ -n "$ASSIGNEE" ]]; then
   CREATE_ARGS+=(--assignee "$ASSIGNEE")
 fi
 
-child_url="$(./scripts/github/create-issue.sh "${CREATE_ARGS[@]}")"
+if [[ "$APPLY" == true ]]; then
+  CREATE_ARGS+=(--apply)
+else
+  CREATE_ARGS+=(--dry-run)
+fi
 
-child_number="${child_url##*/}"
+child_issue_result="$(./scripts/github/create-issue.sh "${CREATE_ARGS[@]}")"
+child_number="$(jq -r '.number // empty' <<<"$child_issue_result")"
+child_url="$(jq -r '.url // empty' <<<"$child_issue_result")"
 
-echo "Sub-issue criada: $child_url"
+if [[ -z "$child_number" ]]; then
+  emit_result "issue_stage_only" "" "" "none" "Dry-run sem número de issue filha."
+  exit 0
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+  emit_result "would_link_subissue" "$child_number" "$child_url" "none" "Issue filha existente/criada em simulação; vínculo não aplicado."
+  exit 0
+fi
 
 repo_node_id="$(gh api "repos/$REPO" --jq '.node_id')"
 graphql_query="mutation(\$repo:ID!, \$parent:Int!, \$child:Int!) { addSubIssue(input: {repositoryId: \$repo, parentIssueNumber: \$parent, subIssueNumber: \$child}) { clientMutationId } }"
@@ -151,9 +209,16 @@ mutation_exit=$?
 set -e
 
 if [[ $mutation_exit -eq 0 ]]; then
-  echo "Vínculo de sub-issue criado via GraphQL."
   echo "$mutation_response" >/dev/null
+  emit_result "linked" "$child_number" "$child_url" "graphql:addSubIssue" "Vínculo de sub-issue criado via GraphQL."
+  exit 0
+fi
+
+comments_payload="$(gh issue view "$PARENT" --repo "$REPO" --comments --json comments)"
+already_linked_comment="$(jq -r --arg child "#$child_number" '.comments[]?.body | select(contains($child))' <<<"$comments_payload" | head -n 1 || true)"
+if [[ -z "$already_linked_comment" ]]; then
+  gh issue comment "$PARENT" --repo "$REPO" --body "Linked child issue: #$child_number" >/dev/null
+  emit_result "linked_with_fallback" "$child_number" "$child_url" "issue_comment" "Fallback aplicado com comentário na issue pai."
 else
-  gh issue comment "$PARENT" --repo "$REPO" --body "Linked child issue: #$child_number"
-  echo "Fallback aplicado: comentário na issue pai com link da filha."
+  emit_result "already_linked_with_fallback" "$child_number" "$child_url" "issue_comment" "Comentário de fallback já existente; sem duplicação."
 fi

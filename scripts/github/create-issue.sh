@@ -11,6 +11,8 @@ BODY_FILE=""
 EXTRA_LABELS=""
 MILESTONE=""
 ASSIGNEE=""
+APPLY=false
+DRY_RUN=true
 
 usage() {
   cat <<'USAGE'
@@ -28,7 +30,36 @@ Opções:
   --labels "label-a,label-b"
   --milestone text|number
   --assignee login
+  --apply      Executa criação/atualização no GitHub
+  --dry-run    Apenas simula (padrão)
 USAGE
+}
+
+json_escape() {
+  python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+emit_result() {
+  local action="$1"
+  local number="$2"
+  local url="$3"
+  local created="$4"
+  local updated="$5"
+  local message="$6"
+
+  {
+    printf '{'
+    printf '"repo":%s,' "$(printf '%s' "$REPO" | json_escape)"
+    printf '"title":%s,' "$(printf '%s' "$TITLE" | json_escape)"
+    printf '"action":%s,' "$(printf '%s' "$action" | json_escape)"
+    printf '"number":%s,' "$(printf '%s' "$number" | json_escape)"
+    printf '"url":%s,' "$(printf '%s' "$url" | json_escape)"
+    printf '"created":%s,' "$created"
+    printf '"updated":%s,' "$updated"
+    printf '"dryRun":%s,' "$DRY_RUN"
+    printf '"message":%s' "$(printf '%s' "$message" | json_escape)"
+    printf '}\n'
+  }
 }
 
 while [[ $# -gt 0 ]]; do
@@ -73,6 +104,16 @@ while [[ $# -gt 0 ]]; do
       ASSIGNEE="$2"
       shift 2
       ;;
+    --apply)
+      APPLY=true
+      DRY_RUN=false
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      APPLY=false
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -87,6 +128,16 @@ done
 
 if ! command -v gh >/dev/null 2>&1; then
   echo "GitHub CLI (gh) não encontrado."
+  exit 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq não encontrado."
+  exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 não encontrado."
   exit 1
 fi
 
@@ -106,6 +157,11 @@ if [[ -z "$TITLE" || -z "$TYPE" || -z "$AREA" || -z "$PRIORITY" ]]; then
   echo "Parâmetros obrigatórios ausentes: --title --type --area --priority"
   usage
   exit 1
+fi
+
+if [[ "$APPLY" == true ]]; then
+  gh auth status >/dev/null
+  gh api user >/dev/null
 fi
 
 case "$TYPE" in
@@ -128,19 +184,53 @@ if [[ -z "$BODY" ]]; then
   BODY="Summary / Resumo\n\n- preencher\n"
 fi
 
-declare -a CMD
-CMD=(gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY")
-CMD+=(--label "type:$TYPE" --label "area:$AREA" --label "priority:$PRIORITY")
-
+desired_labels=("type:$TYPE" "area:$AREA" "priority:$PRIORITY")
 if [[ -n "$EXTRA_LABELS" ]]; then
   IFS=',' read -r -a LABELS <<< "$EXTRA_LABELS"
   for label in "${LABELS[@]}"; do
     trimmed="$(echo "$label" | xargs)"
     if [[ -n "$trimmed" ]]; then
-      CMD+=(--label "$trimmed")
+      desired_labels+=("$trimmed")
     fi
   done
 fi
+
+issues_payload="$(gh api "repos/$REPO/issues?state=all&per_page=100")"
+existing_issue_json="$(jq -c --arg title "$TITLE" '.[] | select(.pull_request|not) | select(.title == $title)' <<<"$issues_payload" | head -n 1 || true)"
+
+if [[ -n "$existing_issue_json" ]]; then
+  existing_number="$(jq -r '.number' <<<"$existing_issue_json")"
+  existing_url="$(jq -r '.html_url' <<<"$existing_issue_json")"
+  if [[ "$APPLY" == true ]]; then
+    declare -a EDIT_ARGS
+    EDIT_ARGS=(issue edit "$existing_number" --repo "$REPO")
+    for label in "${desired_labels[@]}"; do
+      EDIT_ARGS+=(--add-label "$label")
+    done
+    if [[ -n "$MILESTONE" ]]; then
+      EDIT_ARGS+=(--milestone "$MILESTONE")
+    fi
+    if [[ -n "$ASSIGNEE" ]]; then
+      EDIT_ARGS+=(--add-assignee "$ASSIGNEE")
+    fi
+    gh "${EDIT_ARGS[@]}" >/dev/null
+    emit_result "updated_existing" "$existing_number" "$existing_url" false true "Issue existente encontrada e alinhada."
+  else
+    emit_result "would_update_existing" "$existing_number" "$existing_url" false true "Issue existente encontrada (dry-run)."
+  fi
+  exit 0
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+  emit_result "would_create" "" "" false false "Nenhuma issue existente encontrada; criação simulada."
+  exit 0
+fi
+
+declare -a CMD
+CMD=(gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY")
+for label in "${desired_labels[@]}"; do
+  CMD+=(--label "$label")
+done
 
 if [[ -n "$MILESTONE" ]]; then
   CMD+=(--milestone "$MILESTONE")
@@ -150,4 +240,6 @@ if [[ -n "$ASSIGNEE" ]]; then
   CMD+=(--assignee "$ASSIGNEE")
 fi
 
-"${CMD[@]}"
+created_url="$("${CMD[@]}")"
+created_number="${created_url##*/}"
+emit_result "created" "$created_number" "$created_url" true false "Issue criada com sucesso."

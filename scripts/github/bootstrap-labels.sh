@@ -3,11 +3,13 @@ set -euo pipefail
 
 REPO="${GH_REPO:-}"
 LABELS_FILE=".github/labels.yml"
+APPLY=false
+DRY_RUN=true
 
 usage() {
   cat <<'EOF'
 Uso:
-  ./scripts/github/bootstrap-labels.sh [--repo owner/name] [--labels-file path]
+  ./scripts/github/bootstrap-labels.sh [--repo owner/name] [--labels-file path] [--dry-run|--apply]
 
 Descrição:
   Sincroniza labels no GitHub com base em um arquivo versionado.
@@ -15,6 +17,10 @@ Descrição:
   (válido em YAML 1.2) no padrão:
   { "labels": [ { "name": "...", "color": "...", "description": "..." } ] }
 EOF
+}
+
+json_escape() {
+  python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -26,6 +32,16 @@ while [[ $# -gt 0 ]]; do
     --labels-file)
       LABELS_FILE="$2"
       shift 2
+      ;;
+    --apply)
+      APPLY=true
+      DRY_RUN=false
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      APPLY=false
+      shift
       ;;
     -h|--help)
       usage
@@ -58,8 +74,10 @@ if [[ -z "$REPO" ]]; then
   REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 fi
 
-echo "Sincronizando labels para o repositório: $REPO"
-echo "Fonte de dados: $LABELS_FILE"
+if [[ "$APPLY" == true ]]; then
+  gh auth status >/dev/null
+  gh api user >/dev/null
+fi
 
 mapfile -t LABEL_ROWS < <(python3 - "$LABELS_FILE" <<'PY'
 import json
@@ -84,17 +102,49 @@ for item in labels:
 PY
 )
 
+created_count=0
+updated_count=0
+unchanged_count=0
+
 for row in "${LABEL_ROWS[@]}"; do
   IFS=$'\t' read -r name color description <<< "$row"
   if [[ -z "${name:-}" || -z "${color:-}" ]]; then
     continue
   fi
+  existing="$(gh label list --repo "$REPO" --search "$name" --json name,color,description | jq -c --arg name "$name" '.[] | select(.name == $name)' | head -n 1 || true)"
+  if [[ -n "$existing" ]]; then
+    existing_color="$(jq -r '.color // ""' <<<"$existing")"
+    existing_description="$(jq -r '.description // ""' <<<"$existing")"
+    if [[ "${existing_color^^}" == "${color^^}" && "$existing_description" == "$description" ]]; then
+      unchanged_count=$((unchanged_count + 1))
+      continue
+    fi
+    if [[ "$APPLY" == true ]]; then
+      gh label create "$name" \
+        --repo "$REPO" \
+        --color "$color" \
+        --description "$description" \
+        --force >/dev/null
+    fi
+    updated_count=$((updated_count + 1))
+    continue
+  fi
 
-  gh label create "$name" \
-    --repo "$REPO" \
-    --color "$color" \
-    --description "$description" \
-    --force
+  if [[ "$APPLY" == true ]]; then
+    gh label create "$name" \
+      --repo "$REPO" \
+      --color "$color" \
+      --description "$description" \
+      --force >/dev/null
+  fi
+  created_count=$((created_count + 1))
 done
 
-echo "Labels sincronizadas com sucesso."
+printf '{'
+printf '"repo":%s,' "$(printf '%s' "$REPO" | json_escape)"
+printf '"labelsFile":%s,' "$(printf '%s' "$LABELS_FILE" | json_escape)"
+printf '"dryRun":%s,' "$DRY_RUN"
+printf '"created":%s,' "$created_count"
+printf '"updated":%s,' "$updated_count"
+printf '"unchanged":%s' "$unchanged_count"
+printf '}\n'

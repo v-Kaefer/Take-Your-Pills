@@ -42,6 +42,17 @@ Exemplo:
   - Feature (funcionalidade)
     - Task/Sub-issue (execução granular)
 
+## Definição operacional de script
+
+No contexto deste repositório, **script** é automação CLI orientada por manifesto JSON versionado, com execução reproduzível para criar/atualizar entidades GitHub no repositório alvo.
+
+Padrões:
+
+- Manifesto JSON em `config/issues/*.json`.
+- Schema em `config/issues/schema.json`.
+- Simulação padrão com `--dry-run`.
+- Execução real apenas com `--apply`.
+
 ## Labels
 
 Fonte única da verdade:

@@ -162,3 +162,38 @@ Após validação deste `plan.md`, iniciar implementação pela **Fase 1** com c
 - nomes técnicos em inglês;
 - textos de orientação em português;
 - elementos bilingues quando suportado pelo GitHub.
+
+## 10) Definição operacional memorizada de "script"
+
+Para este repositório, "script" significa:
+
+- automação executável (CLI);
+- orientada por manifesto JSON versionado;
+- que cria/atualiza entidades no repositório alvo (`GH_REPO` ou `--repo owner/name`);
+- com execução reproduzível, previsível e rastreável.
+
+## 11) Checklist detalhado de implementação (JSON-first)
+
+- [x] Definir contrato JSON versionado (`schemaVersion`) para árvore de issues.
+- [x] Versionar schema único em `config/issues/schema.json`.
+- [x] Criar manifestos JSON em `config/issues/*.json` seguindo o schema.
+- [x] Implementar validação de manifesto antes da execução.
+- [x] Implementar modo `--validate-only` para validar sem criar itens.
+- [x] Padronizar scripts principais em `scripts/github/`.
+- [x] Adicionar `--dry-run` e `--apply` para diferenciar simulação de execução real.
+- [x] Garantir resolução explícita do repositório alvo via `GH_REPO`/`--repo`.
+- [x] Implementar idempotência em criação de issue (evitar duplicação por título).
+- [x] Implementar atualização de issue existente quando já encontrada.
+- [x] Implementar criação determinística de árvore (épico antes dos filhos).
+- [x] Implementar fallback de vínculo de sub-issue quando mutation GraphQL falhar.
+- [x] Evitar comentários duplicados no fallback de vínculo.
+- [x] Implementar relatório estruturado em JSON ao final de cada execução.
+- [x] Reportar contagem de criados, atualizados, inalterados/falhas.
+- [x] Validar autenticação/token quando execução real (`--apply`) for solicitada.
+- [x] Integrar validação dos manifestos JSON no workflow de qualidade do repositório.
+
+### Pendências futuras (não bloqueantes para esta entrega)
+
+- [ ] Evoluir idempotência para chave lógica composta (além de título) com reconciliação.
+- [ ] Persistir mapa local de IDs criados para reconciliação entre execuções.
+- [ ] Expandir sync automático de Project (seed + atualização de campos) por manifesto.

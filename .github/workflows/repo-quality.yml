@@ -49,3 +49,16 @@ jobs:
           else
             echo "No shell scripts found."
           fi
+
+      - name: Validate JSON issue manifests
+        run: |
+          mapfile -t JSON_FILES < <(find config/issues -type f -name "*.json" ! -name "schema.json" | sort)
+          if [ "${#JSON_FILES[@]}" -eq 0 ]; then
+            echo "No issue manifest json files found."
+            exit 0
+          fi
+          chmod +x scripts/github/create-issue-tree.sh
+          for file in "${JSON_FILES[@]}"; do
+            echo "Validating $file"
+            ./scripts/github/create-issue-tree.sh --file "$file" --schema config/issues/schema.json --validate-only
+          done
