@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repo-quality:
+    name: Repository quality checks
+    uses: ./.github/workflows/repo-quality.yml
+
+  governance-checks:
+    name: Governance checks
+    uses: ./.github/workflows/governance-checks.yml

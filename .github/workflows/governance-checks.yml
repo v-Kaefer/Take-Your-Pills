@@ -1,0 +1,67 @@
+name: Governance Checks
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  governance-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required governance files
+        run: |
+          REQUIRED_FILES=(
+            ".github/CODEOWNERS"
+            ".github/pull_request_template.md"
+            ".github/labels.yml"
+            ".github/ISSUE_TEMPLATE/epic.yml"
+            ".github/ISSUE_TEMPLATE/feature_request.yml"
+            ".github/ISSUE_TEMPLATE/task.yml"
+            ".github/ISSUE_TEMPLATE/bug_report.yml"
+            "scripts/github/bootstrap-labels.sh"
+          )
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
+
+      - name: Validate branch naming convention
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          if [[ ! "$BRANCH_NAME" =~ ^(feat|fix|chore|docs|refactor|test|hotfix)\/[a-z0-9._-]+$ ]]; then
+            echo "Invalid branch name: $BRANCH_NAME"
+            echo "Expected: <type>/<slug>, where type is feat|fix|chore|docs|refactor|test|hotfix"
+            exit 1
+          fi
+
+      - name: Validate PR body references an issue
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [[ -z "$PR_BODY" ]]; then
+            echo "PR body is empty."
+            exit 1
+          fi
+
+          if ! grep -Eiq '(closes|fixes|resolves|relates to)\s+#?[0-9]+' <<< "$PR_BODY"; then
+            echo "PR body must reference an issue (example: Closes #123)."
+            exit 1
+          fi
