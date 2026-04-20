@@ -1,8 +1,22 @@
 {
   "schemaVersion": "1.0",
+  "defaults": {
+    "labels": ["ready"],
+    "assignees": [],
+    "milestone": "",
+    "body": "Backlog item criado via manifesto JSON."
+  },
   "project": {
     "owner": "v-Kaefer",
-    "number": 1
+    "number": 1,
+    "fieldsFile": ".github/project/fields.json",
+    "statusOnCreate": "Backlog",
+    "extraFieldValues": {
+      "Sprint": "S0"
+    }
+  },
+  "linking": {
+    "subIssueStrategy": "graphql_or_comment"
   },
   "epics": [
     {
@@ -11,23 +25,20 @@
       "area": "infra",
       "priority": "p1",
       "body": "Macroplanejamento inicial do backlog do projeto.",
-      "labels": ["ready"],
       "children": [
         {
           "title": "[Feature] Estruturar fluxo de issues",
           "type": "feature",
           "area": "automation",
           "priority": "p1",
-          "body": "Padronizar criação de issues e sub-issues.",
-          "labels": ["ready"]
+          "body": "Padronizar criação de issues e sub-issues."
         },
         {
           "title": "[Task] Validar templates e labels",
           "type": "task",
           "area": "docs",
           "priority": "p2",
-          "body": "Garantir consistência entre templates e taxonomia de labels.",
-          "labels": ["ready"]
+          "body": "Garantir consistência entre templates e taxonomia de labels."
         }
       ]
     }

@@ -10,7 +10,7 @@ BODY=""
 BODY_FILE=""
 EXTRA_LABELS=""
 MILESTONE=""
-ASSIGNEE=""
+ASSIGNEES=()
 APPLY=false
 DRY_RUN=true
 
@@ -29,7 +29,7 @@ Opções:
   --body-file path
   --labels "label-a,label-b"
   --milestone text|number
-  --assignee login
+  --assignee login (pode repetir)
   --apply      Executa criação/atualização no GitHub
   --dry-run    Apenas simula (padrão)
 USAGE
@@ -101,7 +101,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --assignee)
-      ASSIGNEE="$2"
+      ASSIGNEES+=("$2")
       shift 2
       ;;
     --apply)
@@ -159,6 +159,19 @@ if [[ -z "$TITLE" || -z "$TYPE" || -z "$AREA" || -z "$PRIORITY" ]]; then
   exit 1
 fi
 
+deduped_assignees=()
+declare -A ASSIGNEE_SEEN=()
+for assignee in "${ASSIGNEES[@]}"; do
+  IFS=',' read -r -a assignees_parts <<< "$assignee"
+  for assignee_part in "${assignees_parts[@]}"; do
+    trimmed_assignee="$(echo "$assignee_part" | xargs)"
+    if [[ -n "$trimmed_assignee" && -z "${ASSIGNEE_SEEN[$trimmed_assignee]+x}" ]]; then
+      ASSIGNEE_SEEN["$trimmed_assignee"]=1
+      deduped_assignees+=("$trimmed_assignee")
+    fi
+  done
+done
+
 if [[ "$APPLY" == true ]]; then
   gh auth status >/dev/null
   gh api user >/dev/null
@@ -210,9 +223,9 @@ if [[ -n "$existing_issue_json" ]]; then
     if [[ -n "$MILESTONE" ]]; then
       EDIT_ARGS+=(--milestone "$MILESTONE")
     fi
-    if [[ -n "$ASSIGNEE" ]]; then
-      EDIT_ARGS+=(--add-assignee "$ASSIGNEE")
-    fi
+    for assignee in "${deduped_assignees[@]}"; do
+      EDIT_ARGS+=(--add-assignee "$assignee")
+    done
     gh "${EDIT_ARGS[@]}" >/dev/null
     emit_result "updated_existing" "$existing_number" "$existing_url" false true "Issue existente encontrada e alinhada."
   else
@@ -236,9 +249,9 @@ if [[ -n "$MILESTONE" ]]; then
   CMD+=(--milestone "$MILESTONE")
 fi
 
-if [[ -n "$ASSIGNEE" ]]; then
-  CMD+=(--assignee "$ASSIGNEE")
-fi
+for assignee in "${deduped_assignees[@]}"; do
+  CMD+=(--assignee "$assignee")
+done
 
 created_url="$("${CMD[@]}")"
 created_number="${created_url##*/}"

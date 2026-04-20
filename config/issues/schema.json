@@ -12,12 +12,44 @@
       "type": "string",
       "const": "1.0"
     },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "assignees": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "milestone": { "type": ["string", "number"] },
+        "body": { "type": "string" }
+      }
+    },
     "project": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "owner": { "type": "string" },
-        "number": { "type": "integer", "minimum": 1 }
+        "owner": { "type": "string", "minLength": 1 },
+        "number": { "type": "integer", "minimum": 1 },
+        "fieldsFile": { "type": "string", "minLength": 1 },
+        "statusOnCreate": { "type": "string", "minLength": 1 },
+        "extraFieldValues": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "linking": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subIssueStrategy": {
+          "type": "string",
+          "enum": ["graphql_or_comment"]
+        }
       }
     },
     "epics": {
@@ -44,7 +76,10 @@
           "type": "string",
           "enum": ["epic", "feature", "task", "bug", "chore"]
         },
-        "area": { "type": "string", "minLength": 1 },
+        "area": {
+          "type": "string",
+          "enum": ["gameplay", "ui", "art", "audio", "infra", "docs", "automation"]
+        },
         "priority": {
           "type": "string",
           "enum": ["p0", "p1", "p2", "p3"]

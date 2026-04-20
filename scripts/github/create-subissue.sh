@@ -10,7 +10,7 @@ PRIORITY=""
 BODY=""
 BODY_FILE=""
 EXTRA_LABELS=""
-ASSIGNEE=""
+ASSIGNEES=()
 MILESTONE=""
 APPLY=false
 DRY_RUN=true
@@ -31,7 +31,7 @@ Opções:
   --body-file path
   --labels "label-a,label-b"
   --milestone text|number
-  --assignee login
+  --assignee login (pode repetir)
   --apply
   --dry-run
 USAGE
@@ -101,7 +101,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --assignee)
-      ASSIGNEE="$2"
+      ASSIGNEES+=("$2")
       shift 2
       ;;
     --milestone)
@@ -135,6 +135,19 @@ if [[ -z "$PARENT" || -z "$TITLE" || -z "$TYPE" || -z "$AREA" || -z "$PRIORITY" 
   usage
   exit 1
 fi
+
+deduped_assignees=()
+declare -A ASSIGNEE_SEEN=()
+for assignee in "${ASSIGNEES[@]}"; do
+  IFS=',' read -r -a assignees_parts <<< "$assignee"
+  for assignee_part in "${assignees_parts[@]}"; do
+    trimmed_assignee="$(echo "$assignee_part" | xargs)"
+    if [[ -n "$trimmed_assignee" && -z "${ASSIGNEE_SEEN[$trimmed_assignee]+x}" ]]; then
+      ASSIGNEE_SEEN["$trimmed_assignee"]=1
+      deduped_assignees+=("$trimmed_assignee")
+    fi
+  done
+done
 
 if [[ -z "$REPO" ]]; then
   REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
@@ -177,9 +190,9 @@ if [[ -n "$MILESTONE" ]]; then
   CREATE_ARGS+=(--milestone "$MILESTONE")
 fi
 
-if [[ -n "$ASSIGNEE" ]]; then
-  CREATE_ARGS+=(--assignee "$ASSIGNEE")
-fi
+for assignee in "${deduped_assignees[@]}"; do
+  CREATE_ARGS+=(--assignee "$assignee")
+done
 
 if [[ "$APPLY" == true ]]; then
   CREATE_ARGS+=(--apply)
