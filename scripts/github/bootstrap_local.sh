@@ -33,6 +33,18 @@ Auth:
 EOF
 }
 
+requires_authentication() {
+  if [[ "${RUN_LABELS}" == "true" ]]; then
+    return 0
+  fi
+
+  if [[ "${DRY_RUN}" == "false" && ( "${RUN_PROJECT}" == "true" || "${RUN_ISSUES}" == "true" ) ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)
@@ -99,7 +111,7 @@ if [[ -z "${GH_TOKEN:-}" && -n "${GITHUB_TOKEN:-}" ]]; then
   export GH_TOKEN="${GITHUB_TOKEN}"
 fi
 
-if [[ "${RUN_LABELS}" == "true" || ( "${DRY_RUN}" == "false" && ( "${RUN_PROJECT}" == "true" || "${RUN_ISSUES}" == "true" ) ) ]]; then
+if requires_authentication; then
   if [[ -z "${GITHUB_TOKEN:-}" && -z "${GH_TOKEN:-}" ]]; then
     echo "Missing auth token. Set GITHUB_TOKEN or GH_TOKEN."
     exit 1
@@ -137,4 +149,4 @@ if [[ "${RUN_ISSUES}" == "true" ]]; then
   fi
 fi
 
-echo "Bootstrap local finalizado."
+echo "Local bootstrap finished."
