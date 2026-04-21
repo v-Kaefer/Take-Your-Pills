@@ -73,6 +73,9 @@ def main():
             story_labels = list(dict.fromkeys(story["labels"] + data.get("defaultIssueLabels", [])))
             story_body = (
                 f"{story['body']}\n\n"
+                f"## Acceptance criteria\n{story.get('acceptanceCriteria', '- TBD')}\n\n"
+                f"## Test strategy\n{story.get('testStrategy', '- TBD')}\n\n"
+                f"## Definition of Done\n{story.get('dod', '- TBD')}\n\n"
                 f"- Phase: {phase['phase']}\n"
                 f"- Milestone: {phase['milestone']}\n"
                 f"- Item type: user-story\n"
@@ -87,9 +90,15 @@ def main():
             for task_title in story.get("tasks", []):
                 task_labels = ["type:task", phase_label, "status:backlog"]
                 task_body = (
-                    f"Parent story: {story['id']}"
+                    f"Parent story: {story['storyId']}"
                     + (f" (#{story_num})" if story_num else "")
-                    + "\n\n- Item type: task/sub-issue\n- Test strategy: define in implementation PR\n"
+                    + "\n\n"
+                    + "## Technical scope\n- TBD\n\n"
+                    + "## Completion criteria\n- TBD\n\n"
+                    + "## Test strategy\n- TBD\n\n"
+                    + "## Expected evidence\n- TBD\n\n"
+                    + "## Definition of Done\n- TBD\n\n"
+                    + "- Item type: task/sub-issue\n"
                 )
                 if args.dry_run:
                     print(f"[DRY-RUN]   Task: {task_title} labels={task_labels}")

@@ -10,6 +10,10 @@ Para criar/editar Project, labels, issues e sub-issues automaticamente, use uma 
 1. Repositório -> **Settings** -> **Collaborators and teams**.
 2. Adicione o usuário/conta que executará as automações.
 3. Defina role **Admin**.
+4. Em **Settings -> Actions -> General**, permita:
+   - `Read and write permissions` para o `GITHUB_TOKEN`;
+   - criação e aprovação de PRs por GitHub Actions (se desejado).
+5. Para criar **Project v2**, autentique o `gh` com PAT contendo escopo `project` (além de `repo`).
 
 ## 3) Como executar agora
 ### Opção A — Workflow manual (recomendado)

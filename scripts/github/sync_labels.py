@@ -48,8 +48,8 @@ def main():
         try:
             gh_request("POST", base, token, label)
             print(f"created: {label['name']}")
-        except urllib.error.HTTPError as e:
-            if e.code == 422:
+        except RuntimeError as e:
+            if "status=422" in str(e):
                 patch_url = f"{base}/{urllib.parse.quote(label['name'])}"
                 gh_request("PATCH", patch_url, token, label)
                 print(f"updated: {label['name']}")
