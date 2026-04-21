@@ -22,14 +22,21 @@ Para criar/editar Project, labels, issues e sub-issues automaticamente, use uma 
 3. Rodar `dry_run=true` primeiro.
 4. Rodar `dry_run=false` para criar labels + issues/tasks/sub-issues.
 
-### Opção B — Local com GitHub CLI
+### Opção B — Local com script único
 ```bash
 gh auth login
 export GITHUB_REPOSITORY=v-Kaefer/Take-Your-Pills
-python scripts/github/sync_labels.py config/project/labels.json
-python scripts/github/generate_issues.py config/stories/backlog-manifest.json --link-subissues
-python scripts/github/create_project_v2.py config/project/project-definition.json
+export GH_TOKEN=SEU_PAT_COM_PERMISSAO_PROJECT
+chmod +x scripts/github/bootstrap_local.sh
+
+# Primeiro teste
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run
+
+# Execução real
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --no-dry-run --link-subissues
 ```
+
+Os scripts continuam separados (`sync_labels.py`, `create_project_v2.py`, `generate_issues.py`), mas o `bootstrap_local.sh` orquestra tudo em um único comando.
 
 ## 4) Observações
 - Responsáveis por fase estão `TBD` em `config/phases/phase-review-policy.json`.
