@@ -18,9 +18,13 @@ def gh_request(method, url, token, payload=None):
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(req) as res:
-        body = res.read().decode("utf-8")
-        return json.loads(body) if body else {}
+    try:
+        with urllib.request.urlopen(req) as res:
+            body = res.read().decode("utf-8")
+            return json.loads(body) if body else {}
+    except urllib.error.HTTPError as e:
+        details = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"GitHub API request failed ({method} {url}) status={e.code}: {details}") from e
 
 
 def main():

@@ -9,7 +9,7 @@ import sys
 def run(cmd):
     result = subprocess.run(cmd, text=True, capture_output=True)
     if result.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{result.stderr}")
+        raise RuntimeError(f"GitHub command failed. stderr:\n{result.stderr}")
     return result.stdout.strip()
 
 

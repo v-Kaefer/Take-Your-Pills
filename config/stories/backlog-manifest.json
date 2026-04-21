@@ -107,6 +107,7 @@
     {
       "phase": "phase:3",
       "milestone": "MS4",
+      "note": "Intentional mapping based on backlog: MS3 remains in phase:2 for Part 2 delivery consolidation.",
       "stories": [
         {
           "id": "US-11",

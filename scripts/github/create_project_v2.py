@@ -8,7 +8,8 @@ import subprocess
 def run(cmd):
     result = subprocess.run(cmd, text=True, capture_output=True)
     if result.returncode != 0:
-        raise RuntimeError(result.stderr)
+        op = " ".join(cmd[:3]) if len(cmd) >= 3 else "command"
+        raise RuntimeError(f"{op} failed: {result.stderr}")
     return result.stdout.strip()
 
 
