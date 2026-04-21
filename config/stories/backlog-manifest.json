@@ -1,6 +1,9 @@
 {
   "version": "1.0.0",
   "repository": "v-Kaefer/Take-Your-Pills",
+  "mappingRationale": {
+    "phase:3_to_MS4": "Intentional mapping based on backlog: MS3 remains in phase:2 for Part 2 delivery consolidation."
+  },
   "defaultIssueLabels": ["status:backlog"],
   "phases": [
     {
@@ -107,7 +110,6 @@
     {
       "phase": "phase:3",
       "milestone": "MS4",
-      "note": "Intentional mapping based on backlog: MS3 remains in phase:2 for Part 2 delivery consolidation.",
       "stories": [
         {
           "storyId": "US-11",

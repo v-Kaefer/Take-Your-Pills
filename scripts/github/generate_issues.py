@@ -23,8 +23,10 @@ def create_issue(repo, title, body, labels):
     for label in labels:
         cmd += ["--label", label]
     url = run(cmd)
-    number = url.rstrip("/").split("/")[-1]
-    return int(number)
+    parts = url.rstrip("/").split("/")
+    if len(parts) < 2 or not parts[-1].isdigit():
+        raise RuntimeError(f"Unexpected gh issue create output: {url}")
+    return int(parts[-1])
 
 
 def issue_node_id(repo, number):
