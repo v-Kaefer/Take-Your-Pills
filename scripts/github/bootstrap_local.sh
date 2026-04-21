@@ -45,6 +45,15 @@ requires_authentication() {
   return 1
 }
 
+mirror_token_envs() {
+  if [[ -z "${GITHUB_TOKEN:-}" && -n "${GH_TOKEN:-}" ]]; then
+    export GITHUB_TOKEN="${GH_TOKEN}"
+  fi
+  if [[ -z "${GH_TOKEN:-}" && -n "${GITHUB_TOKEN:-}" ]]; then
+    export GH_TOKEN="${GITHUB_TOKEN}"
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)
@@ -104,12 +113,7 @@ if [[ -z "${REPO}" ]]; then
   exit 1
 fi
 
-if [[ -z "${GITHUB_TOKEN:-}" && -n "${GH_TOKEN:-}" ]]; then
-  export GITHUB_TOKEN="${GH_TOKEN}"
-fi
-if [[ -z "${GH_TOKEN:-}" && -n "${GITHUB_TOKEN:-}" ]]; then
-  export GH_TOKEN="${GITHUB_TOKEN}"
-fi
+mirror_token_envs
 
 if requires_authentication; then
   if [[ -z "${GITHUB_TOKEN:-}" && -z "${GH_TOKEN:-}" ]]; then

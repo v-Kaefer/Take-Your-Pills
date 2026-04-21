@@ -23,6 +23,8 @@ Para criar/editar Project, labels, issues e sub-issues automaticamente, use uma 
 4. Rodar `dry_run=false` para criar labels + issues/tasks/sub-issues.
 
 ### Opção B — Local com script único
+> Segurança: evite colocar PAT diretamente no histórico do shell. Prefira carregar via gerenciador de segredos, arquivo de ambiente local não versionado, ou prompt interativo.
+
 ```bash
 gh auth login
 export GITHUB_REPOSITORY=v-Kaefer/Take-Your-Pills
