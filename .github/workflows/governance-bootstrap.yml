@@ -1,0 +1,57 @@
+name: Governance bootstrap (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_labels_sync:
+        description: "Sync labels from config/project/labels.json"
+        required: true
+        default: true
+        type: boolean
+      run_issue_generation:
+        description: "Generate stories/tasks from config/stories/backlog-manifest.json"
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: "Dry-run issue generation"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Sync labels
+        if: ${{ inputs.run_labels_sync }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python scripts/github/sync_labels.py config/project/labels.json
+
+      - name: Generate issues and tasks
+        if: ${{ inputs.run_issue_generation }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python scripts/github/generate_issues.py config/stories/backlog-manifest.json --dry-run
+          else
+            python scripts/github/generate_issues.py config/stories/backlog-manifest.json --link-subissues
+          fi
