@@ -4,3 +4,14 @@ Take Your Pills - É um jogo infinity runner, side-scroller, ambientado em um Ja
 ## Governança do repositório
 - Artefatos de governança: `/docs`, `/config`, `/.github`, `/scripts`
 - Runbook de bootstrap: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`
+- Guia de contribuição: `/CONTRIBUTING.md`
+
+## Verificação local (full verify)
+Use estes comandos antes de abrir/atualizar PR:
+
+```bash
+./scripts/validation/repo_quality.sh
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
+```
+
+> O primeiro comando valida baseline do repositório. O segundo valida o fluxo de bootstrap local (project + issues/tasks) sem alterar dados no GitHub.

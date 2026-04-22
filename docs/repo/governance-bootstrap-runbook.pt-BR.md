@@ -40,6 +40,12 @@ chmod +x scripts/github/bootstrap_local.sh
 
 Os scripts continuam separados (`sync_labels.py`, `create_project_v2.py`, `generate_issues.py`), mas o `bootstrap_local.sh` orquestra tudo em um único comando.
 
+### Verificação completa local (antes de PR)
+```bash
+./scripts/validation/repo_quality.sh
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
+```
+
 ## 4) Observações
 - Responsáveis por fase estão `TBD` em `config/phases/phase-review-policy.json`.
 - Loja e ranking online estão marcados como stretch no manifesto.
