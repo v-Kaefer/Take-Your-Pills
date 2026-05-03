@@ -12,6 +12,12 @@ API_VERSION = "2022-11-28"
 LABEL_PREFIXES = ("type:", "priority:", "test:")
 
 
+class GitHubRequestError(RuntimeError):
+    def __init__(self, method, url, status, details):
+        super().__init__(f"GitHub API request failed ({method} {url}) status={status}: {details}")
+        self.status = status
+
+
 def get_token():
     return os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
 
@@ -31,7 +37,7 @@ def request_json(method, url, token, payload=None):
             return json.loads(body) if body else {}
     except urllib.error.HTTPError as e:
         details = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"GitHub API request failed ({method} {url}) status={e.code}: {details}") from e
+        raise GitHubRequestError(method, url, e.code, details) from e
 
 
 def load_event(path):
@@ -129,7 +135,7 @@ def infer_pr_labels(repo, pr, token):
     if number and token:
         try:
             labels.update(labels_from_linked_issue(repo, number, token))
-        except RuntimeError as exc:
+        except GitHubRequestError as exc:
             print(f"warning: could not read linked issue #{number}: {exc}")
 
     test_label = find_test_label(body)
@@ -192,7 +198,13 @@ def main():
         print("Missing GITHUB_TOKEN or GH_TOKEN")
         return 1
 
-    request_json("POST", f"{API_BASE}/repos/{args.repo}/issues/{number}/labels", token, {"labels": labels})
+    try:
+        request_json("POST", f"{API_BASE}/repos/{args.repo}/issues/{number}/labels", token, {"labels": labels})
+    except GitHubRequestError as exc:
+        if exc.status == 403:
+            print(f"warning: token cannot add labels to {target_type} #{number}; skipping")
+            return 0
+        raise
     return 0
 
 
