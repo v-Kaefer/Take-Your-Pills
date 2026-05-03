@@ -13,9 +13,6 @@ labels: "type:user-story,status:backlog"
 
 ## Definition of Done
 
-## Phase
-
 ## Milestone
 
 ## Item type
-

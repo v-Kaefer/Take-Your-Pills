@@ -340,6 +340,25 @@ def milestone_from_body(body):
     return m.group(1) if m else None
 
 
+def milestone_from_issue(issue):
+    milestone = issue.get("milestone")
+    if milestone and milestone.get("title"):
+        return milestone["title"]
+    return milestone_from_body(issue.get("body", "") or "")
+
+
+def phase_from_milestone(milestone):
+    return {
+        "MS0": "F0",
+        "MS1": "F1",
+        "MS2": "F2",
+        "MS3": "F2",
+        "MS4": "F3",
+        "MS5": "F4",
+        "MS6": "F5",
+    }.get(milestone)
+
+
 def parent_issue_number_from_body(body):
     if not body:
         return None
@@ -365,14 +384,15 @@ def option_id(field, option_name):
 def sync_issue_fields(project_id, item_id, issue, fields, token, dry_run=False):
     labels = issue.get("labels", [])
     body = issue.get("body", "") or ""
+    milestone = milestone_from_issue(issue)
 
     mappings = {
-        "Phase": f"F{label_value(labels, 'phase:')}" if label_value(labels, 'phase:') is not None else None,
+        "Phase": phase_from_milestone(milestone),
         "Item Type": label_value(labels, "type:"),
         "Priority": label_value(labels, "priority:"),
         "Status": label_value(labels, "status:"),
         "Test Type": label_value(labels, "test:"),
-        "Milestone": milestone_from_body(body),
+        "Milestone": milestone,
     }
 
     for field_name, field_value in mappings.items():

@@ -10,6 +10,8 @@ required=(
   "config/project/labels.json"
   "config/stories/backlog-manifest.json"
   "scripts/validation/validate_pr_body.py"
+  "scripts/github/auto_label.py"
+  ".github/workflows/auto-label.yml"
 )
 
 for path in "${required[@]}"; do

@@ -17,10 +17,10 @@ body:
     validations:
       required: true
   - type: input
-    id: phase
+    id: milestone
     attributes:
-      label: Phase
-      placeholder: "phase:0"
+      label: Milestone
+      placeholder: "MS0"
     validations:
       required: true
   - type: textarea
