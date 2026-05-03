@@ -19,9 +19,16 @@ Example: `feat/repo-governance-bootstrap`
 Follow `/.github/pull_request_template.md` and keep these sections filled:
 
 - `## Linked Issue` with `Closes/Fixes/Resolves #123`
+- `## Phase` with a value such as `phase:0`
 - `## How to test`
 - `## Evidence`
 - `## DoD checklist`
+
+The PR metadata workflow rejects empty sections, template placeholders, issue links outside `## Linked Issue`, and missing test type. To validate a PR body locally:
+
+```bash
+PR_BODY="$(cat path/to/pr-body.md)" scripts/validation/validate_pr_body.py
+```
 
 ## 3) Local validation before PR updates
 From repository root:

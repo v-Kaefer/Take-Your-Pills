@@ -1,5 +1,5 @@
 ## Linked Issue
-- Closes #
+- Closes #<issue-number>
 
 ## Phase
 - phase:
@@ -9,7 +9,7 @@
 
 ## How to test
 - Test type: automated | smoke | manual
-- Steps:
+- Steps: describe the commands, manual flow, or verification evidence
 
 ## Evidence
 - [ ] Screenshot/GIF attached (when applicable)
