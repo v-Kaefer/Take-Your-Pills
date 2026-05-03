@@ -7,7 +7,7 @@ import sys
 
 REQUIRED_SECTIONS = [
     "linked issue",
-    "phase",
+    "milestone",
     "summary",
     "how to test",
     "evidence",
@@ -77,9 +77,9 @@ def validate(body):
     if not re.search(r"\b(closes|fixes|resolves)\s+#\d+\b", linked_issue, re.IGNORECASE):
         return fail("Linked Issue section must contain: Closes/Fixes/Resolves #123")
 
-    phase = "\n".join(sections["phase"])
-    if not re.search(r"\bphase:\s*\d+\b", phase, re.IGNORECASE):
-        return fail("Phase section must contain a phase label such as phase:0")
+    milestone = "\n".join(sections["milestone"])
+    if not re.search(r"\bMS[0-6]\b", milestone, re.IGNORECASE):
+        return fail("Milestone section must contain a milestone such as MS0")
 
     how_to_test = "\n".join(sections["how to test"])
     if not re.search(r"test type:\s*(automated|smoke|manual)\b", how_to_test, re.IGNORECASE):

@@ -70,7 +70,6 @@ def main():
         data = json.load(f)
 
     for phase in data["phases"]:
-        phase_label = phase["phase"]
         for story in phase["stories"]:
             story_labels = list(dict.fromkeys(story["labels"] + data.get("defaultIssueLabels", [])))
             story_body = (
@@ -78,7 +77,6 @@ def main():
                 f"## Acceptance criteria\n{story.get('acceptanceCriteria', '- TBD')}\n\n"
                 f"## Test strategy\n{story.get('testStrategy', '- TBD')}\n\n"
                 f"## Definition of Done\n{story.get('dod', '- TBD')}\n\n"
-                f"- Phase: {phase['phase']}\n"
                 f"- Milestone: {phase['milestone']}\n"
                 f"- Item type: user-story\n"
             )
@@ -90,7 +88,7 @@ def main():
                 print(f"Created story #{story_num}: {story['title']}")
 
             for task_title in story.get("tasks", []):
-                task_labels = ["type:task", phase_label, "status:backlog"]
+                task_labels = ["type:task", "status:backlog"]
                 task_body = (
                     f"Parent story: {story['storyId']}"
                     + (f" (#{story_num})" if story_num else "")

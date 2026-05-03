@@ -1,7 +1,7 @@
 # Pilot Validation Log
 
 ## Pilot selected
-- Phase: phase:0
+- Milestone: MS0
 - Objective: validate governance bootstrap flow and issue generation pipeline
 
 ## Branch created for pilot
