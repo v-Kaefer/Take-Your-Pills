@@ -72,7 +72,7 @@ func _update_state_label(extra_note: String = "") -> void:
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var control_note := "Space: primary | Esc: pause | Backspace: game over"
+	var control_note := "%s: primary | Esc: pause | Backspace: game over" % [String(player.primary_action_name)]
 	if extra_note.is_empty():
 		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
 	else:
@@ -80,7 +80,7 @@ func _update_state_label(extra_note: String = "") -> void:
 
 
 func _ensure_input_actions() -> void:
-	_register_key_action("player_primary", KEY_SPACE)
+	_register_key_action(player.primary_action_name, KEY_SPACE)
 	_register_key_action("game_pause", KEY_ESCAPE)
 	_register_key_action("game_over_debug", KEY_BACKSPACE)
 
