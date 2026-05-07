@@ -3,11 +3,15 @@ set -euo pipefail
 
 required=(
   ".github/pull_request_template.md"
+  ".github/workflows/pr-metadata.yml"
   ".github/ISSUE_TEMPLATE/user-story.yml"
   ".github/ISSUE_TEMPLATE/task-sub-issue.yml"
   ".github/ISSUE_TEMPLATE/bug-report.yml"
   "config/project/labels.json"
   "config/stories/backlog-manifest.json"
+  "scripts/validation/validate_pr_body.py"
+  "scripts/github/auto_label.py"
+  ".github/workflows/auto-label.yml"
 )
 
 for path in "${required[@]}"; do

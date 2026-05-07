@@ -5,14 +5,6 @@
   {"name":"type:repo","color":"5319E7","description":"🏗️ Repository/governance work"},
   {"name":"type:stretch","color":"FBCA04","description":"🌟 Stretch goal item"},
 
-  {"name":"phase:0","color":"BFD4F2","description":"🧱 Phase 0"},
-  {"name":"phase:1","color":"BFD4F2","description":"🏃 Phase 1"},
-  {"name":"phase:2","color":"BFD4F2","description":"🔁 Phase 2"},
-  {"name":"phase:3","color":"BFD4F2","description":"📈 Phase 3"},
-  {"name":"phase:4","color":"BFD4F2","description":"✅ Phase 4"},
-  {"name":"phase:5","color":"BFD4F2","description":"🎯 Phase 5"},
-  {"name":"phase:6","color":"BFD4F2","description":"🧪 Phase 6"},
-
   {"name":"priority:critical","color":"B60205","description":"🔥 Critical priority"},
   {"name":"priority:high","color":"D93F0B","description":"⬆️ High priority"},
   {"name":"priority:medium","color":"FBCA04","description":"➡️ Medium priority"},
