@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 RUN_LABELS=true
+RUN_MILESTONES=true
 RUN_PROJECT=true
 RUN_ISSUES=true
 DRY_RUN=true
@@ -20,6 +21,8 @@ Options:
   --no-dry-run              Disable dry-run for project/issues
   --run-labels              Run labels sync (default)
   --skip-labels             Skip labels sync
+  --run-milestones          Run milestones sync (default)
+  --skip-milestones         Skip milestones sync
   --run-project             Run project creation (default)
   --skip-project            Skip project creation
   --run-issues              Run issues/tasks generation (default)
@@ -34,7 +37,7 @@ EOF
 }
 
 requires_authentication() {
-  if [[ "${RUN_LABELS}" == "true" ]]; then
+  if [[ "${DRY_RUN}" == "false" && ( "${RUN_LABELS}" == "true" || "${RUN_MILESTONES}" == "true" ) ]]; then
     return 0
   fi
 
@@ -74,6 +77,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-labels)
       RUN_LABELS=false
+      shift
+      ;;
+    --run-milestones)
+      RUN_MILESTONES=true
+      shift
+      ;;
+    --skip-milestones)
+      RUN_MILESTONES=false
       shift
       ;;
     --run-project)
@@ -128,27 +139,40 @@ cd "${ROOT_DIR}"
 
 if [[ "${RUN_LABELS}" == "true" ]]; then
   echo "==> Sync labels"
-  python3 scripts/github/sync_labels.py config/project/labels.json
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    python3 -m governance_bootstrap labels sync --repo "${REPO}" --file config/project/labels.json --dry-run
+  else
+    python3 -m governance_bootstrap labels sync --repo "${REPO}" --file config/project/labels.json
+  fi
+fi
+
+if [[ "${RUN_MILESTONES}" == "true" ]]; then
+  echo "==> Sync milestones"
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    python3 -m governance_bootstrap milestones sync --repo "${REPO}" --file config/project/milestones.json --dry-run
+  else
+    python3 -m governance_bootstrap milestones sync --repo "${REPO}" --file config/project/milestones.json
+  fi
 fi
 
 if [[ "${RUN_PROJECT}" == "true" ]]; then
   echo "==> Create project v2"
   if [[ "${DRY_RUN}" == "true" ]]; then
-    python3 scripts/github/create_project_v2.py config/project/project-definition.json --repo "${REPO}" --dry-run
+    python3 -m governance_bootstrap project create --repo "${REPO}" --file config/project/project-definition.json --dry-run
   else
-    python3 scripts/github/create_project_v2.py config/project/project-definition.json --repo "${REPO}"
+    python3 -m governance_bootstrap project create --repo "${REPO}" --file config/project/project-definition.json
   fi
 fi
 
 if [[ "${RUN_ISSUES}" == "true" ]]; then
   echo "==> Generate issues/tasks"
   if [[ "${DRY_RUN}" == "true" ]]; then
-    python3 scripts/github/generate_issues.py config/stories/backlog-manifest.json --repo "${REPO}" --dry-run
+    python3 -m governance_bootstrap issues generate --repo "${REPO}" --file config/stories/backlog-manifest.json --dry-run
   else
     if [[ "${LINK_SUBISSUES}" == "true" ]]; then
-      python3 scripts/github/generate_issues.py config/stories/backlog-manifest.json --repo "${REPO}" --link-subissues
+      python3 -m governance_bootstrap issues generate --repo "${REPO}" --file config/stories/backlog-manifest.json --link-subissues
     else
-      python3 scripts/github/generate_issues.py config/stories/backlog-manifest.json --repo "${REPO}"
+      python3 -m governance_bootstrap issues generate --repo "${REPO}" --file config/stories/backlog-manifest.json
     fi
   fi
 fi

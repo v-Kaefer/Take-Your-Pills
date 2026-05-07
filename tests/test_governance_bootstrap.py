@@ -10,6 +10,7 @@ from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
+from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.project import label_value
 
 
@@ -135,6 +136,54 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("- scene instantiates cleanly", task_body)
         self.assertIn("## Expected evidence", task_body)
         self.assertIn("- scene tree screenshot", task_body)
+
+    def test_pr_validation_collects_branch_and_body_findings(self):
+        findings = validate_pull_request("feature/new-branch", "")
+
+        self.assertEqual([finding.section for finding in findings], ["Branch name", "PR body"])
+        self.assertIn("feat/repo-governance-bootstrap", findings[0].fix)
+        self.assertIn("blank", findings[1].problem)
+
+    def test_pr_body_validation_rejects_placeholder_steps(self):
+        body = """## Linked Issue
+- Closes #12
+
+## Milestone
+- MS1
+
+## Summary
+- Replace me
+
+## How to test
+- Test type: manual
+- Steps: describe the commands, manual flow, or verification evidence
+
+## Evidence
+- [ ] Screenshot/GIF attached (when applicable)
+
+## Known risks
+- None
+
+## DoD checklist
+- [ ] Scope implemented as defined
+"""
+
+        findings = validate_pr_body(body)
+
+        self.assertTrue(any(finding.section == "Summary" for finding in findings))
+        self.assertTrue(any(finding.section == "How to test" and "test steps" in finding.problem for finding in findings))
+
+    def test_render_failure_comment_includes_fix_guidance(self):
+        findings = validate_branch_name("bad-branch") + validate_pr_body("")
+
+        comment = render_failure_comment(findings)
+
+        self.assertIn("<!-- governance-pr-validation -->", comment)
+        self.assertIn("## PR validation failed", comment)
+        self.assertIn("Branch name", comment)
+        self.assertIn("PR body", comment)
+        self.assertIn("Closes #123", comment)
+        self.assertIn("Steps: describe the commands", comment)
 
 
 if __name__ == "__main__":

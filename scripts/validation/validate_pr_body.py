@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import os
-import re
 import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-REQUIRED_SECTIONS = [
-    "linked issue",
-    "milestone",
-    "summary",
-    "how to test",
-    "evidence",
-    "known risks",
-    "dod checklist",
-]
+from governance_bootstrap.github import require_client
+from governance_bootstrap.pr_validation import upsert_validation_comment, validate_pull_request
 
 
 def read_body(args):
@@ -27,86 +21,37 @@ def read_body(args):
     return ""
 
 
-def normalize_header(header):
-    return " ".join(header.strip().lower().split())
-
-
-def sections_from_body(body):
-    sections = {}
-    current = None
-    for line in body.splitlines():
-        match = re.match(r"^##\s+(.+?)\s*$", line)
-        if match:
-            current = normalize_header(match.group(1))
-            sections.setdefault(current, [])
-            continue
-        if current:
-            sections[current].append(line)
-    return sections
-
-
-def meaningful_lines(lines):
-    values = []
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if stripped in {"-", "*", "_", "TODO", "TBD"}:
-            continue
-        values.append(stripped)
-    return values
-
-
-def fail(message):
-    print(message, file=sys.stderr)
-    return 1
-
-
-def validate(body):
-    if not body.strip():
-        return fail("PR body is required")
-
-    sections = sections_from_body(body)
-    for section in REQUIRED_SECTIONS:
-        if section not in sections:
-            return fail(f"Missing section: {section.title()}")
-        if not meaningful_lines(sections[section]):
-            return fail(f"Section must not be empty or placeholder-only: {section.title()}")
-
-    linked_issue = "\n".join(sections["linked issue"])
-    if not re.search(r"\b(closes|fixes|resolves)\s+#\d+\b", linked_issue, re.IGNORECASE):
-        return fail("Linked Issue section must contain: Closes/Fixes/Resolves #123")
-
-    milestone = "\n".join(sections["milestone"])
-    if not re.search(r"\bMS[0-6]\b", milestone, re.IGNORECASE):
-        return fail("Milestone section must contain a milestone such as MS0")
-
-    how_to_test = "\n".join(sections["how to test"])
-    if not re.search(r"test type:\s*(automated|smoke|manual)\b", how_to_test, re.IGNORECASE):
-        return fail("How to test section must contain: Test type: automated | smoke | manual")
-
-    steps_match = re.search(r"steps:\s*(.*)", how_to_test, re.IGNORECASE)
-    if steps_match and not steps_match.group(1).strip():
-        lines_after_steps = False
-        seen_steps = False
-        for line in sections["how to test"]:
-            if re.search(r"steps:\s*$", line, re.IGNORECASE):
-                seen_steps = True
-                continue
-            if seen_steps and meaningful_lines([line]):
-                lines_after_steps = True
-                break
-        if not lines_after_steps:
-            return fail("How to test section must describe test steps")
-
-    return 0
-
-
 def main():
     parser = argparse.ArgumentParser(description="Validate repository PR body metadata")
     parser.add_argument("--file", help="Read PR body from a file")
+    parser.add_argument("--branch", help="Validate the PR branch name too")
+    parser.add_argument("--repo", help="Repository owner/name for PR comment updates")
+    parser.add_argument("--pr-number", type=int, help="PR number for sticky comment updates")
+    parser.add_argument("--comment", action="store_true", help="Create or update the sticky PR validation comment")
     args = parser.parse_args()
-    return validate(read_body(args))
+
+    findings = validate_pull_request(args.branch, read_body(args))
+    if findings:
+        for finding in findings:
+            print(f"{finding.section}: {finding.problem}", file=sys.stderr)
+            print(f"  Fix: {finding.fix}", file=sys.stderr)
+        if args.comment:
+            if not args.repo or not args.pr_number:
+                print("Missing --repo or --pr-number for sticky PR comments", file=sys.stderr)
+                return 1
+            upsert_validation_comment(require_client(), args.repo, args.pr_number, findings)
+        return 1
+
+    if args.comment:
+        if not args.repo or not args.pr_number:
+            print("Missing --repo or --pr-number for sticky PR comments", file=sys.stderr)
+            return 1
+        client = require_client()
+        existing = upsert_validation_comment(client, args.repo, args.pr_number, findings)
+        if existing:
+            print(f"Removed validation comment: {existing}")
+
+    return 0
 
 
 if __name__ == "__main__":

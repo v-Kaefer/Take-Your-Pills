@@ -18,3 +18,10 @@ offset_right = 520.0
 offset_bottom = 120.0
 theme_override_font_sizes/font_size = 18
 text = "RUNNING"
+
+[node name="RestartButton" type="Button" parent="HUD"]
+offset_left = 16.0
+offset_top = 128.0
+offset_right = 160.0
+offset_bottom = 168.0
+text = "Restart"

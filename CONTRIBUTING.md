@@ -29,6 +29,8 @@ The PR metadata workflow rejects empty sections, template placeholders, issue li
 PR_BODY="$(cat path/to/pr-body.md)" scripts/validation/validate_pr_body.py
 ```
 
+When a PR fails branch naming or metadata checks in GitHub Actions, the workflow leaves a sticky PR comment with the exact fix to apply.
+
 The repository does not use `phase:*` labels. Use milestones for delivery grouping and Project fields for operational phase tracking.
 
 ## 3) Automatic labels

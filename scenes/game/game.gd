@@ -7,12 +7,14 @@ enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $Player
 @onready var state_label: Label = $HUD/StateLabel
+@onready var restart_button: Button = $HUD/RestartButton
 
 var current_state: GameState = GameState.RUNNING
 
 
 func _ready() -> void:
 	_ensure_input_actions()
+	restart_button.pressed.connect(_on_restart_button_pressed)
 	player.set_run_speed(DEFAULT_RUN_SPEED)
 	player.start_run()
 	player.primary_action_requested.connect(_on_player_primary_action_requested)
@@ -59,6 +61,10 @@ func _on_player_primary_action_requested() -> void:
 	_update_state_label("Primary action accepted")
 
 
+func _on_restart_button_pressed() -> void:
+	get_tree().reload_current_scene()
+
+
 func _update_state_label(extra_note: String = "") -> void:
 	var state_text := "RUNNING"
 	if current_state == GameState.PAUSED:
@@ -68,9 +74,9 @@ func _update_state_label(extra_note: String = "") -> void:
 
 	var control_note := "Space: primary | Esc: pause | Backspace: game over"
 	if extra_note.is_empty():
-		state_label.text = "%s\n%s" % [state_text, control_note]
+		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
 	else:
-		state_label.text = "%s\n%s\n%s" % [state_text, extra_note, control_note]
+		state_label.text = "%s\n%s\n%s\nRestart: button" % [state_text, extra_note, control_note]
 
 
 func _ensure_input_actions() -> void:
