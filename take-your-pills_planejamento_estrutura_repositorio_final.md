@@ -613,118 +613,118 @@ Cada documento de fase deve conter:
 ## 14. Checklist detalhada para construir a estrutura do repositório
 
 ## Etapa 0 — Alinhamento do modelo
-- [ ] Confirmar oficialmente que o projeto será organizado por **fases + User Stories + tasks**, e não por épicos.
-- [ ] Definir a lista real de fases do projeto conforme o cronograma da disciplina.
-- [ ] Definir, para cada fase, qual é o objetivo final concreto esperado.
-- [ ] Definir se os 2 responsáveis de fase serão fixos por fase ou rotativos ao longo do projeto.
-- [ ] Consolidar por escrito a regra de revisão em três camadas: `task -> phase`, `phase -> develop`, `develop -> main`.
-- [ ] Formalizar que todos os 4 membros participam de todas as fases.
-- [ ] Registrar oficialmente a hierarquia-base: `Fase -> User Story -> Task/Sub-issue -> PR`.
-- [ ] Registrar oficialmente que a branch de integração do projeto será `develop`.
+- [x] Confirmar oficialmente que o projeto será organizado por **fases + User Stories + tasks**, e não por épicos.
+- [x] Definir a lista real de fases do projeto conforme o cronograma da disciplina.
+- [x] Definir, para cada fase, qual é o objetivo final concreto esperado.
+- [ ] Definir se os 2 responsáveis de fase serão fixos por fase ou rotativos ao longo do projeto. *(pendente decisão do time)*
+- [x] Consolidar por escrito a regra de revisão em três camadas: `task -> phase`, `phase -> develop`, `develop -> main`.
+- [x] Formalizar que todos os 4 membros participam de todas as fases.
+- [x] Registrar oficialmente a hierarquia-base: `Fase -> User Story -> Task/Sub-issue -> PR`.
+- [x] Registrar oficialmente que a branch de integração do projeto será `develop`.
 
 ## Etapa 1 — Estruturar a governança básica do repositório
-- [ ] Criar a pasta `.github/` com a organização-base.
-- [ ] Criar o template de PR exigindo vínculo com fase, story/task, teste e evidência.
-- [ ] Criar documento de política de branches.
-- [ ] Criar documento de política de revisão.
-- [ ] Criar documento de política de testes.
-- [ ] Criar documento de política de DoD.
-- [ ] Garantir que a documentação-base do repositório exista em Português Brasileiro e Inglês.
-- [ ] Formalizar que labels, branches, workflows e scripts ficam em inglês, enquanto jobs e campos de templates podem ficar em português.
-- [ ] Decidir se `CODEOWNERS` será usado apenas como apoio para arquivos críticos.
+- [x] Criar a pasta `.github/` com a organização-base.
+- [x] Criar o template de PR exigindo vínculo com fase, story/task, teste e evidência.
+- [x] Criar documento de política de branches.
+- [x] Criar documento de política de revisão.
+- [x] Criar documento de política de testes.
+- [x] Criar documento de política de DoD.
+- [x] Garantir que a documentação-base do repositório exista em Português Brasileiro e Inglês.
+- [x] Formalizar que labels, branches, workflows e scripts ficam em inglês, enquanto jobs e campos de templates podem ficar em português.
+- [x] Decidir se `CODEOWNERS` será usado apenas como apoio para arquivos críticos.
 
 ## Etapa 2 — Estruturar o modelo de backlog
-- [ ] Criar template de **User Story**.
-- [ ] Criar template de **Task / Sub-issue**.
-- [ ] Criar template de **Bug Report**.
-- [ ] Definir o formato padrão de escrita das User Stories.
-- [ ] Definir o formato padrão de escrita das tasks.
-- [ ] Garantir que cada template exija critérios de aceite.
-- [ ] Garantir que cada template exija estratégia de teste.
-- [ ] Garantir que cada template exija DoD.
+- [x] Criar template de **User Story**.
+- [x] Criar template de **Task / Sub-issue**.
+- [x] Criar template de **Bug Report**.
+- [x] Definir o formato padrão de escrita das User Stories.
+- [x] Definir o formato padrão de escrita das tasks.
+- [x] Garantir que cada template exija critérios de aceite.
+- [x] Garantir que cada template exija estratégia de teste.
+- [x] Garantir que cada template exija DoD.
 
 ## Etapa 3 — Preparar a estrutura de fases
-- [ ] Criar um documento para cada fase planejada.
-- [ ] Registrar objetivo final da fase.
-- [ ] Registrar escopo incluído e excluído da fase.
-- [ ] Registrar User Stories previstas para a fase.
-- [ ] Registrar Tasks/Issues pai relacionadas à fase e às User Stories.
-- [ ] Registrar a DoD específica da fase.
-- [ ] Registrar a política de saída da fase para `develop`.
+- [x] Criar um documento para cada fase planejada.
+- [x] Registrar objetivo final da fase.
+- [x] Registrar escopo incluído e excluído da fase.
+- [x] Registrar User Stories previstas para a fase.
+- [x] Registrar Tasks/Issues pai relacionadas à fase e às User Stories.
+- [x] Registrar a DoD específica da fase.
+- [x] Registrar a política de saída da fase para `develop`.
 
 ## Etapa 4 — Preparar o GitHub Project
-- [ ] Criar o Project como painel operacional do time.
-- [ ] Adicionar campo `Phase`.
-- [ ] Adicionar campo `Item Type`.
-- [ ] Adicionar campo `Status`.
-- [ ] Adicionar campo `Review Layer`.
-- [ ] Adicionar campo `Test Type`.
-- [ ] Adicionar campo `DoD Status`.
-- [ ] Adicionar campo `Responsible Pair`.
-- [ ] Adicionar campo `Target Branch`.
-- [ ] Criar visualizações por fase, por status e por camada de revisão.
+- [ ] Criar o Project como painel operacional do time. *(pendente execução com permissão admin/token project)*
+- [x] Adicionar campo `Phase`.
+- [x] Adicionar campo `Item Type`.
+- [x] Adicionar campo `Status`.
+- [x] Adicionar campo `Review Layer`.
+- [x] Adicionar campo `Test Type`.
+- [x] Adicionar campo `DoD Status`.
+- [x] Adicionar campo `Responsible Pair`.
+- [x] Adicionar campo `Target Branch`.
+- [x] Criar visualizações por fase, por status e por camada de revisão.
 
 ## Etapa 5 — Preparar a taxonomia de labels
-- [ ] Criar labels de tipo.
-- [ ] Criar labels de fase.
-- [ ] Criar labels de prioridade.
-- [ ] Criar labels de estado.
-- [ ] Criar labels de teste.
-- [ ] Versionar a definição dessas labels em arquivo do repositório.
-- [ ] Preparar sincronização manual ou automatizada das labels.
-- [ ] Preparar labeler automático com GitHub Actions, quando o fluxo justificar.
+- [x] Criar labels de tipo.
+- [x] Criar labels de fase.
+- [x] Criar labels de prioridade.
+- [x] Criar labels de estado.
+- [x] Criar labels de teste.
+- [x] Versionar a definição dessas labels em arquivo do repositório.
+- [x] Preparar sincronização manual ou automatizada das labels.
+- [x] Preparar labeler automático com GitHub Actions, quando o fluxo justificar.
 
 ## Etapa 6 — Preparar a estratégia de testes
-- [ ] Pesquisar e selecionar a melhor abordagem de teste para Godot no projeto.
-- [ ] Definir quais tipos de mudança exigem teste automatizado obrigatório.
-- [ ] Definir quais mudanças aceitam smoke test.
-- [ ] Definir quais mudanças aceitam teste manual documentado como fallback.
-- [ ] Criar padrão de evidência de teste no PR.
-- [ ] Criar checklist mínima de validação por PR.
-- [ ] Formalizar a separação: `pre-push` rápido, CI completo e QA manual fora do `pre-push`.
-- [ ] Preparar workflow para verificar presença de metadados de teste nas PRs.
-- [ ] Definir os checks iniciais obrigatórios: branch naming, PR template/link, repo quality básico e Godot smoke check.
+- [x] Pesquisar e selecionar a melhor abordagem de teste para Godot no projeto.
+- [x] Definir quais tipos de mudança exigem teste automatizado obrigatório.
+- [x] Definir quais mudanças aceitam smoke test.
+- [x] Definir quais mudanças aceitam teste manual documentado como fallback.
+- [x] Criar padrão de evidência de teste no PR.
+- [x] Criar checklist mínima de validação por PR.
+- [x] Formalizar a separação: `pre-push` rápido, CI completo e QA manual fora do `pre-push`.
+- [x] Preparar workflow para verificar presença de metadados de teste nas PRs.
+- [x] Definir os checks iniciais obrigatórios: branch naming, PR template/link, repo quality básico e Godot smoke check.
 
 ## Etapa 7 — Preparar o fluxo de branches e proteção
-- [ ] Definir padrão de nome para branches de fase.
-- [ ] Definir padrão de nome para branches de task.
-- [ ] Configurar proteção em `main`.
-- [ ] Configurar proteção em `develop`.
-- [ ] Definir política operacional da branch da fase.
-- [ ] Definir como os reviewers serão identificados por fase.
-- [ ] Garantir que PRs para `main` exijam aprovação dos 4 membros.
-- [ ] Garantir que PRs de fase para `develop` respeitem a regra dos outros 2 + pelo menos 1 responsável.
-- [ ] Definir e documentar a política de handoff para continuidade entre integrantes.
+- [x] Definir padrão de nome para branches de fase.
+- [x] Definir padrão de nome para branches de task.
+- [ ] Configurar proteção em `main`. *(pendente permissão admin)*
+- [ ] Configurar proteção em `develop`. *(pendente permissão admin)*
+- [x] Definir política operacional da branch da fase.
+- [ ] Definir como os reviewers serão identificados por fase. *(pendente definição dos responsáveis por fase)*
+- [ ] Garantir que PRs para `main` exijam aprovação dos 4 membros. *(pendente branch protection/admin)*
+- [ ] Garantir que PRs de fase para `develop` respeitem a regra dos outros 2 + pelo menos 1 responsável. *(pendente branch protection/admin e definição de responsáveis)*
+- [x] Definir e documentar a política de handoff para continuidade entre integrantes.
 
 ## Etapa 8 — Preparar automações mínimas
-- [ ] Criar workflow de validação de branch naming.
-- [ ] Criar workflow de validação de PR template.
-- [ ] Criar workflow de validação de vínculo PR ↔ issue/task.
-- [ ] Criar workflow de validação da presença de teste/evidência no PR.
-- [ ] Criar workflow de review automático por PR com resumo, checks, riscos e aderência ao padrão.
-- [ ] Garantir que os workflows sejam modulares e segmentados, mas integrados a uma build/orquestração principal como dependência.
-- [ ] Criar script para sincronizar labels.
-- [ ] Criar script ou manifesto para gerar User Stories e tasks em lote.
-- [ ] Planejar automação do Project apenas depois que a governança básica estiver estável.
+- [x] Criar workflow de validação de branch naming.
+- [x] Criar workflow de validação de PR template.
+- [x] Criar workflow de validação de vínculo PR ↔ issue/task.
+- [x] Criar workflow de validação da presença de teste/evidência no PR.
+- [x] Criar workflow de review automático por PR com resumo, checks, riscos e aderência ao padrão.
+- [x] Garantir que os workflows sejam modulares e segmentados, mas integrados a uma build/orquestração principal como dependência.
+- [x] Criar script para sincronizar labels.
+- [x] Criar script ou manifesto para gerar User Stories e tasks em lote.
+- [x] Planejar automação do Project apenas depois que a governança básica estiver estável.
 
 ## Etapa 9 — Preparar a geração de issues e sub-issues
-- [ ] Definir um schema versionado para manifestos de User Stories e tasks.
-- [ ] Criar arquivos de manifesto por fase.
-- [ ] Garantir que cada item gerado tenha título, descrição, critérios de aceite, teste e DoD.
-- [ ] Garantir que tasks sejam vinculadas corretamente à User Story correspondente.
-- [ ] Garantir que bugs tenham fluxo separado das User Stories.
-- [ ] Fazer validação em modo dry-run antes de criar itens reais.
-- [ ] Registrar que, como não há legado implementado, a adoção do novo modelo será aplicada diretamente sem etapa de migração.
+- [x] Definir um schema versionado para manifestos de User Stories e tasks.
+- [x] Criar arquivos de manifesto por fase.
+- [x] Garantir que cada item gerado tenha título, descrição, critérios de aceite, teste e DoD.
+- [x] Garantir que tasks sejam vinculadas corretamente à User Story correspondente.
+- [x] Garantir que bugs tenham fluxo separado das User Stories.
+- [x] Fazer validação em modo dry-run antes de criar itens reais.
+- [x] Registrar que, como não há legado implementado, a adoção do novo modelo será aplicada diretamente sem etapa de migração.
 
 ## Etapa 10 — Validar o processo completo em piloto
-- [ ] Escolher uma fase piloto para testar o fluxo completo.
-- [ ] Criar a branch da fase piloto.
-- [ ] Gerar User Stories e tasks dessa fase.
-- [ ] Abrir PRs simulando task -> phase.
-- [ ] Validar o fluxo de revisão dos responsáveis da fase.
-- [ ] Validar o PR phase -> develop.
-- [ ] Validar o PR develop -> main.
-- [ ] Ajustar templates, labels, workflows e documentação antes de expandir para todas as fases.
+- [x] Escolher uma fase piloto para testar o fluxo completo.
+- [x] Criar a branch da fase piloto.
+- [x] Gerar User Stories e tasks dessa fase.
+- [ ] Abrir PRs simulando task -> phase. *(pendente permissão admin e execução no GitHub)*
+- [ ] Validar o fluxo de revisão dos responsáveis da fase. *(pendente definição de responsáveis e PRs reais)*
+- [ ] Validar o PR phase -> develop. *(pendente branch protection/admin)*
+- [ ] Validar o PR develop -> main. *(pendente branch protection/admin)*
+- [x] Ajustar templates, labels, workflows e documentação antes de expandir para todas as fases.
 
 ---
 

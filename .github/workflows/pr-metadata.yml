@@ -1,0 +1,25 @@
+name: PR metadata validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-body:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure required PR sections and issue link
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          test -n "$PR_BODY" || { echo "PR body is required"; exit 1; }
+          echo "$PR_BODY" | grep -qi "## Linked Issue" || { echo "Missing section: Linked Issue"; exit 1; }
+          LINKED_SECTION="$(printf '%s\n' "$PR_BODY" | awk 'BEGIN{in=0} /^##[[:space:]]+Linked Issue/{in=1; next} /^##[[:space:]]+/{if(in){exit}} {if(in) print}')"
+          echo "$LINKED_SECTION" | grep -Eiq "(closes|fixes|resolves)[[:space:]]+#([0-9]+)" || { echo "Linked Issue section must contain: Closes/Fixes/Resolves #123"; exit 1; }
+          echo "$PR_BODY" | grep -qi "## How to test" || { echo "Missing section: How to test"; exit 1; }
+          echo "$PR_BODY" | grep -qi "## Evidence" || { echo "Missing section: Evidence"; exit 1; }
+          echo "$PR_BODY" | grep -qi "## DoD checklist" || { echo "Missing section: DoD checklist"; exit 1; }

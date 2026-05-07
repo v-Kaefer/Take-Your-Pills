@@ -1,0 +1,23 @@
+name: PR issue link validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-linked-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate explicit issue linking keyword
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          test -n "$PR_BODY" || { echo "PR body is required"; exit 1; }
+          echo "$PR_BODY" | grep -Eiq "(closes|fixes|resolves)\s+#([0-9]+)" || {
+            echo "PR must include explicit link keyword: Closes/Fixes/Resolves #123";
+            exit 1;
+          }
