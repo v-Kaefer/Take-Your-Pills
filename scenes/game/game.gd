@@ -72,7 +72,7 @@ func _update_state_label(extra_note: String = "") -> void:
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var control_note := "%s: primary | Esc: pause | Backspace: game over" % [String(player.primary_action_name)]
+	var control_note := "%s: primary | Esc: pause | Backspace: game over" % [player.primary_action_name]
 	if extra_note.is_empty():
 		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
 	else:
