@@ -34,7 +34,141 @@
           "title": "US-01 | Implementar corrida lateral contínua e base de movimentação",
           "labels": ["type:user-story", "priority:critical", "test:smoke"],
           "body": "Como jogador, quero controlar uma corrida lateral contínua para que o jogo tenha um loop base imediatamente compreensível.",
-          "tasks": ["T-01.1 | Criar cena base do Player", "T-01.2 | Implementar corrida automática", "T-01.3 | Implementar input principal e estados básicos", "T-01.4 | Conectar player à cena Game"]
+          "acceptanceCriteria": [
+            "o personagem entra em corrida automática assim que a run começa",
+            "o deslocamento horizontal é contínuo e estável",
+            "a velocidade base vem de uma única fonte de configuração",
+            "não existe input manual para andar para frente ou para trás",
+            "pausa e game over interrompem totalmente o auto-run"
+          ],
+          "testStrategy": [
+            "executar o smoke check do projeto Godot em modo headless",
+            "abrir a cena Game e verificar que o player corre sem input",
+            "ativar pausa e confirmar que o movimento é interrompido",
+            "encerrar a run e confirmar que o auto-run não continua",
+            "verificar que não há caminho de controle horizontal manual"
+          ],
+          "dod": [
+            "cena Player criada e instanciável",
+            "auto-run integrado à cena Game",
+            "estados básicos impedem movimento em pause e dead",
+            "evidência de validação manual registrada"
+          ],
+          "tasks": [
+            {
+              "title": "T-01.1 | Criar cena base do Player",
+              "technicalScope": [
+                "criar a cena Player com nó raiz compatível com movimento futuro",
+                "adicionar placeholder visual e collider base",
+                "registrar o script inicial do player"
+              ],
+              "completionCriteria": [
+                "a cena Player instancia sem erros",
+                "a cena possui base visual e colisão",
+                "o arquivo está pronto para receber o auto-run"
+              ],
+              "testStrategy": [
+                "abrir a cena Player diretamente no editor",
+                "instanciar a cena em Game e confirmar que carrega sem erros"
+              ],
+              "expectedEvidence": [
+                "print ou captura da árvore da cena",
+                "confirmação de instância sem erro no editor"
+              ],
+              "dod": [
+                "cena adicionada ao repositório",
+                "cena carrega e instancia sem falhas",
+                "base preparada para as tarefas de movimento"
+              ]
+            },
+            {
+              "title": "T-01.2 | Implementar corrida automática",
+              "technicalScope": [
+                "implementar deslocamento horizontal automático na atualização física",
+                "ler a velocidade a partir de uma configuração única",
+                "impedir movimento para trás",
+                "parar a movimentação quando o estado não estiver ativo"
+              ],
+              "completionCriteria": [
+                "o player se move automaticamente enquanto a run estiver ativa",
+                "a velocidade horizontal responde a uma configuração central",
+                "o personagem não aceita deslocamento horizontal manual",
+                "pause e game over interrompem o auto-run"
+              ],
+              "testStrategy": [
+                "executar uma run em Game sem pressionar input horizontal",
+                "pausar a run e confirmar que o avanço para",
+                "finalizar a run e confirmar que o movimento cessa"
+              ],
+              "expectedEvidence": [
+                "observação manual do movimento automático",
+                "anotação ou captura de pausa e game over interrompendo o avanço"
+              ],
+              "dod": [
+                "auto-run funcionando no fluxo principal",
+                "movimento controlado por uma fonte de velocidade única",
+                "parada confiável em pause e dead"
+              ]
+            },
+            {
+              "title": "T-01.3 | Implementar input principal e estados básicos",
+              "technicalScope": [
+                "definir os estados mínimos running, paused e dead",
+                "rotear o input principal através da camada de estado",
+                "reservar o ponto de entrada para o input de pulo sem implementar física de pulo",
+                "garantir que input em pause e dead não altere o auto-run"
+              ],
+              "completionCriteria": [
+                "o player expõe estados básicos claros",
+                "o input principal respeita o estado atual",
+                "pause e dead bloqueiam a movimentação",
+                "o estado permite a futura implementação do salto sem refatoração ampla"
+              ],
+              "testStrategy": [
+                "acionar input durante running e confirmar que o estado responde",
+                "acionar input durante pause e dead e confirmar que não há efeito",
+                "validar que o estado não quebra a corrida automática"
+              ],
+              "expectedEvidence": [
+                "registro dos estados e do fluxo de input",
+                "verificação manual de bloqueio em pause e dead"
+              ],
+              "dod": [
+                "camada de estado conectada ao player",
+                "input principal isolado do comportamento de movimento",
+                "base pronta para salto e outras ações futuras"
+              ]
+            },
+            {
+              "title": "T-01.4 | Conectar player à cena Game",
+              "technicalScope": [
+                "instanciar o player a partir da cena Game",
+                "fazer a Game assumir o ciclo de vida da run",
+                "garantir que pause e game over desativem o player de forma consistente",
+                "manter o player independente da lógica de cena fora do movimento"
+              ],
+              "completionCriteria": [
+                "a cena Game cria o player corretamente",
+                "a run começa já em estado jogável",
+                "pause e game over afetam o player como esperado",
+                "a responsabilidade entre Game e Player fica separada"
+              ],
+              "testStrategy": [
+                "abrir a cena Game e confirmar que o player aparece e corre",
+                "pausar a cena e confirmar que a corrida para",
+                "encerrar a run e confirmar que o player não continua ativo"
+              ],
+              "expectedEvidence": [
+                "captura da cena Game com o player em execução",
+                "registro da verificação de pause e game over"
+              ],
+              "dod": [
+                "player conectado à cena Game",
+                "ciclo de vida da run centralizado em Game",
+                "integração pronta para as próximas histórias da fase"
+              ]
+            }
+          ]
         },
         {
           "storyId": "US-02",

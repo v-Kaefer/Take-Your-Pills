@@ -9,6 +9,8 @@ required=(
   ".github/ISSUE_TEMPLATE/bug-report.yml"
   "config/project/labels.json"
   "config/stories/backlog-manifest.json"
+  "pyproject.toml"
+  "tests/test_governance_bootstrap.py"
   "scripts/validation/validate_pr_body.py"
   "scripts/github/auto_label.py"
   ".github/workflows/auto-label.yml"
