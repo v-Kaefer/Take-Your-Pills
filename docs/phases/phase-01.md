@@ -1,7 +1,7 @@
 # Phase 1 — Playable foundation
 
 ## Objective
-Reach core runner loop and first checkpoint baseline.
+Reach the core runner loop and first checkpoint baseline with streamed chunks and the player anchored in a fixed view.
 
 ## Included scope
 - US-01..US-05
@@ -17,7 +17,7 @@ Reach core runner loop and first checkpoint baseline.
 
 ## Test criteria
 - Smoke tests for movement/jump/collision/restart
-- Manual readability checks for HUD and camera
+- Manual readability checks for HUD and chunk-stream framing
 
 ## Phase DoD
 - Core loop playable and stable

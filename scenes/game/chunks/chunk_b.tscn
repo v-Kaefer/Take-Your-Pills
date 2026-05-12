@@ -1,0 +1,51 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/chunks/chunk.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(640, 96)
+
+[sub_resource type="RectangleShape2D" id="2"]
+size = Vector2(24, 320)
+
+[node name="ChunkB" type="Node2D"]
+script = ExtResource("1")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="Sky" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
+color = Color(0.06, 0.08, 0.15, 1)
+
+[node name="TowerLeft" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(96, 192, 176, 192, 176, 264, 96, 264)
+color = Color(0.16, 0.18, 0.25, 1)
+
+[node name="TowerRight" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(328, 160, 424, 160, 424, 264, 328, 264)
+color = Color(0.11, 0.13, 0.19, 1)
+
+[node name="GroundVisual" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(0, 264, 640, 264, 640, 360, 0, 360)
+color = Color(0.12, 0.12, 0.14, 1)
+
+[node name="LaneStripe" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(0, 252, 640, 252, 640, 256, 0, 256)
+color = Color(0.86, 0.78, 0.31, 1)
+
+[node name="GroundBody" type="StaticBody2D" parent="Terrain"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GroundBody"]
+position = Vector2(320, 312)
+shape = SubResource("1")
+
+[node name="TriggerNext" type="Area2D" parent="."]
+position = Vector2(576, 240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerNext"]
+shape = SubResource("2")
+
+[node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
+rect = Rect2(0, 0, 640, 360)

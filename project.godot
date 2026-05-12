@@ -18,6 +18,10 @@ config/name="Take Your Pills"
 run/main_scene="res://scenes/game/game.tscn"
 config/features=PackedStringArray("4.6")
 
+[autoload]
+
+RunSignals="*res://scripts/run_signals.gd"
+
 [rendering]
 
 renderer/rendering_method.mobile="forward_plus"

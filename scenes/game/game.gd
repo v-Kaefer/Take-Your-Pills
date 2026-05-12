@@ -1,21 +1,24 @@
 extends Node2D
 class_name Game
 
-const DEFAULT_RUN_SPEED := 240.0
+const DEFAULT_SCROLL_SPEED := 240.0
 
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
-@onready var player: Player = $Player
+@onready var player: Player = $World/Player
+@onready var chunks = $World/Chunks
 @onready var state_label: Label = $HUD/StateLabel
 @onready var restart_button: Button = $HUD/RestartButton
 
 var current_state: GameState = GameState.RUNNING
+var transient_note: String = ""
 
 
 func _ready() -> void:
 	_ensure_input_actions()
 	restart_button.pressed.connect(_on_restart_button_pressed)
-	player.set_run_speed(DEFAULT_RUN_SPEED)
+	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
+	chunks.start_run()
 	player.start_run()
 	player.primary_action_requested.connect(_on_player_primary_action_requested)
 	_update_state_label()
@@ -43,29 +46,36 @@ func _toggle_pause() -> void:
 
 	if current_state == GameState.RUNNING:
 		current_state = GameState.PAUSED
+		chunks.pause_run()
 		player.pause_run()
 	else:
 		current_state = GameState.RUNNING
+		chunks.start_run()
 		player.start_run()
 
 	_update_state_label()
 
 
 func _set_game_over() -> void:
+	if current_state == GameState.GAME_OVER:
+		return
+
 	current_state = GameState.GAME_OVER
+	chunks.end_run()
 	player.end_run()
 	_update_state_label()
 
 
 func _on_player_primary_action_requested() -> void:
-	_update_state_label("Primary action accepted")
+	transient_note = "Primary action accepted"
+	_update_state_label()
 
 
 func _on_restart_button_pressed() -> void:
 	get_tree().reload_current_scene()
 
 
-func _update_state_label(extra_note: String = "") -> void:
+func _update_state_label() -> void:
 	var state_text := "RUNNING"
 	if current_state == GameState.PAUSED:
 		state_text = "PAUSED"
@@ -73,10 +83,12 @@ func _update_state_label(extra_note: String = "") -> void:
 		state_text = "GAME OVER"
 
 	var control_note := "Space: primary | Esc: pause | Backspace: game over"
-	if extra_note.is_empty():
+
+	if transient_note.is_empty():
 		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
 	else:
-		state_label.text = "%s\n%s\n%s\nRestart: button" % [state_text, extra_note, control_note]
+		state_label.text = "%s\n%s\n%s\nRestart: button" % [state_text, transient_note, control_note]
+		transient_note = ""
 
 
 func _ensure_input_actions() -> void:
