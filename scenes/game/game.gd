@@ -6,19 +6,29 @@ const DEFAULT_RUN_SPEED := 240.0
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $Player
-@onready var state_label: Label = $HUD/StateLabel
-@onready var restart_button: Button = $HUD/RestartButton
+@onready var hud: GameHUD = $HUD
 
 var current_state: GameState = GameState.RUNNING
+var score: int = 0
+var active_note: String = ""
 
 
 func _ready() -> void:
 	_ensure_input_actions()
-	restart_button.pressed.connect(_on_restart_button_pressed)
+	hud.connect_restart(_on_restart_button_pressed)
 	player.set_run_speed(DEFAULT_RUN_SPEED)
 	player.start_run()
 	player.primary_action_requested.connect(_on_player_primary_action_requested)
-	_update_state_label()
+	_update_hud()
+
+
+func _process(_delta: float) -> void:
+	if current_state == GameState.RUNNING:
+		# Simple score based on distance
+		var new_score = int(player.position.x / 10.0)
+		if new_score != score:
+			score = new_score
+			_update_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -48,24 +58,31 @@ func _toggle_pause() -> void:
 		current_state = GameState.RUNNING
 		player.start_run()
 
-	_update_state_label()
+	_update_hud()
 
 
 func _set_game_over() -> void:
 	current_state = GameState.GAME_OVER
 	player.end_run()
-	_update_state_label()
+	hud.show_game_over()
+	_update_hud()
 
 
 func _on_player_primary_action_requested() -> void:
-	_update_state_label("Primary action accepted")
+	active_note = "Primary action accepted"
+	_update_hud()
+	# Clear note after 2 seconds
+	await get_tree().create_timer(2.0).timeout
+	if active_note == "Primary action accepted":
+		active_note = ""
+		_update_hud()
 
 
 func _on_restart_button_pressed() -> void:
 	get_tree().reload_current_scene()
 
 
-func _update_state_label(extra_note: String = "") -> void:
+func _update_hud() -> void:
 	var state_text := "RUNNING"
 	if current_state == GameState.PAUSED:
 		state_text = "PAUSED"
@@ -73,10 +90,8 @@ func _update_state_label(extra_note: String = "") -> void:
 		state_text = "GAME OVER"
 
 	var control_note := "Space: primary | Esc: pause | Backspace: game over"
-	if extra_note.is_empty():
-		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
-	else:
-		state_label.text = "%s\n%s\n%s\nRestart: button" % [state_text, extra_note, control_note]
+	hud.update_state(state_text, control_note, active_note)
+	hud.update_score(score)
 
 
 func _ensure_input_actions() -> void:
