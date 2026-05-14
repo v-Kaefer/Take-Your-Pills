@@ -2,62 +2,56 @@
 
 Guia oficial para automação de backlog no GitHub com execução única (bulk-first) via manifesto JSON.
 
-## Objetivo principal
+## 1) Branch naming
+Use branches with the approved prefix pattern:
 
-Use o fluxo abaixo quando quiser criar/atualizar labels, issues, sub-issues e integração com Project em uma única rodada, sem operação manual por item.
+- `feat/...`
+- `fix/...`
+- `docs/...`
+- `refactor/...`
+- `test/...`
+- `hotfix/...`
+- `phase/...`
+- `task/...`
 
-## Pré-requisitos
+Example: `feat/repo-governance-bootstrap`
 
-- `gh` autenticado (`gh auth login`)
-- `python3`
-- `jq`
-- permissões no repositório alvo (leitura e escrita em issues)
-- permissões no Project (quando `project.owner`/`project.number` estiverem no manifesto)
-- labels esperadas já existentes no repositório (ou sincronizadas antes)
+## 2) Pull request body
+Follow `/.github/pull_request_template.md` and keep these sections filled:
 
-## Configuração recomendada
+- `## Linked Issue` with `Closes`, `Fixes`, or `Resolves #123`
+- `## Milestone` with a value such as `MS0`
+- `## Summary`
+- `## How to test`
+- `## Evidence`
+- `## DoD checklist`
 
-Defina repositório padrão para evitar repetir `--repo`:
+The PR metadata workflow rejects empty sections, placeholder text, issue links outside `## Linked Issue`, and missing test type. To validate a PR body locally:
 
 ```bash
-export GH_REPO="owner/name"
+PR_BODY="$(cat path/to/pr-body.md)" scripts/validation/validate_pr_body.py
 ```
 
-## Criar PR com template
+When a PR fails branch naming or metadata checks in GitHub Actions, the workflow leaves a sticky PR comment with the exact fix to apply.
 
-Quando a PR for aberta pela CLI, prefira o wrapper versionado para aplicar o mesmo
-template usado pelo GitHub UI:
+## 3) Create PR with template
+When the PR is opened via CLI, prefer the wrapper versioned in the repo so the same template used by the GitHub UI is applied automatically:
 
 ```bash
 ./scripts/github/create-pr.sh --base develop --head feat/minha-branch --title "Minha PR"
 ```
 
-Esse wrapper aplica `.github/pull_request_template.md` por padrão e evita `--fill`,
-porque esse modo ignora o contrato do template.
+The wrapper applies `.github/pull_request_template.md` by default and rejects `--fill`, because that mode ignores the template contract.
 
-## Fluxo oficial (bulk-first)
-
-### Passo 1) Sincronizar labels
-
-Sempre execute primeiro para garantir as labels exigidas pelo manifesto.
+## 4) Local validation before PR updates
+From repository root:
 
 ```bash
-./scripts/github/bootstrap-labels.sh --repo owner/name --dry-run
-./scripts/github/bootstrap-labels.sh --repo owner/name --apply
+./scripts/validation/repo_quality.sh
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
 ```
 
-Com arquivo customizado:
-
-```bash
-./scripts/github/bootstrap-labels.sh \
-  --repo owner/name \
-  --labels-file .github/labels.yml \
-  --apply
-```
-
-Critério de sucesso: saída JSON com `created`/`updated`/`unchanged` e `dryRun` coerente.
-
-### Passo 2) Validar manifesto sem acessar GitHub
+When changing the backlog manifest, also validate the issue tree schema and structure:
 
 ```bash
 ./scripts/github/create-issue-tree.sh \
@@ -66,127 +60,67 @@ Critério de sucesso: saída JSON com `created`/`updated`/`unchanged` e `dryRun`
   --validate-only
 ```
 
-Quando usar `--validate-only`:
-
-- validar estrutura JSON/schema e consistência interna
-- validar tipos, prioridades, áreas, obrigatórios e relações pai-filho
-- sem leitura/escrita no repositório
-
-Critério de sucesso: JSON com `stage: "validate"` e `message: "Config válido."`.
-
-### Passo 3) Planejar execução completa (dry-run)
+For full governance bootstrap execution (real write operations), use:
 
 ```bash
-./scripts/github/create-issue-tree.sh \
-  --repo owner/name \
-  --file config/issues/roadmap.json \
-  --schema config/issues/schema.json \
+./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --no-dry-run --link-subissues
+```
+
+## 5) Governance bootstrap references
+- Main runbook: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`
+- Local orchestrator: `/scripts/github/bootstrap_local.sh`
+- Underlying scripts (kept separated):
+  - `/scripts/github/sync_labels.py`
+  - `/scripts/github/create_project_v2.py`
+  - `/scripts/github/create_milestones.py`
+  - `/scripts/github/generate_issues.py`
+  - `/scripts/github/sync_project_v2.py`
+  - `/scripts/github/sync_issue_milestones.py`
+
+## 6) GitHub issue and Project maintenance scripts
+All scripts that write to GitHub expect `GITHUB_TOKEN` or `GH_TOKEN` in the environment. Use a token with repository issue permissions; Project v2 operations also require `project` scope.
+
+Create missing repository milestones from the manifest:
+
+```bash
+python3 scripts/github/create_milestones.py \
+  config/project/milestones.json \
+  --repo v-Kaefer/Take-Your-Pills
+```
+
+Add repository issues to Project v2, sync custom fields, keep issue order from oldest to newest, and repair sub-issue links:
+
+```bash
+python3 scripts/github/sync_project_v2.py \
+  config/project/project-definition.json \
+  --repo v-Kaefer/Take-Your-Pills \
+  --project-number 4 \
+  --link-subissues
+```
+
+Only repair native sub-issue links without reprocessing Project items:
+
+```bash
+python3 scripts/github/sync_project_v2.py \
+  config/project/project-definition.json \
+  --repo v-Kaefer/Take-Your-Pills \
+  --project-number 4 \
+  --only-link-subissues
+```
+
+Sync issue milestones from generated issue metadata. User stories read `- Milestone: MSx` from their body; tasks inherit the parent story milestone from `Parent story: ... (#N)`. Closed `not_planned` issues are duplicates or discarded planning entries and must not count toward milestones, so clear them during normal maintenance:
+
+```bash
+python3 scripts/github/sync_issue_milestones.py \
+  --repo v-Kaefer/Take-Your-Pills \
+  --clear-not-planned
+```
+
+Preview milestone changes without writing to GitHub:
+
+```bash
+python3 scripts/github/sync_issue_milestones.py \
+  --repo v-Kaefer/Take-Your-Pills \
+  --clear-not-planned \
   --dry-run
 ```
-
-Quando usar `--dry-run`:
-
-- sempre como etapa obrigatória recomendada antes de `--apply`
-- executa pré-checagens externas (`gh auth`, permissões, labels esperadas, acesso ao project)
-- calcula plano (`plannedCreate`/`plannedUpdate`) sem escrever nada
-
-Critério de sucesso: JSON com `stage: "plan"`, `failed: 0` e preconditions válidas.
-
-### Passo 4) Aplicar execução única
-
-```bash
-./scripts/github/create-issue-tree.sh \
-  --repo owner/name \
-  --file config/issues/roadmap.json \
-  --schema config/issues/schema.json \
-  --apply
-```
-
-Quando usar `--apply`:
-
-- após validação e dry-run aprovados
-- cria/atualiza issues de forma idempotente por título
-- cria e vincula sub-issues ao pai
-- adiciona itens ao Project e tenta preencher campos mapeados
-
-Critério de sucesso: JSON com `stage: "apply"` e resumo final com contagens.
-
-## Interpretação do resumo final
-
-Campos de auditoria no JSON de saída:
-
-- `plannedCreate` / `plannedUpdate`: plano calculado no início
-- `created` / `updated`: ações efetivas em issues
-- `linked`: sub-issues vinculadas ao pai
-- `projectItemsAdded`: itens adicionados ao Project
-- `projectFieldsUpdated`: atualizações de campos do Project
-- `failed`: falhas parciais
-
-Política de falha parcial:
-
-- o fluxo continua para os demais itens
-- cada item retorna status e mensagem
-- não há abort silencioso
-
-## Reexecução segura (idempotência)
-
-- reexecutar o mesmo manifesto não deve duplicar issue com mesmo título
-- itens existentes são atualizados (labels/milestone/assignees)
-- vínculo de sub-issue usa estratégia `graphql_or_comment` com fallback
-- no Project, inclusão repetida tenta evitar duplicação e reporta status por item
-
-## Manifesto (execução única)
-
-Arquivo de exemplo: `config/issues/roadmap.json`.
-
-Seções principais:
-
-- `defaults`: labels/assignees/milestone/body padrão para todos os itens
-- `project`: owner/number, arquivo de mapeamento de campos e valores extras
-- `linking`: estratégia de vínculo pai-filho
-- `epics`: árvore de backlog (epic + children)
-
-Schema oficial: `config/issues/schema.json`.
-
-## Troubleshooting
-
-### `gh auth` inválido ou expirado
-
-- rode `gh auth status`
-- reautentique com `gh auth login`
-
-### Sem permissão de escrita em issues/project
-
-- confirme acesso ao repo e project
-- revise escopos do token do `gh`
-
-### `missingLabels` no dry-run
-
-- sincronize labels com `bootstrap-labels.sh`
-- rode dry-run novamente
-
-### Erro de schema/manifesto
-
-- rode `--validate-only`
-- ajuste campos obrigatórios, enums (`type`, `area`, `priority`) e estrutura `children`
-
-### Campos do Project não atualizam
-
-- confira `project.fieldsFile` e IDs/opções em `.github/project/fields.json`
-- regenere o mapeamento quando necessário:
-
-```bash
-./scripts/github/seed-project.sh \
-  --owner owner \
-  --project-number 1 \
-  --output .github/project/fields.json
-```
-
-## Scripts avançados (uso pontual)
-
-Os comandos abaixo existem para casos específicos, mas não são o fluxo principal bulk-first:
-
-- `create-issue.sh`: criação/atualização unitária
-- `create-subissue.sh`: criação de item filho e vínculo ao pai
-- `create-project.sh`: criação de Project
-- `seed-project.sh`: geração de mapeamento de campos do Project

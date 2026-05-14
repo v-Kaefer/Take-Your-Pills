@@ -39,7 +39,11 @@ jobs:
           markdownlint "**/*.md" \
             --ignore node_modules \
             --ignore aplicacao-planejamento-repo2.md \
-            --ignore planejamento-repo2-automacoes.md
+            --ignore planejamento-repo2-automacoes.md \
+            --ignore pipeline_review_automation_plan.md \
+            --ignore take-your-pills_backlog_final.md \
+            --ignore take_your_pills_issues_detalhados.md \
+            --ignore take_your_pills_project_definitions_update.md
 
       - name: Run shellcheck
         run: |
@@ -49,6 +53,14 @@ jobs:
           else
             echo "No shell scripts found."
           fi
+
+      - name: Run Python governance tests
+        run: |
+          python3 -m unittest tests.test_governance_bootstrap
+
+      - name: Check Python syntax
+        run: |
+          python3 -m compileall governance_bootstrap scripts/github scripts/validation tests
 
       - name: Run repository tests
         run: |

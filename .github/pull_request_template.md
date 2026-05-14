@@ -1,33 +1,27 @@
-## Summary / Resumo
+## Linked Issue
+- Closes #123
 
-Descreva de forma objetiva o que foi alterado nesta PR.
+## Milestone
+- MS0
+
+## Summary
+- What changed and why.
 <!-- If you are creating the PR via CLI, use ./scripts/github/create-pr.sh to keep this template applied. -->
 
-## Related Issue / Issue relacionada
+## How to test
+- Test type: automated | smoke | manual
+- Steps: describe the commands, manual flow, or verification evidence you ran.
 
-<!-- Exemplo: Closes #123 -->
-Closes #
+## Evidence
+- [ ] Screenshot/GIF attached (when applicable)
+- [ ] Log/output attached (when applicable)
+- [ ] Manual checklist executed (when applicable)
 
-## Change Type / Tipo de mudança
+## Known risks
+- List any known limitations, or write `None` if there are none.
 
-- [ ] feat
-- [ ] fix
-- [ ] chore
-- [ ] docs
-- [ ] refactor
-- [ ] test
-
-## Validation / Validação
-
-- [ ] Verifiquei localmente as alterações relevantes
-- [ ] Atualizei documentação quando aplicável
-- [ ] Não incluí segredos ou credenciais no código
-
-## AI Usage / Uso de IA
-
-- [ ] Não utilizei IA
-- [ ] Utilizei IA como apoio e revisei integralmente o conteúdo gerado
-
-## Notes / Observações
-
-Contexto adicional para revisão (opcional).
+## DoD checklist
+- [ ] Scope implemented as defined
+- [ ] Tests executed and documented
+- [ ] Evidence attached
+- [ ] No known critical breakage introduced
