@@ -1,6 +1,7 @@
 ## Summary / Resumo
 
 Descreva de forma objetiva o que foi alterado nesta PR.
+<!-- If you are creating the PR via CLI, use ./scripts/github/create-pr.sh to keep this template applied. -->
 
 ## Related Issue / Issue relacionada
 

@@ -50,6 +50,30 @@ jobs:
             echo "No shell scripts found."
           fi
 
+      - name: Run repository tests
+        run: |
+          target_branch="${GITHUB_BASE_REF:-${GITHUB_REF_NAME:-}}"
+          mapfile -t TEST_FILES < <(find tests -maxdepth 1 -type f -name "test_*.sh" | sort)
+
+          if [ "${#TEST_FILES[@]}" -eq 0 ]; then
+            echo "No repository tests found."
+            exit 0
+          fi
+
+          for test_file in "${TEST_FILES[@]}"; do
+            case "$(basename "$test_file")" in
+              test_bootstrap_labels.sh)
+                if [ "$target_branch" != "main" ]; then
+                  echo "Skipping ${test_file} on ${target_branch}"
+                  continue
+                fi
+                ;;
+            esac
+
+            echo "Running ${test_file}"
+            bash "$test_file"
+          done
+
       - name: Validate JSON issue manifests
         run: |
           mapfile -t JSON_FILES < <(find config/issues -type f -name "*.json" ! -name "schema.json" | sort)

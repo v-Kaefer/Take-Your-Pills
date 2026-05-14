@@ -23,6 +23,18 @@ Defina repositório padrão para evitar repetir `--repo`:
 export GH_REPO="owner/name"
 ```
 
+## Criar PR com template
+
+Quando a PR for aberta pela CLI, prefira o wrapper versionado para aplicar o mesmo
+template usado pelo GitHub UI:
+
+```bash
+./scripts/github/create-pr.sh --base develop --head feat/minha-branch --title "Minha PR"
+```
+
+Esse wrapper aplica `.github/pull_request_template.md` por padrão e evita `--fill`,
+porque esse modo ignora o contrato do template.
+
 ## Fluxo oficial (bulk-first)
 
 ### Passo 1) Sincronizar labels

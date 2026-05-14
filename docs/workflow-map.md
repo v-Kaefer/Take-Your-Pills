@@ -24,6 +24,8 @@ Descrever como os workflows da Fase 1 se conectam e quais responsabilidades cobr
 - Papel: validar qualidade dos arquivos do repositório.
 - Ferramentas: `actionlint`, `yamllint`, `markdownlint`, `shellcheck`.
 - Validação adicional: consistência de manifestos JSON de backlog via `create-issue-tree.sh --validate-only`.
+- Testes adicionais: contratos de template de PR, wrapper de `gh pr create` e regressão de labels.
+- Cobertura por branch: `develop` executa o smoke mínimo; `main` executa a validação mais completa de labels.
 - Resultado: evita regressões em arquivos de automação e documentação.
 
 ## `governance-checks.yml`
