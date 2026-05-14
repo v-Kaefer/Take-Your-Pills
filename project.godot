@@ -22,6 +22,10 @@ config/features=PackedStringArray("4.6")
 
 RunSignals="*res://scripts/run_signals.gd"
 
+[display]
+
+window/stretch/mode="canvas_items"
+
 [rendering]
 
 renderer/rendering_method.mobile="forward_plus"

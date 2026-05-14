@@ -6,7 +6,7 @@ const DEFAULT_SCROLL_SPEED := 240.0
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $World/Player
-@onready var chunks = $World/Chunks
+@onready var chunks: ChunkManager = $World/Chunks
 @onready var state_label: Label = $HUD/StateLabel
 @onready var restart_button: Button = $HUD/RestartButton
 
@@ -38,6 +38,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(player.primary_action_name):
 		player.request_primary_action()
 		get_viewport().set_input_as_handled()
+		return
+
+	if event.is_action_pressed(player.jump_action_name):
+		player.request_jump()
+		get_viewport().set_input_as_handled()
+		return
 
 
 func _toggle_pause() -> void:
@@ -82,7 +88,7 @@ func _update_state_label() -> void:
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var control_note := "Space: primary | Esc: pause | Backspace: game over"
+	var control_note := "Space: primary | Up: jump | Esc: pause | Backspace: game over"
 
 	if transient_note.is_empty():
 		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
@@ -93,6 +99,7 @@ func _update_state_label() -> void:
 
 func _ensure_input_actions() -> void:
 	_register_key_action(player.primary_action_name, KEY_SPACE)
+	_register_key_action(player.jump_action_name, KEY_UP)
 	_register_key_action("game_pause", KEY_ESCAPE)
 	_register_key_action("game_over_debug", KEY_BACKSPACE)
 
