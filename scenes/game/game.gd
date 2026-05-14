@@ -88,7 +88,12 @@ func _update_state_label() -> void:
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var control_note := "Space: primary | Up: jump | Esc: pause | Backspace: game over"
+	var primary_hint := _action_hint(player.primary_action_name, "Space")
+	var jump_hint := _action_hint(player.jump_action_name, "Up")
+	var control_note := "%s: primary | %s: jump | Esc: pause | Backspace: game over" % [
+		primary_hint,
+		jump_hint,
+	]
 
 	if transient_note.is_empty():
 		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
@@ -113,3 +118,16 @@ func _register_key_action(action_name: StringName, keycode: Key) -> void:
 	var event := InputEventKey.new()
 	event.keycode = keycode
 	InputMap.action_add_event(action_name, event)
+
+
+func _action_hint(action_name: StringName, fallback: String) -> String:
+	for event in InputMap.action_get_events(action_name):
+		var key_event := event as InputEventKey
+		if key_event == null:
+			continue
+
+		var key_label := key_event.as_text_keycode()
+		if not key_label.is_empty():
+			return key_label
+
+	return fallback
