@@ -75,7 +75,7 @@ O time sai desta fase sabendo:
 ## Fase 1 — Fundação jogável + pré-produção de design
 **Janela sugerida:** de **22/04** até o checkpoint de **13/05**
 
-**Objetivo:** ter um runner jogável com movimento, colisão, derrota, restart, cenário inicial e loop base reconhecível.
+**Objetivo:** ter um runner jogável com chunks, colisão, derrota, restart, cenário inicial e loop base reconhecível.
 
 ### Entregas desta fase
 - guia visual mínimo do jogo

@@ -5,7 +5,22 @@ Take Your Pills - É um jogo infinity runner, side-scroller, ambientado em um Ja
 - Artefatos de governança: `/docs`, `/config`, `/.github`, `/scripts`
 - Runbook de bootstrap: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`
 - CLI reutilizável: `python -m governance_bootstrap`
+- Make targets: `make help`
 - Guia de contribuição: `/CONTRIBUTING.md`
+
+## Make shortcuts
+Use os atalhos abaixo para a rotina de governança:
+
+```bash
+make labels_sync
+make milestones_sync
+make project_create
+make issues_generate
+
+make issue_create REPO=v-Kaefer/Take-Your-Pills TITLE="New issue" BODY_FILE=/tmp/body.md LABELS="status:backlog type:task"
+make issue_update REPO=v-Kaefer/Take-Your-Pills ISSUE_NUMBER=123 TITLE="Updated title" ADD_LABELS="priority:high"
+make issue_delete REPO=v-Kaefer/Take-Your-Pills ISSUE_NUMBER=123
+```
 
 ## Verificação local (full verify)
 Use estes comandos antes de abrir/atualizar PR:

@@ -31,27 +31,27 @@
       "stories": [
         {
           "storyId": "US-01",
-          "title": "US-01 | Implementar corrida lateral contínua e base de movimentação",
+          "title": "US-01 | Implementar fluxo de chunks com player fixo",
           "labels": ["type:user-story", "priority:critical", "test:smoke"],
-          "body": "Como jogador, quero controlar uma corrida lateral contínua para que o jogo tenha um loop base imediatamente compreensível.",
+          "body": "Como jogador, quero um fluxo de chunks sob um player fixo para que o jogo tenha um loop base imediatamente compreensível.",
           "acceptanceCriteria": [
-            "o personagem entra em corrida automática assim que a run começa",
-            "o deslocamento horizontal é contínuo e estável",
+            "o fluxo de chunks entra em movimento assim que a run começa",
+            "o deslocamento horizontal do cenário é contínuo e estável",
             "a velocidade base vem de uma única fonte de configuração",
-            "não existe input manual para andar para frente ou para trás",
-            "pausa e game over interrompem totalmente o auto-run"
+            "o player permanece ancorado e não recebe input manual de deslocamento horizontal",
+            "pausa e game over interrompem totalmente o fluxo de chunks"
           ],
           "testStrategy": [
             "executar o smoke check do projeto Godot em modo headless",
-            "abrir a cena Game e verificar que o player corre sem input",
-            "ativar pausa e confirmar que o movimento é interrompido",
-            "encerrar a run e confirmar que o auto-run não continua",
-            "verificar que não há caminho de controle horizontal manual"
+            "abrir a cena Game e verificar que os chunks se movem sem mover o player",
+            "ativar pausa e confirmar que o fluxo é interrompido",
+            "encerrar a run e confirmar que o fluxo não continua",
+            "verificar que não há caminho de controle horizontal manual do player"
           ],
           "dod": [
             "cena Player criada e instanciável",
-            "auto-run integrado à cena Game",
-            "estados básicos impedem movimento em pause e dead",
+            "fluxo de chunks integrado à cena Game",
+            "estados básicos impedem o fluxo em pause e dead",
             "evidência de validação manual registrada"
           ],
           "tasks": [
@@ -65,7 +65,7 @@
               "completionCriteria": [
                 "a cena Player instancia sem erros",
                 "a cena possui base visual e colisão",
-                "o arquivo está pronto para receber o auto-run"
+                "o arquivo está pronto para receber o fluxo fixo de chunks e enquadramento"
               ],
               "testStrategy": [
                 "abrir a cena Player diretamente no editor",
@@ -82,30 +82,30 @@
               ]
             },
             {
-              "title": "T-01.2 | Implementar corrida automática",
+              "title": "T-01.2 | Implementar fluxo de chunks",
               "technicalScope": [
-                "implementar deslocamento horizontal automático na atualização física",
+                "implementar deslocamento horizontal automático nos chunks e nas camadas do cenário",
                 "ler a velocidade a partir de uma configuração única",
-                "impedir movimento para trás",
-                "parar a movimentação quando o estado não estiver ativo"
+                "manter o player fixo no eixo horizontal",
+                "parar o fluxo quando o estado não estiver ativo"
               ],
               "completionCriteria": [
-                "o player se move automaticamente enquanto a run estiver ativa",
+                "o cenário se move automaticamente enquanto a run estiver ativa",
                 "a velocidade horizontal responde a uma configuração central",
-                "o personagem não aceita deslocamento horizontal manual",
-                "pause e game over interrompem o auto-run"
+                "o player não aceita deslocamento horizontal manual",
+                "pause e game over interrompem o fluxo"
               ],
               "testStrategy": [
                 "executar uma run em Game sem pressionar input horizontal",
-                "pausar a run e confirmar que o avanço para",
+                "pausar a run e confirmar que o fluxo para",
                 "finalizar a run e confirmar que o movimento cessa"
               ],
               "expectedEvidence": [
-                "observação manual do movimento automático",
+                "observação manual do fluxo automático",
                 "anotação ou captura de pausa e game over interrompendo o avanço"
               ],
               "dod": [
-                "auto-run funcionando no fluxo principal",
+                "fluxo funcionando no fluxo principal",
                 "movimento controlado por uma fonte de velocidade única",
                 "parada confiável em pause e dead"
               ]
@@ -116,7 +116,7 @@
                 "definir os estados mínimos running, paused e dead",
                 "rotear o input principal através da camada de estado",
                 "reservar o ponto de entrada para o input de pulo sem implementar física de pulo",
-                "garantir que input em pause e dead não altere o auto-run"
+                "garantir que input em pause e dead não altere o fluxo dos chunks"
               ],
               "completionCriteria": [
                 "o player expõe estados básicos claros",
@@ -127,7 +127,7 @@
               "testStrategy": [
                 "acionar input durante running e confirmar que o estado responde",
                 "acionar input durante pause e dead e confirmar que não há efeito",
-                "validar que o estado não quebra a corrida automática"
+                "validar que o estado não quebra o fluxo dos chunks"
               ],
               "expectedEvidence": [
                 "registro dos estados e do fluxo de input",
@@ -140,30 +140,33 @@
               ]
             },
             {
-              "title": "T-01.4 | Conectar player à cena Game",
+              "title": "T-01.4 | Conectar player e chunks à cena Game",
               "technicalScope": [
                 "instanciar o player a partir da cena Game",
+                "instanciar o fluxo de chunks a partir da cena Game",
                 "fazer a Game assumir o ciclo de vida da run",
-                "garantir que pause e game over desativem o player de forma consistente",
-                "manter o player independente da lógica de cena fora do movimento"
+                "garantir que pause e game over desativem o fluxo de forma consistente",
+                "manter o player independente da lógica de chunks"
               ],
               "completionCriteria": [
                 "a cena Game cria o player corretamente",
+                "a cena Game cria o fluxo de chunks corretamente",
                 "a run começa já em estado jogável",
-                "pause e game over afetam o player como esperado",
-                "a responsabilidade entre Game e Player fica separada"
+                "pause e game over afetam o fluxo como esperado",
+                "a responsabilidade entre Game, Player e mapa fica separada"
               ],
               "testStrategy": [
-                "abrir a cena Game e confirmar que o player aparece e corre",
-                "pausar a cena e confirmar que a corrida para",
-                "encerrar a run e confirmar que o player não continua ativo"
+                "abrir a cena Game e confirmar que o player aparece enquanto os chunks correm",
+                "pausar a cena e confirmar que o fluxo para",
+                "encerrar a run e confirmar que os chunks não continuam ativos"
               ],
               "expectedEvidence": [
-                "captura da cena Game com o player em execução",
+                "captura da cena Game com os chunks em execução",
                 "registro da verificação de pause e game over"
               ],
               "dod": [
                 "player conectado à cena Game",
+                "chunks conectados à cena Game",
                 "ciclo de vida da run centralizado em Game",
                 "integração pronta para as próximas histórias da fase"
               ]
@@ -186,10 +189,10 @@
         },
         {
           "storyId": "US-04",
-          "title": "US-04 | Implementar cenário inicial, câmera e instanciação básica",
+          "title": "US-04 | Implementar cenário inicial com chunks",
           "labels": ["type:user-story", "priority:high", "test:smoke"],
-          "body": "Como jogador, quero um cenário inicial legível para compreender o espaço de jogo e o movimento.",
-          "tasks": ["T-04.1 | Criar cena do cenário inicial", "T-04.2 | Implementar câmera 2D", "T-04.3 | Instanciar obstáculos básicos", "T-04.4 | Ajustar layout inicial para leitura"]
+          "body": "Como jogador, quero um cenário inicial legível com chunks para compreender o espaço de jogo e o movimento.",
+          "tasks": ["T-04.1 | Criar cena do cenário inicial", "T-04.2 | Fixar player no enquadramento", "T-04.3 | Instanciar chunks e obstáculos básicos", "T-04.4 | Ajustar layout inicial para leitura"]
         },
         {
           "storyId": "US-05",
