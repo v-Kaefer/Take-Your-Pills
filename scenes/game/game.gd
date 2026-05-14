@@ -2,6 +2,8 @@ extends Node2D
 class_name Game
 
 const DEFAULT_SCROLL_SPEED := 240.0
+const SCORE_DISTANCE_DIVISOR := 10.0
+const NOTE_DISPLAY_DURATION := 2.0
 
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
@@ -26,7 +28,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if current_state == GameState.RUNNING:
-		var new_score = int(player.position.x / 10.0)
+		var new_score = int(player.position.x / SCORE_DISTANCE_DIVISOR)
 		if new_score != score:
 			score = new_score
 			_update_hud()
@@ -84,7 +86,7 @@ func _set_game_over() -> void:
 func _on_player_primary_action_requested() -> void:
 	active_note = "Primary action accepted"
 	_update_hud()
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(NOTE_DISPLAY_DURATION).timeout
 	if active_note == "Primary action accepted":
 		active_note = ""
 		_update_hud()
