@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/chunks/chunk.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="2"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(640, 96)
@@ -49,3 +50,6 @@ shape = SubResource("2")
 
 [node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
 rect = Rect2(0, 0, 640, 360)
+
+[node name="Obstacle" parent="." instance=ExtResource("2")]
+position = Vector2(448, 248)

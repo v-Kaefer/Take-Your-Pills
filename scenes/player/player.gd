@@ -1,7 +1,6 @@
 extends CharacterBody2D
 class_name Player
 
-@export var primary_action_name: StringName = &"player_primary"
 @export var jump_action_name: StringName = &"player_jump"
 @export var jump_velocity: float = -420.0
 @export var gravity: float = 1200.0
@@ -9,8 +8,6 @@ class_name Player
 @export var ground_snap_length: float = 8.0
 
 enum RunState { RUNNING, PAUSED, DEAD }
-
-signal primary_action_requested
 
 var current_state: RunState = RunState.PAUSED
 var _jump_requested: bool = false
@@ -35,14 +32,6 @@ func end_run() -> void:
 	current_state = RunState.DEAD
 	velocity.x = 0.0
 	_jump_requested = false
-
-
-func request_primary_action() -> bool:
-	if current_state != RunState.RUNNING:
-		return false
-
-	primary_action_requested.emit()
-	return true
 
 
 func request_jump() -> bool:

@@ -66,7 +66,7 @@ func _on_request_next_chunk(chunk: Node) -> void:
 	if chunk != tail_chunk:
 		return
 
-	_spawn_chunk(Vector2(_get_rightmost_x() + chunk_width, 0.0))
+	call_deferred("_spawn_chunk", Vector2(_get_rightmost_x() + chunk_width, 0.0))
 
 
 func _on_chunk_exited_screen(chunk: Node) -> void:
@@ -79,14 +79,14 @@ func _on_chunk_exited_screen(chunk: Node) -> void:
 		typed_chunk.queue_free()
 
 
-func _spawn_chunk(position: Vector2) -> void:
+func _spawn_chunk(spawn_position: Vector2) -> void:
 	if CHUNK_SCENES.is_empty():
 		return
 
 	var scene_index := _spawn_cursor % CHUNK_SCENES.size()
 	var chunk := CHUNK_SCENES[scene_index].instantiate() as Node2D
 	_spawn_cursor += 1
-	chunk.position = position
+	chunk.position = spawn_position
 	add_child(chunk)
 	_active_chunks.append(chunk)
 

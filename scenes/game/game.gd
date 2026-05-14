@@ -3,7 +3,6 @@ class_name Game
 
 const DEFAULT_SCROLL_SPEED := 240.0
 const SCORE_DISTANCE_DIVISOR := 10.0
-const NOTE_DISPLAY_DURATION := 2.0
 
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
@@ -13,16 +12,15 @@ enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 var current_state: GameState = GameState.RUNNING
 var score: int = 0
-var active_note: String = ""
 
 
 func _ready() -> void:
 	_ensure_input_actions()
+	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
 	hud.connect_restart(_on_restart_button_pressed)
 	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
 	chunks.start_run()
 	player.start_run()
-	player.primary_action_requested.connect(_on_player_primary_action_requested)
 	_update_hud()
 
 
@@ -45,13 +43,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	if event.is_action_pressed(player.primary_action_name):
-		player.request_primary_action()
-		get_viewport().set_input_as_handled()
-		return
-
 	if event.is_action_pressed(player.jump_action_name):
-		player.request_jump()
+		if current_state == GameState.GAME_OVER:
+			get_viewport().set_input_as_handled()
+			_restart_run()
+			return
+		elif current_state == GameState.RUNNING:
+			player.request_jump()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -83,16 +81,15 @@ func _set_game_over() -> void:
 	_update_hud()
 
 
-func _on_player_primary_action_requested() -> void:
-	active_note = "Primary action accepted"
-	_update_hud()
-	await get_tree().create_timer(NOTE_DISPLAY_DURATION).timeout
-	if active_note == "Primary action accepted":
-		active_note = ""
-		_update_hud()
+func _on_player_hit_obstacle(_obstacle: Node, _body: Node) -> void:
+	_set_game_over()
 
 
 func _on_restart_button_pressed() -> void:
+	_restart_run()
+
+
+func _restart_run() -> void:
 	get_tree().reload_current_scene()
 
 
@@ -103,43 +100,44 @@ func _update_hud() -> void:
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var primary_hint := _action_hint(player.primary_action_name, "Space")
-	var jump_hint := _action_hint(player.jump_action_name, "Up")
-	var control_note := "%s: primary | %s: jump | Esc: pause | Backspace: game over" % [
-		primary_hint,
-		jump_hint,
-	]
+	var control_note := "Jump: %s | Esc: pause | Backspace: game over" % _action_hints(player.jump_action_name)
+	if current_state == GameState.GAME_OVER:
+		control_note = "Jump: restart | Restart: button"
 
-	hud.update_state(state_text, control_note, active_note)
+	hud.update_state(state_text, control_note)
 	hud.update_score(score)
 
 
 func _ensure_input_actions() -> void:
-	_register_key_action(player.primary_action_name, KEY_SPACE)
-	_register_key_action(player.jump_action_name, KEY_UP)
-	_register_key_action("game_pause", KEY_ESCAPE)
-	_register_key_action("game_over_debug", KEY_BACKSPACE)
+	_register_key_action(player.jump_action_name, [KEY_SPACE, KEY_UP])
+	_register_key_action("game_pause", [KEY_ESCAPE])
+	_register_key_action("game_over_debug", [KEY_BACKSPACE])
 
 
-func _register_key_action(action_name: StringName, keycode: Key) -> void:
+func _register_key_action(action_name: StringName, keycodes: Array[Key]) -> void:
 	if not InputMap.has_action(action_name):
 		InputMap.add_action(action_name)
 
 	InputMap.action_erase_events(action_name)
 
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	InputMap.action_add_event(action_name, event)
+	for keycode in keycodes:
+		var event := InputEventKey.new()
+		event.keycode = keycode
+		InputMap.action_add_event(action_name, event)
 
 
-func _action_hint(action_name: StringName, fallback: String) -> String:
+func _action_hints(action_name: StringName) -> String:
+	var labels: Array[String] = []
 	for event in InputMap.action_get_events(action_name):
 		var key_event := event as InputEventKey
 		if key_event == null:
 			continue
 
 		var key_label := key_event.as_text_keycode()
-		if not key_label.is_empty():
-			return key_label
+		if not key_label.is_empty() and not labels.has(key_label):
+			labels.append(key_label)
 
-	return fallback
+	if labels.is_empty():
+		return "Space"
+
+	return " / ".join(labels)
