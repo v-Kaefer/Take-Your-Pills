@@ -7,21 +7,29 @@ enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $World/Player
 @onready var chunks: ChunkManager = $World/Chunks
-@onready var state_label: Label = $HUD/StateLabel
-@onready var restart_button: Button = $HUD/RestartButton
+@onready var hud: GameHUD = $HUD
 
 var current_state: GameState = GameState.RUNNING
-var transient_note: String = ""
+var score: int = 0
+var active_note: String = ""
 
 
 func _ready() -> void:
 	_ensure_input_actions()
-	restart_button.pressed.connect(_on_restart_button_pressed)
+	hud.connect_restart(_on_restart_button_pressed)
 	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
 	chunks.start_run()
 	player.start_run()
 	player.primary_action_requested.connect(_on_player_primary_action_requested)
-	_update_state_label()
+	_update_hud()
+
+
+func _process(_delta: float) -> void:
+	if current_state == GameState.RUNNING:
+		var new_score := int(player.position.x / 10.0)
+		if new_score != score:
+			score = new_score
+			_update_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,7 +67,7 @@ func _toggle_pause() -> void:
 		chunks.start_run()
 		player.start_run()
 
-	_update_state_label()
+	_update_hud()
 
 
 func _set_game_over() -> void:
@@ -69,19 +77,24 @@ func _set_game_over() -> void:
 	current_state = GameState.GAME_OVER
 	chunks.end_run()
 	player.end_run()
-	_update_state_label()
+	hud.show_game_over()
+	_update_hud()
 
 
 func _on_player_primary_action_requested() -> void:
-	transient_note = "Primary action accepted"
-	_update_state_label()
+	active_note = "Primary action accepted"
+	_update_hud()
+	await get_tree().create_timer(2.0).timeout
+	if active_note == "Primary action accepted":
+		active_note = ""
+		_update_hud()
 
 
 func _on_restart_button_pressed() -> void:
 	get_tree().reload_current_scene()
 
 
-func _update_state_label() -> void:
+func _update_hud() -> void:
 	var state_text := "RUNNING"
 	if current_state == GameState.PAUSED:
 		state_text = "PAUSED"
@@ -95,11 +108,8 @@ func _update_state_label() -> void:
 		jump_hint,
 	]
 
-	if transient_note.is_empty():
-		state_label.text = "%s\n%s\nRestart: button" % [state_text, control_note]
-	else:
-		state_label.text = "%s\n%s\n%s\nRestart: button" % [state_text, transient_note, control_note]
-		transient_note = ""
+	hud.update_state(state_text, control_note, active_note)
+	hud.update_score(score)
 
 
 func _ensure_input_actions() -> void:
