@@ -1,6 +1,7 @@
+---
 name: Main source branch validation
 
-on:
+'on':
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, edited, ready_for_review]
@@ -27,7 +28,11 @@ jobs:
             echo "This workflow only validates PRs targeting main."
             exit 1
           fi
-          if [[ "$HEAD_REPO" != "$EXPECTED_REPO" || "$HEAD_REF" != "develop" ]]; then
+          if [[ "$HEAD_REPO" != "$EXPECTED_REPO" ]]; then
+            echo "PRs targeting main must come from $EXPECTED_REPO:develop." >&2
+            exit 1
+          fi
+          if [[ "$HEAD_REF" != "develop" ]]; then
             echo "PRs targeting main must come from $EXPECTED_REPO:develop." >&2
             exit 1
           fi

@@ -1,6 +1,7 @@
+---
 name: Godot smoke check
 
-on:
+'on':
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -15,9 +16,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Godot
-        uses: firebelley/setup-godot@v1
+        uses: chickensoft-games/setup-godot@v2
         with:
-          godot-version: '4.2.2'
+          version: 4.2.2
 
       - name: Verify project.godot exists
         id: has_project
@@ -38,5 +39,6 @@ jobs:
 
       - name: Skip smoke (no Godot project yet)
         if: steps.has_project.outputs.exists != 'true'
+        shell: bash
         run: |
           echo "Skipping smoke check: project.godot not found yet."

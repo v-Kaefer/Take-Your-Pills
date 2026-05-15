@@ -1,6 +1,7 @@
+---
 name: Repository Quality
 
-on:
+'on':
   workflow_call:
   workflow_dispatch:
   pull_request:
@@ -60,12 +61,18 @@ jobs:
 
       - name: Check Python syntax
         run: |
-          python3 -m compileall governance_bootstrap scripts/github scripts/validation tests
+          python3 -m compileall \
+            governance_bootstrap \
+            scripts/github \
+            scripts/validation \
+            tests
 
       - name: Run repository tests
         run: |
           target_branch="${GITHUB_BASE_REF:-${GITHUB_REF_NAME:-}}"
-          mapfile -t TEST_FILES < <(find tests -maxdepth 1 -type f -name "test_*.sh" | sort)
+          mapfile -t TEST_FILES < <(
+            find tests -maxdepth 1 -type f -name "test_*.sh" | sort
+          )
 
           if [ "${#TEST_FILES[@]}" -eq 0 ]; then
             echo "No repository tests found."
@@ -88,7 +95,13 @@ jobs:
 
       - name: Validate JSON issue manifests
         run: |
-          mapfile -t JSON_FILES < <(find config/issues -type f -name "*.json" ! -name "schema.json" | sort)
+          mapfile -t JSON_FILES < <(
+            find config/issues \
+              -type f \
+              -name "*.json" \
+              ! -name "schema.json" \
+              | sort
+          )
           if [ "${#JSON_FILES[@]}" -eq 0 ]; then
             echo "No issue manifest json files found."
             exit 0
@@ -96,5 +109,8 @@ jobs:
           chmod +x scripts/github/create-issue-tree.sh
           for file in "${JSON_FILES[@]}"; do
             echo "Validating $file"
-            ./scripts/github/create-issue-tree.sh --file "$file" --schema config/issues/schema.json --validate-only
+            ./scripts/github/create-issue-tree.sh \
+              --file "$file" \
+              --schema config/issues/schema.json \
+              --validate-only
           done
