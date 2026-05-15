@@ -9,8 +9,8 @@
   "project": {
     "owner": "v-Kaefer",
     "number": 1,
-    "fieldsFile": ".github/project/fields.json",
-    "statusOnCreate": "Backlog",
+    "fieldsFile": "config/project/fields.json",
+    "statusOnCreate": "backlog",
     "extraFieldValues": {
       "Sprint": "S0"
     }

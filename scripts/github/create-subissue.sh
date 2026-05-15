@@ -169,7 +169,7 @@ fi
 if [[ -z "$BODY" ]]; then
   BODY="Parent Issue / Issue pai: #$PARENT"
 else
-  BODY="$BODY\n\nParent Issue / Issue pai: #$PARENT"
+  BODY+=$'\n\n'"Parent Issue / Issue pai: #$PARENT"
 fi
 
 declare -a CREATE_ARGS
@@ -214,10 +214,21 @@ if [[ "$DRY_RUN" == true ]]; then
   exit 0
 fi
 
-repo_node_id="$(gh api "repos/$REPO" --jq '.node_id')"
-graphql_query="mutation(\$repo:ID!, \$parent:Int!, \$child:Int!) { addSubIssue(input: {repositoryId: \$repo, parentIssueNumber: \$parent, subIssueNumber: \$child}) { clientMutationId } }"
+ids_query='query($owner:String!, $repo:String!, $parent:Int!, $child:Int!){ repository(owner:$owner,name:$repo){ parent: issue(number:$parent){id} child: issue(number:$child){id} } }'
+repo_owner="${REPO%%/*}"
+repo_name="${REPO#*/}"
+ids_response="$(gh api graphql -f query="$ids_query" -f owner="$repo_owner" -f repo="$repo_name" -F parent="$PARENT" -F child="$child_number")"
+parent_id="$(jq -r '.data.repository.parent.id // ""' <<<"$ids_response")"
+child_id="$(jq -r '.data.repository.child.id // ""' <<<"$ids_response")"
+
+if [[ -z "$parent_id" || -z "$child_id" ]]; then
+  emit_result "link_failed" "$child_number" "$child_url" "none" "Não foi possível resolver os IDs de parent/child para sub-issue."
+  exit 1
+fi
+
+graphql_query='mutation($parent:ID!, $child:ID!) { addSubIssue(input: {issueId: $parent, subIssueId: $child}) { clientMutationId } }'
 set +e
-mutation_response="$(gh api graphql -f query="$graphql_query" -f repo="$repo_node_id" -F parent="$PARENT" -F child="$child_number" 2>/dev/null)"
+mutation_response="$(gh api graphql -f query="$graphql_query" -f parent="$parent_id" -f child="$child_id" 2>/dev/null)"
 mutation_exit=$?
 set -e
 

@@ -39,6 +39,26 @@ json_escape() {
   python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
 
+map_type_label() {
+  case "$1" in
+    epic|feature) echo "user-story" ;;
+    task) echo "task" ;;
+    bug) echo "bug" ;;
+    chore) echo "repo" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+map_priority_label() {
+  case "$1" in
+    p0) echo "critical" ;;
+    p1) echo "high" ;;
+    p2) echo "medium" ;;
+    p3) echo "low" ;;
+    *) echo "$1" ;;
+  esac
+}
+
 emit_result() {
   local action="$1"
   local number="$2"
@@ -194,10 +214,12 @@ case "$PRIORITY" in
 esac
 
 if [[ -z "$BODY" ]]; then
-  BODY="Summary / Resumo\n\n- preencher\n"
+  BODY=$'Summary / Resumo\n\n- preencher\n'
 fi
 
-desired_labels=("type:$TYPE" "area:$AREA" "priority:$PRIORITY")
+mapped_type="$(map_type_label "$TYPE")"
+mapped_priority="$(map_priority_label "$PRIORITY")"
+desired_labels=("type:$mapped_type" "priority:$mapped_priority")
 if [[ -n "$EXTRA_LABELS" ]]; then
   IFS=',' read -r -a LABELS <<< "$EXTRA_LABELS"
   for label in "${LABELS[@]}"; do
@@ -208,7 +230,7 @@ if [[ -n "$EXTRA_LABELS" ]]; then
   done
 fi
 
-issues_payload="$(gh api "repos/$REPO/issues?state=all&per_page=100")"
+issues_payload="$(gh api --paginate "repos/$REPO/issues?state=all&per_page=100" | jq -s 'add')"
 existing_issue_json="$(jq -c --arg title "$TITLE" '.[] | select(.pull_request|not) | select(.title == $title)' <<<"$issues_payload" | head -n 1 || true)"
 
 if [[ -n "$existing_issue_json" ]]; then

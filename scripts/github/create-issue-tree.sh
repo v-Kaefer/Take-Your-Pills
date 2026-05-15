@@ -140,6 +140,10 @@ def dedupe_str_list(values):
 def validate_issue(item, ctx):
     if not isinstance(item, dict):
         raise SystemExit(f"Config inválido em {ctx}: item deve ser objeto")
+    allowed_fields = {"title", "type", "area", "priority", "body", "labels", "assignees", "milestone", "children"}
+    extra_fields = [k for k in item.keys() if k not in allowed_fields]
+    if extra_fields:
+        raise SystemExit(f"Config inválido em {ctx}: campos não suportados: {', '.join(extra_fields)}")
     for field in ("title", "type", "area", "priority"):
         if not str(item.get(field, "")).strip():
             raise SystemExit(f"Config inválido em {ctx}: campo obrigatório '{field}' ausente")
@@ -200,7 +204,7 @@ def get_project():
     if owner and (not isinstance(number, int) or number < 1):
         raise SystemExit("Config inválido: project.number deve ser inteiro >= 1 quando project.owner for informado")
 
-    fields_file = str(project.get("fieldsFile", ".github/project/fields.json")).strip() or ".github/project/fields.json"
+    fields_file = str(project.get("fieldsFile", "config/project/fields.json")).strip() or "config/project/fields.json"
     status_on_create = str(project.get("statusOnCreate", "Backlog")).strip() or "Backlog"
 
     extra_field_values = project.get("extraFieldValues", {})
@@ -258,10 +262,23 @@ def normalize_item(item, key, parent_key, kind, defaults):
     area = str(item["area"]).strip()
     priority = str(item["priority"]).strip()
 
+    type_label_map = {
+        "epic": "user-story",
+        "feature": "user-story",
+        "task": "task",
+        "bug": "bug",
+        "chore": "repo",
+    }
+    priority_label_map = {
+        "p0": "critical",
+        "p1": "high",
+        "p2": "medium",
+        "p3": "low",
+    }
+
     required_labels = [
-        f"type:{issue_type}",
-        f"area:{area}",
-        f"priority:{priority}",
+        f"type:{type_label_map.get(issue_type, issue_type)}",
+        f"priority:{priority_label_map.get(priority, priority)}",
     ] + labels
 
     return {
@@ -282,16 +299,19 @@ def normalize_item(item, key, parent_key, kind, defaults):
 
 def collect_items(epics, defaults):
     normalized = []
+
+    def walk_issue(item, key, parent_key, kind):
+        normalized.append(normalize_item(item, key, parent_key, kind, defaults))
+        children = item.get("children", []) or []
+        for child_idx, child in enumerate(children):
+            child_key = f"{key}-child-{child_idx}"
+            walk_issue(child, child_key, key, "CHILD")
+
     for epic_idx, epic in enumerate(epics):
         if epic.get("type") != "epic":
             raise SystemExit(f"Config inválido em epics[{epic_idx}]: type deve ser 'epic'")
         epic_key = f"epic-{epic_idx}"
-        normalized.append(normalize_item(epic, epic_key, "", "EPIC", defaults))
-
-        children = epic.get("children", []) or []
-        for child_idx, child in enumerate(children):
-            child_key = f"{epic_key}-child-{child_idx}"
-            normalized.append(normalize_item(child, child_key, epic_key, "CHILD", defaults))
+        walk_issue(epic, epic_key, "", "EPIC")
     return normalized
 
 
@@ -394,8 +414,8 @@ fi
 
 project_owner="$(jq -r '.project.owner // ""' <<<"$NORMALIZED_JSON")"
 project_number="$(jq -r '.project.number // empty' <<<"$NORMALIZED_JSON")"
-project_fields_file="$(jq -r '.project.fieldsFile // ".github/project/fields.json"' <<<"$NORMALIZED_JSON")"
-project_status_on_create="$(jq -r '.project.statusOnCreate // "Backlog"' <<<"$NORMALIZED_JSON")"
+project_fields_file="$(jq -r '.project.fieldsFile // "config/project/fields.json"' <<<"$NORMALIZED_JSON")"
+project_status_on_create="$(jq -r '.project.statusOnCreate // "backlog"' <<<"$NORMALIZED_JSON")"
 
 have_project=false
 if [[ -n "$project_owner" && -n "$project_number" ]]; then
@@ -430,7 +450,7 @@ fi
 
 existing_issues_json='[]'
 set +e
-existing_issues_json="$(gh api "repos/$REPO/issues?state=all&per_page=100" 2>/dev/null)"
+existing_issues_json="$(gh api --paginate "repos/$REPO/issues?state=all&per_page=100" 2>/dev/null | jq -s 'add')"
 issues_exit=$?
 set -e
 if [[ $issues_exit -ne 0 ]]; then
@@ -668,7 +688,7 @@ for ((i=0; i<total_items; i++)); do
         project_id="$(jq -r '.project_id // ""' <<<"$project_fields_json")"
         if [[ -n "$item_id" && -n "$project_id" ]]; then
           status_field_id="$(jq -r '.fields.Status.id // ""' <<<"$project_fields_json")"
-          status_option_id="$(jq -r --arg name "$project_status_on_create" '.fields.Status.options[$name] // ""' <<<"$project_fields_json")"
+          status_option_id="$(jq -r --arg name "$project_status_on_create" --arg lower "$(echo "$project_status_on_create" | tr '[:upper:]' '[:lower:]')" '.fields.Status.options[$name] // .fields.Status.options[$lower] // ""' <<<"$project_fields_json")"
           if [[ -n "$status_field_id" && -n "$status_option_id" ]]; then
             set +e
             gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$status_field_id" --single-select-option-id "$status_option_id" >/dev/null 2>&1
@@ -680,25 +700,30 @@ for ((i=0; i<total_items; i++)); do
             fi
           fi
 
-          type_field_id="$(jq -r '.fields.Type.id // ""' <<<"$project_fields_json")"
-          type_option_name="$(echo "$issue_type" | tr '[:lower:]' '[:upper:]')"
-          type_option_id="$(jq -r --arg name "$type_option_name" '.fields.Type.options[$name] // ""' <<<"$project_fields_json")"
+          case "$issue_type" in
+            epic|feature) project_item_type="user-story" ;;
+            task) project_item_type="task" ;;
+            bug) project_item_type="bug" ;;
+            chore) project_item_type="repo" ;;
+            *) project_item_type="$issue_type" ;;
+          esac
+          type_field_id="$(jq -r '.fields["Item Type"].id // ""' <<<"$project_fields_json")"
+          type_option_id="$(jq -r --arg name "$project_item_type" '.fields["Item Type"].options[$name] // ""' <<<"$project_fields_json")"
           if [[ -n "$type_field_id" && -n "$type_option_id" ]]; then
             gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$type_field_id" --single-select-option-id "$type_option_id" >/dev/null 2>&1 || true
           fi
 
           priority_field_id="$(jq -r '.fields.Priority.id // ""' <<<"$project_fields_json")"
-          priority_option_name="$(echo "$priority" | tr '[:lower:]' '[:upper:]')"
-          priority_option_id="$(jq -r --arg name "$priority_option_name" '.fields.Priority.options[$name] // ""' <<<"$project_fields_json")"
+          case "$priority" in
+            p0) project_priority="critical" ;;
+            p1) project_priority="high" ;;
+            p2) project_priority="medium" ;;
+            p3) project_priority="low" ;;
+            *) project_priority="$priority" ;;
+          esac
+          priority_option_id="$(jq -r --arg name "$project_priority" '.fields.Priority.options[$name] // ""' <<<"$project_fields_json")"
           if [[ -n "$priority_field_id" && -n "$priority_option_id" ]]; then
             gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$priority_field_id" --single-select-option-id "$priority_option_id" >/dev/null 2>&1 || true
-          fi
-
-          area_field_id="$(jq -r '.fields.Area.id // ""' <<<"$project_fields_json")"
-          area_option_name="$(echo "$area" | sed 's/.*/\L&/; s/^./\U&/')"
-          area_option_id="$(jq -r --arg name "$area_option_name" '.fields.Area.options[$name] // ""' <<<"$project_fields_json")"
-          if [[ -n "$area_field_id" && -n "$area_option_id" ]]; then
-            gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$area_field_id" --single-select-option-id "$area_option_id" >/dev/null 2>&1 || true
           fi
 
           while IFS= read -r field_name; do
