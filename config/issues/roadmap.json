@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "defaults": {
-    "labels": ["ready"],
+    "labels": ["status:ready"],
     "assignees": [],
     "milestone": "",
     "body": "Backlog item criado via manifesto JSON."
