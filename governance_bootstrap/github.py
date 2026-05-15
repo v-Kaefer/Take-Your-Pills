@@ -70,6 +70,45 @@ class GitHubClient:
     def list_issue_comments(self, repo: str, number: int):
         return self.paginated(f"{API_BASE}/repos/{repo}/issues/{number}/comments")
 
+    def list_pull_request_files(self, repo: str, number: int):
+        return self.paginated(f"{API_BASE}/repos/{repo}/pulls/{number}/files")
+
+    def get_git_ref(self, repo: str, ref_path: str):
+        return self.request_json("GET", f"{API_BASE}/repos/{repo}/git/ref/{ref_path}")
+
+    def create_git_ref(self, repo: str, ref_name: str, sha: str):
+        return self.request_json("POST", f"{API_BASE}/repos/{repo}/git/refs", {"ref": ref_name, "sha": sha})
+
+    def update_git_ref(self, repo: str, ref_path: str, sha: str, force: bool = False):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/git/refs/{ref_path}", {"sha": sha, "force": force})
+
+    def get_release_by_tag(self, repo: str, tag: str):
+        return self.request_json("GET", f"{API_BASE}/repos/{repo}/releases/tags/{tag}")
+
+    def create_release(self, repo: str, version, sha: str, body: str):
+        payload = {
+            "tag_name": version.canonical,
+            "target_commitish": sha,
+            "name": version.canonical,
+            "body": body,
+            "draft": False,
+            "prerelease": version.prerelease,
+            "generate_release_notes": False,
+        }
+        return self.request_json("POST", f"{API_BASE}/repos/{repo}/releases", payload)
+
+    def update_release(self, repo: str, release_id: int, version, sha: str, body: str):
+        payload = {
+            "tag_name": version.canonical,
+            "target_commitish": sha,
+            "name": version.canonical,
+            "body": body,
+            "draft": False,
+            "prerelease": version.prerelease,
+            "generate_release_notes": False,
+        }
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/releases/{release_id}", payload)
+
     def create_issue_comment(self, repo: str, number: int, body: str):
         return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/comments", {"body": body})
 

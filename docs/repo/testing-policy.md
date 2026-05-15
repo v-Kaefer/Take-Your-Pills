@@ -9,6 +9,6 @@
 - Preferred framework: GDUnit4.
 
 ## Validation strategy
-- pre-push: fast checks
+- pre-push: changed-file audit + targeted syntax checks
 - CI: broader checks
 - QA manual: qualitative validation

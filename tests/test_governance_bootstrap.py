@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
+from governance_bootstrap.release import extract_release_context, parse_name_status_lines, render_change_summary_comment, render_release_context_comment, summarize_change_items
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
@@ -184,6 +185,62 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("PR body", comment)
         self.assertIn("Closes #123", comment)
         self.assertIn("Steps: describe the commands", comment)
+
+    def test_release_context_parser_accepts_short_versions(self):
+        body = """## Release version
+- b0.1
+
+## Related develop PRs
+- #12
+- https://github.com/owner/repo/pull/15
+"""
+
+        context = extract_release_context(body)
+
+        self.assertIsNotNone(context.version)
+        self.assertEqual(context.version.canonical, "beta-0.1.0")
+        self.assertEqual(context.related_prs, [12, 15])
+        self.assertEqual(context.errors, [])
+
+    def test_change_summary_groups_paths_by_game_area(self):
+        items = parse_name_status_lines(
+            "\n".join(
+                [
+                    "M\tscenes/player/player.gd",
+                    "A\tscenes/game/chunks/chunk_d.tscn",
+                    "M\tdocs/workflow-map.md",
+                ]
+            )
+        )
+
+        summary = summarize_change_items(items)
+        comment = render_change_summary_comment(summary)
+
+        self.assertIn("Gameplay impact", comment)
+        self.assertIn("Support changes", comment)
+        self.assertIn("Player systems", comment)
+        self.assertIn("Chunk generation", comment)
+        self.assertIn("Documentation", comment)
+        self.assertIn("Top-level folders: scenes (2), docs (1).", comment)
+        self.assertNotIn("Likely game areas", comment)
+
+    def test_release_context_comment_mentions_related_prs(self):
+        context = extract_release_context(
+            """## Release version
+- final-1.0.0
+
+## Related develop PRs
+- #7
+- #9
+"""
+        )
+
+        comment = render_release_context_comment(context, 42, "planned")
+
+        self.assertIn("final-1.0.0", comment)
+        self.assertIn("State: planned", comment)
+        self.assertIn("#7", comment)
+        self.assertIn("#9", comment)
 
 
 if __name__ == "__main__":

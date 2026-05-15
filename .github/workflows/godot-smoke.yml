@@ -38,4 +38,5 @@ jobs:
 
       - name: Skip smoke (no Godot project yet)
         if: steps.has_project.outputs.exists != 'true'
-        run: echo "Skipping smoke check: project.godot not found yet."
+        run: |
+          echo "Skipping smoke check: project.godot not found yet."

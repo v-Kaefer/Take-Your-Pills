@@ -22,10 +22,11 @@ jobs:
       - name: Validate branch naming and PR metadata
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 scripts/validation/validate_pr_body.py \
-            --branch "${{ github.event.pull_request.head.ref }}" \
+            --branch "$PR_HEAD_REF" \
             --repo "${{ github.repository }}" \
             --pr-number "${{ github.event.pull_request.number }}" \
             --comment

@@ -26,6 +26,11 @@ Follow `/.github/pull_request_template.md` and keep these sections filled:
 - `## Evidence`
 - `## DoD checklist`
 
+For PRs targeting `main`, also fill:
+
+- `## Release version`
+- `## Related develop PRs`
+
 The PR metadata workflow rejects empty sections, placeholder text, issue links outside `## Linked Issue`, and missing test type. To validate a PR body locally:
 
 ```bash
@@ -33,6 +38,8 @@ PR_BODY="$(cat path/to/pr-body.md)" scripts/validation/validate_pr_body.py
 ```
 
 When a PR fails branch naming or metadata checks in GitHub Actions, the workflow leaves a sticky PR comment with the exact fix to apply.
+
+PRs targeting `develop` also get an automated change-summary comment with grouped diff analysis.
 
 ## 3) Create PR with template
 When the PR is opened via CLI, prefer the wrapper versioned in the repo so the same template used by the GitHub UI is applied automatically:
@@ -49,7 +56,10 @@ From repository root:
 ```bash
 ./scripts/validation/repo_quality.sh
 ./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
+git config core.hooksPath .githooks
 ```
+
+With the tracked `pre-push` hook enabled, pushes will print a sector-based change summary and run targeted syntax checks on changed Python, shell, YAML, JSON, and TOML files before the push is accepted.
 
 When changing the backlog manifest, also validate the issue tree schema and structure:
 
@@ -65,6 +75,8 @@ For full governance bootstrap execution (real write operations), use:
 ```bash
 ./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --no-dry-run --link-subissues
 ```
+
+The release workflow creates a tag and GitHub Release when a PR to `main` is merged. It normalizes versions such as `alpha-0.0.1`, `beta-0.1.0`, and `final-1.0.0`, and it comments on the linked `develop` PRs.
 
 ## 5) Governance bootstrap references
 - Main runbook: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`

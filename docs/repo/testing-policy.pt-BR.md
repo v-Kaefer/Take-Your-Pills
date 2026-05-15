@@ -9,6 +9,6 @@
 - Framework preferencial: GDUnit4.
 
 ## Estratégia de validação
-- pre-push: checks rápidos
+- pre-push: auditoria de arquivos alterados + checks de sintaxe direcionados
 - CI: checks mais completos
 - QA manual: validação qualitativa

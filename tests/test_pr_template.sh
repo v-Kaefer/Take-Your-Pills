@@ -9,12 +9,15 @@ if [[ ! -f "$template" ]]; then
 fi
 
 for pattern in \
-  '## Summary / Resumo' \
-  '## Related Issue / Issue relacionada' \
-  '## Change Type / Tipo de mudança' \
-  '## Validation / Validação' \
-  '## AI Usage / Uso de IA' \
-  '## Notes / Observações' \
+  '## Linked Issue' \
+  '## Milestone' \
+  '## Summary' \
+  '## Release version' \
+  '## Related develop PRs' \
+  '## How to test' \
+  '## Evidence' \
+  '## Known risks' \
+  '## DoD checklist' \
   'Closes #'
 do
   if ! grep -Fq "$pattern" "$template"; then
