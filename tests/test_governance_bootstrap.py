@@ -4,11 +4,12 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
-from governance_bootstrap.release import extract_release_context, parse_name_status_lines, render_change_summary_comment, render_release_context_comment, summarize_change_items
+from governance_bootstrap.github import GitHubRequestError
+from governance_bootstrap.release import extract_release_context, parse_name_status_lines, prepare_main_release, publish_release, render_change_summary_comment, render_release_context_comment, summarize_change_items
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
@@ -201,6 +202,70 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(context.version.canonical, "beta-0.1.0")
         self.assertEqual(context.related_prs, [12, 15])
         self.assertEqual(context.errors, [])
+
+    def test_release_prepare_main_dry_run_accepts_valid_version(self):
+        body = """## Release version
+- f1.2.3
+
+## Related develop PRs
+- #12
+- #15
+"""
+
+        client = Mock()
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=True)
+
+        self.assertEqual(result, 0)
+        self.assertIn("State: planned", output.getvalue())
+        self.assertIn("final-1.2.3", output.getvalue())
+        self.assertIn("#12", output.getvalue())
+        self.assertIn("#15", output.getvalue())
+
+    def test_release_prepare_main_dry_run_rejects_invalid_version(self):
+        body = """## Release version
+- maybe-later
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=True)
+
+        self.assertEqual(result, 1)
+        self.assertIn("Invalid release version", output.getvalue())
+        self.assertIn("Accepted forms:", output.getvalue())
+
+    def test_release_publish_creates_tag_and_release(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.side_effect = GitHubRequestError("GET", "/repos/owner/repo/releases/tags/final-1.2.3", 404, "missing")
+        client.create_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = []
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="created") as upsert_comment:
+            result = publish_release(client, "owner/repo", 42, body, "abc123")
+
+        self.assertEqual(result, 0)
+        client.create_git_ref.assert_called_once_with("owner/repo", "refs/tags/final-1.2.3", "abc123")
+        client.create_release.assert_called_once()
+        self.assertEqual(client.create_release.call_args.args[1].canonical, "final-1.2.3")
+        self.assertEqual(client.create_release.call_args.args[1].prerelease, False)
+        upsert_comment.assert_any_call(client, "owner/repo", 42, "<!-- governance-release-plan -->", unittest.mock.ANY)
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
 
     def test_change_summary_groups_paths_by_game_area(self):
         items = parse_name_status_lines(

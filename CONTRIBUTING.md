@@ -76,7 +76,7 @@ For full governance bootstrap execution (real write operations), use:
 ./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --no-dry-run --link-subissues
 ```
 
-The release workflow creates a tag and GitHub Release when a PR to `main` is merged. It normalizes versions such as `alpha-0.0.1`, `beta-0.1.0`, and `final-1.0.0`, and it comments on the linked `develop` PRs.
+The release workflow validates the release version on PRs to `main` before merge, then creates a tag and GitHub Release when the PR is merged. It normalizes versions such as `alpha-0.0.1`, `beta-0.1.0`, and `final-1.0.0`, and it comments on the linked `develop` PRs.
 
 ## 5) Governance bootstrap references
 - Main runbook: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`
