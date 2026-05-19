@@ -2,7 +2,6 @@ extends Node2D
 class_name Game
 
 const DEFAULT_SCROLL_SPEED := 240.0
-const SCORE_DISTANCE_DIVISOR := 10.0
 
 enum GameState { RUNNING, PAUSED, GAME_OVER }
 
@@ -17,19 +16,12 @@ var score: int = 0
 func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
+	RunSignals.collectable_collected.connect(_on_collectable_collected)
 	hud.connect_restart(_on_restart_button_pressed)
 	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
 	chunks.start_run()
 	player.start_run()
 	_update_hud()
-
-
-func _process(_delta: float) -> void:
-	if current_state == GameState.RUNNING:
-		var new_score := int(player.position.x / SCORE_DISTANCE_DIVISOR)
-		if new_score != score:
-			score = new_score
-			_update_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -83,6 +75,14 @@ func _set_game_over() -> void:
 
 func _on_player_hit_obstacle(_obstacle: Node, _body: Node) -> void:
 	_set_game_over()
+
+
+func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int) -> void:
+	if current_state != GameState.RUNNING:
+		return
+
+	score += score_value
+	_update_hud()
 
 
 func _on_restart_button_pressed() -> void:

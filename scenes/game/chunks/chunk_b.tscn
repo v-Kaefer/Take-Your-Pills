@@ -1,6 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/chunks/chunk.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="3"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(640, 96)
@@ -49,3 +51,12 @@ shape = SubResource("2")
 
 [node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
 rect = Rect2(0, 0, 640, 360)
+
+[node name="PillCollectable" parent="." instance=ExtResource("2")]
+position = Vector2(224, 224)
+
+[node name="PillCollectable2" parent="." instance=ExtResource("2")]
+position = Vector2(352, 192)
+
+[node name="BoxCollectable" parent="." instance=ExtResource("3")]
+position = Vector2(512, 224)
