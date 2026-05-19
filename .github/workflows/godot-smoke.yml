@@ -18,7 +18,7 @@ jobs:
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.2.2
+          version: 4.6.2
 
       - name: Verify project.godot exists
         id: has_project
@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           godot --version || true
-          godot --headless --quit
+          godot --headless --path . --quit --log-file /tmp/godot-smoke.log
 
       - name: Skip smoke (no Godot project yet)
         if: steps.has_project.outputs.exists != 'true'
