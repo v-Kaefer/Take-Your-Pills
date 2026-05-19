@@ -42,7 +42,7 @@ position = Vector2(320, 312)
 shape = SubResource("1")
 
 [node name="TriggerNext" type="Area2D" parent="."]
-position = Vector2(576, 240)
+position = Vector2(512, 240)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerNext"]
 shape = SubResource("2")
