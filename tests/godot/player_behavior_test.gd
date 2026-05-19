@@ -24,3 +24,5 @@ func test_player_jump_requests_follow_state_transitions() -> void:
 	player.end_run()
 	assert_int(player.current_state).is_equal(Player.RunState.DEAD)
 	assert_bool(player.request_jump()).is_false()
+
+	player.free()

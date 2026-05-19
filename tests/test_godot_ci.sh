@@ -22,6 +22,7 @@ grep -Fq "godot-version: '4.6.2'" .github/workflows/game-tests.yml
 grep -Fq "version: 'v6.1.3'" .github/workflows/game-tests.yml
 grep -Fq "paths: 'res://tests/godot'" .github/workflows/game-tests.yml
 grep -Fq "warnings-as-errors: true" .github/workflows/game-tests.yml
+grep -Fq "checks: write" .github/workflows/game-tests.yml
 
 grep -Fq "extends GdUnitTestSuite" tests/godot/player_behavior_test.gd
 grep -Fq "test_player_jump_requests_follow_state_transitions" tests/godot/player_behavior_test.gd

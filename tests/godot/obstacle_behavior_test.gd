@@ -28,3 +28,7 @@ func test_obstacle_emits_player_hit_only_once_for_player_bodies() -> void:
 	RunSignals.player_hit_obstacle.disconnect(on_hit)
 
 	assert_int(counter.count).is_equal(1)
+
+	obstacle.free()
+	player.free()
+	non_player.free()

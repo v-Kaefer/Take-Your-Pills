@@ -13,6 +13,7 @@ name: Game tests
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   gdunit:
