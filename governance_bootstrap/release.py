@@ -166,6 +166,22 @@ class ReleaseContext:
     raw_version: str | None
 
 
+@dataclass(frozen=True)
+class ReleaseAssetSpec:
+    path: str
+    name: str | None = None
+
+    @property
+    def upload_name(self) -> str:
+        return self.name or Path(self.path).name
+
+
+@dataclass(frozen=True)
+class ReleaseAssetLink:
+    name: str
+    url: str
+
+
 def _clean_line(value: str) -> str:
     return value.strip().lstrip("-*").strip()
 
@@ -414,7 +430,12 @@ def ensure_tag(client: GitHubClient, repo: str, tag: str, sha: str) -> str:
     return "unchanged"
 
 
-def render_release_body(context: ReleaseContext, main_pr_number: int, sha: str) -> str:
+def render_release_body(
+    context: ReleaseContext,
+    main_pr_number: int,
+    sha: str,
+    assets: list[ReleaseAssetLink] | None = None,
+) -> str:
     assert context.version is not None
     lines = [
         f"Release `{context.version.canonical}`",
@@ -426,7 +447,48 @@ def render_release_body(context: ReleaseContext, main_pr_number: int, sha: str) 
         lines.append("- Related develop PRs:")
         for number in context.related_prs:
             lines.append(f"  - #{number}")
+    if assets:
+        lines.extend(["", "## Downloads"])
+        for asset in assets:
+            lines.append(f"- [{asset.name}]({asset.url})")
     return "\n".join(lines)
+
+
+def _normalize_release_assets(asset_paths: list[str] | None) -> list[ReleaseAssetSpec]:
+    if not asset_paths:
+        return []
+    return [ReleaseAssetSpec(path=path) for path in asset_paths]
+
+
+def _release_assets_by_name(assets: list[dict]) -> dict[str, dict]:
+    return {asset["name"]: asset for asset in assets if asset.get("name")}
+
+
+def _upload_release_assets(
+    client: GitHubClient,
+    repo: str,
+    upload_url: str,
+    release_id: int,
+    assets: list[ReleaseAssetSpec],
+) -> list[ReleaseAssetLink]:
+    if not assets:
+        return []
+
+    existing_assets = _release_assets_by_name(client.list_release_assets(repo, release_id))
+    uploaded_assets: list[ReleaseAssetLink] = []
+
+    for asset in assets:
+        existing = existing_assets.get(asset.upload_name)
+        if existing:
+            client.delete_release_asset(repo, existing["id"])
+        result = client.upload_release_asset(repo, upload_url, asset.path, asset.upload_name)
+        uploaded_assets.append(
+            ReleaseAssetLink(
+                name=result.get("name", asset.upload_name),
+                url=result.get("browser_download_url", ""),
+            )
+        )
+    return uploaded_assets
 def summarize_pull_request(client: GitHubClient, repo: str, pr_number: int, dry_run: bool = False, title: str | None = None) -> int:
     files = client.list_pull_request_files(repo, pr_number)
     items = [ChangeItem(status=item.get("status"), path=item.get("filename", "")) for item in files]
@@ -457,7 +519,15 @@ def prepare_main_release(client: GitHubClient, repo: str, pr_number: int, body: 
     return 0
 
 
-def publish_release(client: GitHubClient, repo: str, pr_number: int, body: str | None, merge_sha: str, dry_run: bool = False) -> int:
+def publish_release(
+    client: GitHubClient,
+    repo: str,
+    pr_number: int,
+    body: str | None,
+    merge_sha: str,
+    asset_paths: list[str] | None = None,
+    dry_run: bool = False,
+) -> int:
     context = extract_release_context(body)
     if context.errors:
         rendered = render_release_context_comment(context, pr_number, "released")
@@ -468,8 +538,14 @@ def publish_release(client: GitHubClient, repo: str, pr_number: int, body: str |
         return 1
 
     assert context.version is not None
+    release_assets = _normalize_release_assets(asset_paths)
     release_body = render_release_body(context, pr_number, merge_sha)
     if dry_run:
+        if release_assets:
+            print(release_body)
+            for asset in release_assets:
+                print(f"- would upload `{asset.path}` as `{asset.upload_name}`")
+            return 0
         print(release_body)
         return 0
 
@@ -477,12 +553,16 @@ def publish_release(client: GitHubClient, repo: str, pr_number: int, body: str |
 
     try:
         release = client.get_release_by_tag(repo, context.version.canonical)
-        release_id = release["id"]
-        result = client.update_release(repo, release_id, context.version, merge_sha, release_body)
     except GitHubRequestError as exc:
         if exc.status != 404:
             raise
-        result = client.create_release(repo, context.version, merge_sha, release_body)
+        release = client.create_release(repo, context.version, merge_sha, release_body)
+
+    release_id = release["id"]
+    upload_url = release.get("upload_url", "").split("{", 1)[0]
+    uploaded_assets = _upload_release_assets(client, repo, upload_url, release_id, release_assets)
+    final_body = render_release_body(context, pr_number, merge_sha, assets=uploaded_assets)
+    result = client.update_release(repo, release_id, context.version, merge_sha, final_body)
 
     release_url = result.get("html_url")
     upsert_marked_comment(client, repo, pr_number, RELEASE_PLAN_MARKER, render_release_context_comment(context, pr_number, "released", release_url))

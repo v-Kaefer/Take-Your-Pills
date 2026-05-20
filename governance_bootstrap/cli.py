@@ -105,7 +105,15 @@ def cmd_release_publish(args) -> int:
         print("Missing --merge-sha or PR_MERGE_SHA/GITHUB_SHA")
         return 1
     client = GitHubClient("") if args.dry_run else require_client()
-    return publish_release(client, repo_arg(args.repo), args.pr_number, body, merge_sha, dry_run=args.dry_run)
+    return publish_release(
+        client,
+        repo_arg(args.repo),
+        args.pr_number,
+        body,
+        merge_sha,
+        asset_paths=args.asset or [],
+        dry_run=args.dry_run,
+    )
 
 
 def cmd_bootstrap(args) -> int:
@@ -230,6 +238,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_publish.add_argument("--body")
     release_publish.add_argument("--body-file")
     release_publish.add_argument("--merge-sha")
+    release_publish.add_argument("--asset", action="append", default=[], help="Path to a release asset to upload")
     release_publish.add_argument("--dry-run", action="store_true")
     release_publish.set_defaults(func=cmd_release_publish)
 

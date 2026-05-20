@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
 from governance_bootstrap.github import GitHubRequestError
-from governance_bootstrap.release import extract_release_context, parse_name_status_lines, prepare_main_release, publish_release, render_change_summary_comment, render_release_context_comment, summarize_change_items
+from governance_bootstrap.release import extract_release_context, parse_name_status_lines, prepare_main_release, publish_release, render_change_summary_comment, render_release_body, render_release_context_comment, summarize_change_items, ReleaseAssetLink
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
@@ -253,7 +253,12 @@ class GovernanceBootstrapTests(unittest.TestCase):
         client = Mock()
         client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
         client.get_release_by_tag.side_effect = GitHubRequestError("GET", "/repos/owner/repo/releases/tags/final-1.2.3", 404, "missing")
-        client.create_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.create_release.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
         client.list_issue_comments.return_value = []
 
         with patch("governance_bootstrap.release.upsert_marked_comment", return_value="created") as upsert_comment:
@@ -264,8 +269,83 @@ class GovernanceBootstrapTests(unittest.TestCase):
         client.create_release.assert_called_once()
         self.assertEqual(client.create_release.call_args.args[1].canonical, "final-1.2.3")
         self.assertEqual(client.create_release.call_args.args[1].prerelease, False)
+        client.update_release.assert_called_once()
+        self.assertIn("Release `final-1.2.3`", client.update_release.call_args.args[4])
         upsert_comment.assert_any_call(client, "owner/repo", 42, "<!-- governance-release-plan -->", unittest.mock.ANY)
         upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
+    def test_release_publish_uploads_assets_and_lists_downloads(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.list_release_assets.return_value = [{"id": 88, "name": "take-your-pills-windows.exe"}]
+        client.delete_release_asset.return_value = {}
+        client.upload_release_asset.side_effect = [
+            {"name": "take-your-pills-windows.exe", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-windows.exe"},
+            {"name": "take-your-pills-linux.x86_64", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-linux.x86_64"},
+            {"name": "take-your-pills-godot.zip", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-godot.zip"},
+        ]
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = []
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="created"):
+            result = publish_release(
+                client,
+                "owner/repo",
+                42,
+                body,
+                "abc123",
+                asset_paths=[
+                    "dist/release/take-your-pills-windows.exe",
+                    "dist/release/take-your-pills-linux.x86_64",
+                    "dist/release/take-your-pills-godot.zip",
+                ],
+            )
+
+        self.assertEqual(result, 0)
+        client.delete_release_asset.assert_called_once_with("owner/repo", 88)
+        self.assertEqual(client.upload_release_asset.call_count, 3)
+        final_body = client.update_release.call_args.args[4]
+        self.assertIn("## Downloads", final_body)
+        self.assertIn("take-your-pills-windows.exe", final_body)
+        self.assertIn("take-your-pills-linux.x86_64", final_body)
+        self.assertIn("take-your-pills-godot.zip", final_body)
+        self.assertIn("https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-godot.zip", final_body)
+
+    def test_render_release_body_lists_assets(self):
+        context = extract_release_context(
+            """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+        )
+
+        body = render_release_body(
+            context,
+            42,
+            "abc123",
+            assets=[
+                ReleaseAssetLink(name="take-your-pills-windows.exe", url="https://example.invalid/windows"),
+                ReleaseAssetLink(name="take-your-pills-godot.zip", url="https://example.invalid/godot"),
+            ],
+        )
+
+        self.assertIn("## Downloads", body)
+        self.assertIn("[take-your-pills-windows.exe](https://example.invalid/windows)", body)
+        self.assertIn("[take-your-pills-godot.zip](https://example.invalid/godot)", body)
 
     def test_change_summary_groups_paths_by_game_area(self):
         items = parse_name_status_lines(

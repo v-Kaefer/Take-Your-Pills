@@ -54,7 +54,8 @@ O `governance-bootstrap.yml` fica como execução manual para sincronização e 
   - lê versão `alpha`, `beta` ou `final` do template da PR;
   - exige lista explícita de PRs de `develop` vinculados;
   - comenta nos PRs de `develop` com a versão planejada e, no merge, com a release criada;
-  - cria tag e GitHub Release no merge para `main`.
+  - cria tag e GitHub Release no merge para `main`;
+  - exporta os builds de Windows e Linux e o ZIP do Godot, e lista os três downloads na release.
 
 ## `godot-smoke.yml`
 

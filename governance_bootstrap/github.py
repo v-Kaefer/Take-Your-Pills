@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
+from pathlib import Path
 import time
 import urllib.error
 import urllib.parse
@@ -108,6 +110,51 @@ class GitHubClient:
             "generate_release_notes": False,
         }
         return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/releases/{release_id}", payload)
+
+    def list_release_assets(self, repo: str, release_id: int):
+        return self.paginated(f"{API_BASE}/repos/{repo}/releases/{release_id}/assets")
+
+    def delete_release_asset(self, repo: str, asset_id: int):
+        return self.request_json("DELETE", f"{API_BASE}/repos/{repo}/releases/assets/{asset_id}")
+
+    def upload_release_asset(self, repo: str, upload_url: str, file_path: str, name: str):
+        path = Path(file_path)
+        content_type, _ = mimetypes.guess_type(path.name)
+        if not content_type:
+            content_type = "application/octet-stream"
+        url = urllib.parse.urlparse(upload_url.split("{", 1)[0])
+        query = urllib.parse.parse_qsl(url.query, keep_blank_values=True)
+        query = [(key, value) for key, value in query if key not in {"name", "label"}]
+        query.append(("name", name))
+        base_url = urllib.parse.urlunparse(url._replace(query=urllib.parse.urlencode(query)))
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self.token}",
+            "X-GitHub-Api-Version": API_VERSION,
+            "Content-Type": content_type,
+        }
+        data = path.read_bytes()
+        for attempt in range(1, 6):
+            req = urllib.request.Request(base_url, data=data, headers=headers, method="POST")
+            try:
+                with urllib.request.urlopen(req) as res:
+                    body = res.read().decode("utf-8")
+                    return json.loads(body) if body else {}
+            except urllib.error.HTTPError as exc:
+                details = exc.read().decode("utf-8", errors="replace")
+                if exc.code in RETRYABLE_HTTP_STATUS and attempt < 5:
+                    wait_seconds = attempt * 2
+                    print(f"warning: HTTP {exc.code} from GitHub; retrying in {wait_seconds}s")
+                    time.sleep(wait_seconds)
+                    continue
+                raise GitHubRequestError("POST", base_url, exc.code, details) from exc
+            except urllib.error.URLError as exc:
+                if attempt < 5:
+                    wait_seconds = attempt * 2
+                    print(f"warning: GitHub request failed; retrying in {wait_seconds}s: {exc.reason}")
+                    time.sleep(wait_seconds)
+                    continue
+                raise
 
     def create_issue_comment(self, repo: str, number: int, body: str):
         return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/comments", {"body": body})
