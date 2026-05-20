@@ -1,6 +1,7 @@
+---
 name: Governance bootstrap (manual)
 
-on:
+'on':
   workflow_dispatch:
     inputs:
       dry_run:
@@ -33,7 +34,8 @@ jobs:
 
       - name: Install governance CLI
         run: |
-          python -m pip install "git+https://github.com/OWNER/github-governance-bootstrap.git@v0.1.0"
+          repo_url="git+https://github.com/OWNER/github-governance-bootstrap"
+          python -m pip install "$repo_url.git@v0.1.0"
 
       - name: Run bootstrap
         env:

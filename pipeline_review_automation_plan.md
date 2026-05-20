@@ -47,7 +47,7 @@ A pipeline deve cobrir estes cenários:
 
 A regra principal será:
 
-> `CODEOWNERS` garante review técnico por área de código.  
+> `CODEOWNERS` garante review técnico por área de código.
 > Workflow garante review funcional por issue/sub-issue.
 
 ---

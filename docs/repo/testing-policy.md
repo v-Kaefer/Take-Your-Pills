@@ -7,8 +7,10 @@
 
 ## Godot stack
 - Preferred framework: GDUnit4.
+- CI game tests run through a GdUnit4 workflow on PRs that touch game code.
+- Fast smoke checks still run separately to catch project boot issues early.
 
 ## Validation strategy
-- pre-push: fast checks
+- pre-push: changed-file audit + targeted syntax checks
 - CI: broader checks
 - QA manual: qualitative validation

@@ -1,0 +1,50 @@
+---
+name: Repository Quality
+
+'on':
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  lint-repo-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install linters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest
+
+      - name: Run actionlint
+        run: |
+          export PATH="$HOME/go/bin:$PATH"
+          actionlint
+
+      - name: Run yamllint
+        run: yamllint .
+
+      - name: Run Python governance tests
+        run: |
+          python3 -m unittest tests.test_governance_bootstrap
+
+      - name: Check Python syntax
+        run: |
+          python3 -m compileall \
+            governance_bootstrap \
+            tests
+
+      - name: Run repository tests
+        run: |
+          bash tests/test_pr_template.sh
+          bash tests/test_godot_ci.sh

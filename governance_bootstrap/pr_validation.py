@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from .comments import find_marked_comment, upsert_marked_comment
 from .github import GitHubClient
 
 
@@ -237,23 +238,9 @@ def render_failure_comment(findings: list[ValidationFinding]) -> str:
 
 
 def find_validation_comment(client: GitHubClient, repo: str, pr_number: int) -> dict | None:
-    for comment in client.list_issue_comments(repo, pr_number):
-        if VALIDATION_MARKER in (comment.get("body") or ""):
-            return comment
-    return None
+    return find_marked_comment(client, repo, pr_number, VALIDATION_MARKER)
 
 
 def upsert_validation_comment(client: GitHubClient, repo: str, pr_number: int, findings: list[ValidationFinding]) -> str | None:
-    existing = find_validation_comment(client, repo, pr_number)
-    if not findings:
-        if existing:
-            client.delete_issue_comment(repo, existing["id"])
-            return "deleted"
-        return None
-
-    body = render_failure_comment(findings)
-    if existing:
-        client.update_issue_comment(repo, existing["id"], body)
-        return "updated"
-    client.create_issue_comment(repo, pr_number, body)
-    return "created"
+    body = render_failure_comment(findings) if findings else ""
+    return upsert_marked_comment(client, repo, pr_number, VALIDATION_MARKER, body)

@@ -14,4 +14,3 @@ labels: "type:repo,status:backlog"
 ## Validation
 
 ## Definition of Done
-

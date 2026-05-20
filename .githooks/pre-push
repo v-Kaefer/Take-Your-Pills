@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+hook_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+code_root="$(cd -- "$hook_dir/.." && pwd)"
+
+exec python3 "$code_root/scripts/validation/pre_push.py" --remote-name "${1:-}" --remote-url "${2:-}"

@@ -16,4 +16,3 @@ labels: "type:task,status:backlog"
 ## Expected evidence
 
 ## Definition of Done
-
