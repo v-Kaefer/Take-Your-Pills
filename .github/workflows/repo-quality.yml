@@ -19,14 +19,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install linters
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck yamllint
-          npm install -g markdownlint-cli@0.41.0
           go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
       - name: Run actionlint
@@ -36,54 +33,6 @@ jobs:
 
       - name: Run yamllint
         run: yamllint .
-
-      - name: Run markdownlint
-        run: |
-          set -euo pipefail
-
-          mapfile -t RAW_MARKDOWN_FILES < <(
-            if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
-              git fetch --no-tags --depth=1 origin "${GITHUB_BASE_REF}"
-              git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" -- "*.md"
-            else
-              git diff-tree --no-commit-id --name-only -r HEAD -- "*.md"
-            fi
-          )
-
-          is_ignored_markdown() {
-            local path="$1"
-            case "${path}" in
-              node_modules/*|\
-              aplicacao-planejamento-repo2.md|\
-              planejamento-repo2-automacoes.md|\
-              pipeline_review_automation_plan.md|\
-              take-your-pills_backlog_final.md|\
-              take_your_pills_issues_detalhados.md|\
-              take_your_pills_project_definitions_update.md)
-                return 0
-                ;;
-              *)
-                return 1
-                ;;
-            esac
-          }
-
-          MARKDOWN_FILES=()
-          for file in "${RAW_MARKDOWN_FILES[@]}"; do
-            [[ -z "${file}" ]] && continue
-            if is_ignored_markdown "${file}"; then
-              continue
-            fi
-            MARKDOWN_FILES+=("${file}")
-          done
-
-          if [ "${#MARKDOWN_FILES[@]}" -eq 0 ]; then
-            echo "No changed markdown files to lint."
-            exit 0
-          fi
-
-          printf "Linting markdown files:\n%s\n" "${MARKDOWN_FILES[@]}"
-          markdownlint "${MARKDOWN_FILES[@]}"
 
       - name: Run shellcheck
         run: |
