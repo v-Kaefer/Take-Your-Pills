@@ -74,9 +74,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/release
-          godot --headless --path . --export-release "Windows Desktop" build/release/take-your-pills-windows.exe
-          godot --headless --path . --export-release "Linux/X11" build/release/take-your-pills-linux.x86_64
-          godot --headless --path . --export-pack "Linux/X11" build/release/take-your-pills-godot.zip
+          godot --headless --path . \
+            --export-release "Windows Desktop" \
+            build/release/take-your-pills-windows.exe
+          godot --headless --path . \
+            --export-release "Linux/X11" \
+            build/release/take-your-pills-linux.x86_64
+          godot --headless --path . \
+            --export-pack "Linux/X11" \
+            build/release/take-your-pills-godot.zip
 
       - name: Create release
         if: >-
