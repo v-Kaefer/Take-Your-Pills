@@ -12,6 +12,14 @@ enum GameState { RUNNING, PAUSED, GAME_OVER }
 
 var current_state: GameState = GameState.RUNNING
 var score: int = 0
+var distance: float = 0.0
+var bonus_score: int = 0
+var score_accumulator: float = 0.0
+var _last_displayed_distance: int = -1
+
+const BASE_SCORE_PER_METER := 10.0
+var current_scenario_multiplier: float = 1.0
+var current_speed_multiplier: float = 1.0
 
 
 func _ready() -> void:
@@ -26,10 +34,26 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if current_state == GameState.RUNNING:
-		var new_score := int(player.position.x / SCORE_DISTANCE_DIVISOR)
-		if new_score != score:
+		var meters_scrolled := (chunks.scroll_speed * _delta) / SCORE_DISTANCE_DIVISOR
+		distance += meters_scrolled
+		
+		# Gained points this frame based on distance scrolled and current multipliers
+		var points_gained := meters_scrolled * BASE_SCORE_PER_METER * current_scenario_multiplier * current_speed_multiplier
+		score_accumulator += points_gained
+		
+		var current_dist_int := int(distance)
+		var new_score := int(score_accumulator) + bonus_score
+		
+		if new_score != score or current_dist_int != _last_displayed_distance:
 			score = new_score
+			_last_displayed_distance = current_dist_int
 			_update_hud()
+
+
+func add_score(amount: int) -> void:
+	bonus_score += amount
+	score = int(score_accumulator) + bonus_score
+	_update_hud()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -106,6 +130,7 @@ func _update_hud() -> void:
 
 	hud.update_state(state_text, control_note)
 	hud.update_score(score)
+	hud.update_distance(distance)
 
 
 func _ensure_input_actions() -> void:
