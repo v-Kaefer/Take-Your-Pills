@@ -61,7 +61,7 @@ git config core.hooksPath .githooks
 
 The tracked `pre-push` hook prints a sector-based change summary and runs targeted syntax checks on changed Python, shell, YAML, JSON, and TOML files before the push is accepted.
 
-The `/scripts` tree is developer tooling for local/manual execution. CI no longer treats it as an automated validation target.
+The `scripts/github` subtree is primarily developer tooling for local/manual execution. The `scripts/validation` subtree remains part of local guardrails and selected automation, including PR metadata checks, so contributors should treat those validation scripts as supported enforcement entry points rather than optional tooling.
 
 When changing the backlog manifest, also validate the issue tree schema and structure:
 
