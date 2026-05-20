@@ -214,7 +214,11 @@ if [[ "$DRY_RUN" == true ]]; then
   exit 0
 fi
 
-ids_query='query($owner:String!, $repo:String!, $parent:Int!, $child:Int!){ repository(owner:$owner,name:$repo){ parent: issue(number:$parent){id} child: issue(number:$child){id} } }'
+ids_query="$(
+  cat <<'EOF'
+query($owner:String!, $repo:String!, $parent:Int!, $child:Int!){ repository(owner:$owner,name:$repo){ parent: issue(number:$parent){id} child: issue(number:$child){id} } }
+EOF
+)"
 repo_owner="${REPO%%/*}"
 repo_name="${REPO#*/}"
 ids_response="$(gh api graphql -f query="$ids_query" -f owner="$repo_owner" -f repo="$repo_name" -F parent="$PARENT" -F child="$child_number")"
@@ -226,7 +230,11 @@ if [[ -z "$parent_id" || -z "$child_id" ]]; then
   exit 1
 fi
 
-graphql_query='mutation($parent:ID!, $child:ID!) { addSubIssue(input: {issueId: $parent, subIssueId: $child}) { clientMutationId } }'
+graphql_query="$(
+  cat <<'EOF'
+mutation($parent:ID!, $child:ID!) { addSubIssue(input: {issueId: $parent, subIssueId: $child}) { clientMutationId } }
+EOF
+)"
 set +e
 mutation_response="$(gh api graphql -f query="$graphql_query" -f parent="$parent_id" -f child="$child_id" 2>/dev/null)"
 mutation_exit=$?

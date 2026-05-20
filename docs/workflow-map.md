@@ -19,11 +19,10 @@ O `governance-bootstrap.yml` fica como execução manual para sincronização e 
 
 ## `repo-quality.yml`
 
-- Papel: validar qualidade dos arquivos do repositório.
-- Ferramentas: `actionlint`, `yamllint`, `shellcheck`.
-- Validações adicionais: suíte Python de governança e consistência de manifestos JSON de backlog.
-- Observação: Markdown docs are no longer linted by this workflow.
-- Resultado: evita regressões em automações e scripts.
+- Papel: validar qualidade dos arquivos do repositório fora de `scripts/`.
+- Ferramentas: `actionlint`, `yamllint`.
+- Validações adicionais: suíte Python de governança, template de PR e contrato do game test.
+- Resultado: evita regressões em automações, configurações e testes do jogo.
 
 ## `pr-metadata.yml`
 
@@ -79,6 +78,5 @@ O `governance-bootstrap.yml` fica como execução manual para sincronização e 
 - Responsabilidades:
   - sincronizar labels;
   - sincronizar milestones;
-  - validar a base do repositório;
   - criar Project v2;
   - gerar issues e sub-issues a partir de manifesto.

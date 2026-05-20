@@ -46,6 +46,8 @@ Os scripts em `scripts/github` continuam existindo por compatibilidade, mas dele
 python -m governance_bootstrap bootstrap --repo v-Kaefer/Take-Your-Pills --dry-run
 ```
 
+O diretório `scripts/` permanece como tooling local/manual. Ele não é tratado como alvo de validação automatizada no CI.
+
 ## 4) Observações
 - Para reutilizar em outro projeto, copie/adapte os manifests em `config/project`, `config/stories` e `governance.bootstrap.json`.
 - O segredo esperado pelo workflow manual é `GOVERNANCE_PAT`.

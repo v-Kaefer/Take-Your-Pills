@@ -59,7 +59,9 @@ From repository root:
 git config core.hooksPath .githooks
 ```
 
-With the tracked `pre-push` hook enabled, pushes will print a sector-based change summary and run targeted syntax checks on changed Python, shell, YAML, JSON, and TOML files before the push is accepted.
+The tracked `pre-push` hook prints a sector-based change summary and runs targeted syntax checks on changed Python, shell, YAML, JSON, and TOML files before the push is accepted.
+
+The `/scripts` tree is developer tooling for local/manual execution. CI no longer treats it as an automated validation target.
 
 When changing the backlog manifest, also validate the issue tree schema and structure:
 
