@@ -497,8 +497,7 @@ O repositório deve ser preparado para automação de:
 
 - criação de User Stories e tasks a partir de manifesto;
 - sincronização de labels;
-- resumo automático de PRs com comentário fixo;
-- fluxo de release para PRs em `main`;
+- labeler automático com actions;
 - validação de branch naming;
 - validação de PR template;
 - verificação de vínculo PR ↔ issue;
@@ -673,7 +672,7 @@ Cada documento de fase deve conter:
 - [x] Criar labels de teste.
 - [x] Versionar a definição dessas labels em arquivo do repositório.
 - [x] Preparar sincronização manual ou automatizada das labels.
-- [x] Preparar fluxo automático de resumo de PRs e release versionada com GitHub Actions.
+- [x] Preparar labeler automático com GitHub Actions, quando o fluxo justificar.
 
 ## Etapa 6 — Preparar a estratégia de testes
 - [x] Pesquisar e selecionar a melhor abordagem de teste para Godot no projeto.

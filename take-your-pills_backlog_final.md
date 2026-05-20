@@ -11,7 +11,7 @@ Este backlog foi montado com prioridade no **GDD de 1 página** como fonte atual
 - Japão pós-guerra.
 - Yakuza / fuga / droga experimental.
 - Loop de correr, desviar, coletar, sofrer efeito adverso, acumular pontos, melhorar a run e repetir.
-- Features prioritárias: corrida infinita, coleta e pontuação, efeito adverso ao acumular speed-ups, loja de upgrades e ranking.
+- Features prioritárias: corrida infinita, coleta e pontuação, efeito adverso ao acumular speed-ups, loja de upgrades e ranking. 
 
 ### Regra de planejamento adotada
 Como o jogo **só precisa estar completo na primeira entrega da Parte 3**, este backlog foi organizado para:
@@ -288,8 +288,8 @@ Escopo:
 ## US-00 — Como equipe, queremos uma estrutura de repositório operacional para conseguir executar o projeto com rastreabilidade e revisão consistente.
 **Issue sugerida:** `US-00 | Estruturar repositório, Project, milestones e backlog inicial`
 
-**Milestone:** MS0
-**Priority:** critical
+**Milestone:** MS0  
+**Priority:** critical  
 **DoD da story:**
 - Project criado
 - milestones publicadas
@@ -311,7 +311,7 @@ Escopo:
 ## US-01 — Como jogador, quero controlar uma corrida lateral contínua para que o jogo tenha um loop base imediatamente compreensível.
 **Issue sugerida:** `US-01 | Implementar corrida lateral contínua e base de movimentação`
 
-**Milestone:** MS1
+**Milestone:** MS1  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -334,7 +334,7 @@ Escopo:
 ## US-02 — Como jogador, quero pular e cair de forma previsível para conseguir evitar obstáculos com leitura rápida.
 **Issue sugerida:** `US-02 | Implementar pulo, gravidade e aterrissagem`
 
-**Milestone:** MS1
+**Milestone:** MS1  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -352,7 +352,7 @@ Escopo:
 ## US-03 — Como jogador, quero morrer ao colidir com perigo para entender risco e consequência da run.
 **Issue sugerida:** `US-03 | Implementar colisão, derrota e restart`
 
-**Milestone:** MS1
+**Milestone:** MS1  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -369,7 +369,7 @@ Escopo:
 ## US-04 — Como jogador, quero um cenário inicial legível para compreender o espaço de jogo e o movimento.
 **Issue sugerida:** `US-04 | Implementar cenário inicial, câmera e instanciação básica`
 
-**Milestone:** MS1
+**Milestone:** MS1  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -386,7 +386,7 @@ Escopo:
 ## US-05 — Como jogador, quero uma HUD mínima para acompanhar informações essenciais da run.
 **Issue sugerida:** `US-05 | Implementar HUD mínima`
 
-**Milestone:** MS1
+**Milestone:** MS1  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -405,7 +405,7 @@ Escopo:
 ## US-06 — Como jogador, quero coletar itens para acumular pontos e alimentar o loop de risco e recompensa.
 **Issue sugerida:** `US-06 | Implementar sistema de coleta`
 
-**Milestone:** MS2
+**Milestone:** MS2  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -422,7 +422,7 @@ Escopo:
 ## US-07 — Como jogador, quero um sistema de pontuação claro para perceber progresso e desempenho.
 **Issue sugerida:** `US-07 | Implementar score, distância e feedback de pontuação`
 
-**Milestone:** MS2
+**Milestone:** MS2  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -439,7 +439,7 @@ Escopo:
 ## US-08 — Como jogador, quero sentir o efeito adverso das pílulas ao acumular speed-ups para que o jogo tenha seu diferencial de risco.
 **Issue sugerida:** `US-08 | Implementar efeito adverso e variação de velocidade`
 
-**Milestone:** MS2
+**Milestone:** MS2  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -456,7 +456,7 @@ Escopo:
 ## US-09 — Como jogador, quero menus básicos para iniciar, pausar e reiniciar a run com clareza.
 **Issue sugerida:** `US-09 | Implementar fluxo de menu inicial, pausa e game over`
 
-**Milestone:** MS3
+**Milestone:** MS3  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -474,7 +474,7 @@ Escopo:
 ## US-10 — Como equipe, queremos uma build demonstrável da Parte 2 para cumprir os checkpoints e a entrega com estabilidade.
 **Issue sugerida:** `US-10 | Consolidar build da Parte 2`
 
-**Milestone:** MS3
+**Milestone:** MS3  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -494,7 +494,7 @@ Escopo:
 ## US-11 — Como jogador, quero uma loja simples de upgrades para transformar pontuação em progressão e rejogabilidade.
 **Issue sugerida:** `US-11 | Implementar loja de upgrades enxuta`
 
-**Milestone:** MS4
+**Milestone:** MS4  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -511,7 +511,7 @@ Escopo:
 ## US-12 — Como jogador, quero upgrades essenciais para perceber evolução entre runs.
 **Issue sugerida:** `US-12 | Implementar upgrades essenciais`
 
-**Milestone:** MS4
+**Milestone:** MS4  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -534,7 +534,7 @@ Escopo:
 ## US-13 — Como jogador, quero um ranking local para acompanhar minha melhora e perseguir recordes.
 **Issue sugerida:** `US-13 | Implementar ranking local`
 
-**Milestone:** MS4
+**Milestone:** MS4  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -551,7 +551,7 @@ Escopo:
 ## US-14 — Como equipe, queremos usar playtesting para ajustar dificuldade, clareza e ritmo antes da entrega completa.
 **Issue sugerida:** `US-14 | Executar playtesting e consolidar ajustes`
 
-**Milestone:** MS4
+**Milestone:** MS4  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -572,7 +572,7 @@ Escopo:
 ## US-15 — Como jogador, quero feedback audiovisual mais claro para sentir melhor risco, recompensa e estado da run.
 **Issue sugerida:** `US-15 | Polir feedback visual e sonoro`
 
-**Milestone:** MS5
+**Milestone:** MS5  
 **Priority:** high
 
 **Critérios de aceite:**
@@ -589,7 +589,7 @@ Escopo:
 ## US-16 — Como equipe, queremos balancear o jogo para que a experiência final seja justa, clara e apresentável.
 **Issue sugerida:** `US-16 | Balancear dificuldade, economia e progressão`
 
-**Milestone:** MS5
+**Milestone:** MS5  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -607,7 +607,7 @@ Escopo:
 ## US-17 — Como equipe, queremos fechar uma build final estável para a primeira entrega da Parte 3.
 **Issue sugerida:** `US-17 | Fechar build final da Parte 3`
 
-**Milestone:** MS5
+**Milestone:** MS5  
 **Priority:** critical
 
 **Critérios de aceite:**
@@ -629,7 +629,7 @@ Escopo:
 ## US-18 — Como jogador, quero ranking online para competir além da máquina local.
 **Issue sugerida:** `US-18 | Ranking online (stretch goal)`
 
-**Milestone:** MS6
+**Milestone:** MS6  
 **Priority:** low
 
 **Observação:** esta story só deve entrar se o jogo completo já estiver estável até 06/07.
