@@ -69,8 +69,8 @@ Existe um documento único dizendo claramente o que faz parte da entrega e o que
 
 **Dependências:** nenhuma.
 
-**Prioridade:** high
-**Área:** repo / docs
+**Prioridade:** high  
+**Área:** repo / docs  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -102,8 +102,8 @@ Qualquer pessoa do grupo consegue implementar a pontuação sem precisar interpr
 
 **Dependências:** 01.01.
 
-**Prioridade:** high
-**Área:** runner / speed-system
+**Prioridade:** high  
+**Área:** runner / speed-system  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -130,8 +130,8 @@ Não existe dúvida sobre quantos coletáveis existem e para que cada um serve.
 
 **Dependências:** 01.01.
 
-**Prioridade:** high
-**Área:** collectables
+**Prioridade:** high  
+**Área:** collectables  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -160,8 +160,8 @@ O grupo passa a trabalhar sob uma convenção única.
 
 **Dependências:** nenhuma.
 
-**Prioridade:** medium
-**Área:** repo
+**Prioridade:** medium  
+**Área:** repo  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -192,8 +192,8 @@ O projeto tem organização previsível e reutilizável.
 
 **Dependências:** 01.01.
 
-**Prioridade:** high
-**Área:** repo / build
+**Prioridade:** high  
+**Área:** repo / build  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -220,8 +220,8 @@ O repositório possui proteção mínima contra pushes problemáticos.
 
 **Dependências:** 01.04 e 02.01.
 
-**Prioridade:** high
-**Área:** repo / test
+**Prioridade:** high  
+**Área:** repo / test  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -252,8 +252,8 @@ Ao iniciar a run, o personagem já está correndo automaticamente.
 
 **Dependências:** 02.01.
 
-**Prioridade:** high
-**Área:** player
+**Prioridade:** high  
+**Área:** player  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -281,8 +281,8 @@ O pulo é previsível, controlável e compatível com o ritmo do runner.
 
 **Dependências:** 03.01.
 
-**Prioridade:** high
-**Área:** player
+**Prioridade:** high  
+**Área:** player  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -310,8 +310,8 @@ O jogador consegue morrer de forma consistente e o jogo reage corretamente.
 
 **Dependências:** 03.01, 03.02 e 07.02.
 
-**Prioridade:** high
-**Área:** player / speed-system
+**Prioridade:** high  
+**Área:** player / speed-system  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -338,8 +338,8 @@ Após morrer, o jogador consegue reiniciar rapidamente.
 
 **Dependências:** 03.03.
 
-**Prioridade:** high
-**Área:** ui / runner
+**Prioridade:** high  
+**Área:** ui / runner  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -367,8 +367,8 @@ A HUD consegue exibir score e distância em tempo real.
 
 **Dependências:** 03.01.
 
-**Prioridade:** high
-**Área:** runner / ui
+**Prioridade:** high  
+**Área:** runner / ui  
 **Período alvo:** Fase 1
 
 ### Sub-issues
@@ -394,8 +394,8 @@ Todos os coletáveis usam a mesma base de código e mudam apenas por configuraç
 
 **Dependências:** 01.03 e 02.01.
 
-**Prioridade:** high
-**Área:** collectables
+**Prioridade:** high  
+**Área:** collectables  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -423,8 +423,8 @@ O jogo consegue subir e descer níveis de velocidade de forma controlada.
 
 **Dependências:** 04.02.
 
-**Prioridade:** high
-**Área:** speed-system
+**Prioridade:** high  
+**Área:** speed-system  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -456,8 +456,8 @@ O valor final de cada coleta respeita a fórmula do projeto.
 
 **Dependências:** 01.02, 04.01 e 04.03.
 
-**Prioridade:** high
-**Área:** runner / speed-system
+**Prioridade:** high  
+**Área:** runner / speed-system  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -484,8 +484,8 @@ O jogador entende em que estado está e percebe risco antes da derrota.
 
 **Dependências:** 04.03 e 08.01.
 
-**Prioridade:** high
-**Área:** speed-system / ui / audio
+**Prioridade:** high  
+**Área:** speed-system / ui / audio  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -513,8 +513,8 @@ O laboratório funciona como início da run.
 
 **Dependências:** 03.01, 03.02, 04.01 e 04.02.
 
-**Prioridade:** high
-**Área:** scenario
+**Prioridade:** high  
+**Área:** scenario  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -540,8 +540,8 @@ As ruas funcionam como cenário recorrente principal.
 
 **Dependências:** 05.01.
 
-**Prioridade:** high
-**Área:** scenario
+**Prioridade:** high  
+**Área:** scenario  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -567,8 +567,8 @@ O jogador deixa o laboratório e entra nas ruas sem resetar a sessão.
 
 **Dependências:** 05.01 e 05.02.
 
-**Prioridade:** high
-**Área:** scenario / runner
+**Prioridade:** high  
+**Área:** scenario / runner  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -595,8 +595,8 @@ A casa existe como evento funcional, com entrada e saída controladas.
 
 **Dependências:** 05.02.
 
-**Prioridade:** high
-**Área:** scenario
+**Prioridade:** high  
+**Área:** scenario  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -622,8 +622,8 @@ A casa entra e sai da run sem quebrar o jogo.
 
 **Dependências:** 05.04 e 04.03.
 
-**Prioridade:** high
-**Área:** scenario / runner
+**Prioridade:** high  
+**Área:** scenario / runner  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -653,8 +653,8 @@ O jogador consegue entender o estado atual do jogo olhando a HUD.
 
 **Dependências:** 04.01 e 04.03.
 
-**Prioridade:** high
-**Área:** ui
+**Prioridade:** high  
+**Área:** ui  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -682,8 +682,8 @@ O jogo possui fluxo completo do início ao fim da run.
 
 **Dependências:** 03.04 e 06.01.
 
-**Prioridade:** high
-**Área:** ui
+**Prioridade:** high  
+**Área:** ui  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -711,8 +711,8 @@ O jogo mantém histórico local dos melhores resultados.
 
 **Dependências:** 04.01 e 06.02.
 
-**Prioridade:** high
-**Área:** ui / runner
+**Prioridade:** high  
+**Área:** ui / runner  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -741,8 +741,8 @@ Existe um plano de testes automatizados aplicável ao projeto.
 
 **Dependências:** 02.02.
 
-**Prioridade:** medium
-**Área:** test
+**Prioridade:** medium  
+**Área:** test  
 **Período alvo:** Fase 2
 
 ### Sub-issues
@@ -769,8 +769,8 @@ As regras mais críticas podem ser validadas sem depender exclusivamente de test
 
 **Dependências:** 07.01, 04.03, 04.04, 05.05 e 06.03.
 
-**Prioridade:** medium
-**Área:** test
+**Prioridade:** medium  
+**Área:** test  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -798,8 +798,8 @@ Toda build passa por verificação manual consistente.
 
 **Dependências:** 03.04, 04.04, 05.05 e 06.03.
 
-**Prioridade:** high
-**Área:** qa
+**Prioridade:** high  
+**Área:** qa  
 **Período alvo:** Fase 3
 
 ### Sub-issues
@@ -830,8 +830,8 @@ O jogo responde com áudio aos eventos mais importantes.
 
 **Dependências:** 04.05 e 06.02.
 
-**Prioridade:** medium
-**Área:** audio
+**Prioridade:** medium  
+**Área:** audio  
 **Período alvo:** Fase 4
 
 ### Sub-issues
@@ -858,8 +858,8 @@ O jogador percebe melhor risco, recompensa e status da run.
 
 **Dependências:** 04.05, 06.01 e 08.01.
 
-**Prioridade:** medium
-**Área:** ui / polish
+**Prioridade:** medium  
+**Área:** ui / polish  
 **Período alvo:** Fase 4
 
 ### Sub-issues
@@ -887,8 +887,8 @@ O jogo fica menos injusto, mais legível e mais adequado para apresentação.
 
 **Dependências:** 07.03 e 08.02.
 
-**Prioridade:** high
-**Área:** qa / runner / scenario
+**Prioridade:** high  
+**Área:** qa / runner / scenario  
 **Período alvo:** Fase 4
 
 ### Sub-issues
@@ -917,8 +917,8 @@ Existe uma versão final demonstrável e pronta para ser entregue.
 
 **Dependências:** todas as issues críticas anteriores.
 
-**Prioridade:** high
-**Área:** build / qa / docs
+**Prioridade:** high  
+**Área:** build / qa / docs  
 **Período alvo:** Fase 4
 
 ### Sub-issues

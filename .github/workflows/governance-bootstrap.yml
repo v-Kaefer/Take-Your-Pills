@@ -1,7 +1,6 @@
----
 name: Governance bootstrap (manual)
 
-'on':
+on:
   workflow_dispatch:
     inputs:
       run_labels_sync:
@@ -15,8 +14,7 @@ name: Governance bootstrap (manual)
         default: true
         type: boolean
       run_issue_generation:
-        description: >
-          Generate stories/tasks from config/stories/backlog-manifest.json
+        description: "Generate stories/tasks from config/stories/backlog-manifest.json"
         required: true
         default: true
         type: boolean
@@ -71,6 +69,10 @@ jobs:
           else
             python -m governance_bootstrap milestones sync
           fi
+
+      - name: Validate repo quality baseline
+        run: |
+          ./scripts/validation/repo_quality.sh
 
       - name: Create project v2
         if: ${{ inputs.run_project_creation }}
