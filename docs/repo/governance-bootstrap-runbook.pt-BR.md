@@ -46,7 +46,7 @@ Os scripts em `scripts/github` continuam existindo por compatibilidade, mas dele
 python -m governance_bootstrap bootstrap --repo v-Kaefer/Take-Your-Pills --dry-run
 ```
 
-O diretório `scripts/` permanece como tooling local/manual. Ele não é tratado como alvo de validação automatizada no CI.
+O subtree `scripts/github` permanece como tooling local/manual e de compatibilidade. Já `scripts/validation` continua sendo usado pela validação automatizada e pela automação de governança/qualidade do repositório no CI.
 
 ## 4) Observações
 - Para reutilizar em outro projeto, copie/adapte os manifests em `config/project`, `config/stories` e `governance.bootstrap.json`.
