@@ -25,6 +25,7 @@ git add scenes/player/player.gd
 git commit -q -m "initial"
 git branch -M main
 git push -q origin main
+git branch --set-upstream-to=origin/main main >/dev/null
 
 git config core.hooksPath "$repo_root/.githooks"
 
@@ -41,6 +42,38 @@ grep -Fq "Player systems" <<<"$output"
 grep -Fq "Support changes" <<<"$output"
 grep -Fq "Documentation" <<<"$output"
 grep -Fq "Lint checks passed" <<<"$output"
+grep -Fq "[pre-push] mode: git hook stdin; reading refs queued by git push." <<<"$output"
+
+if command -v script >/dev/null; then
+  manual_output="$(script -q -e -c "cd '$work_repo' && PRE_PUSH_VERBOSE=1 bash '$repo_root/.githooks/pre-push'" /dev/null 2>&1)"
+  manual_output="${manual_output//$'\r'/}"
+  grep -Fq "[pre-push] mode: interactive terminal; running local upstream comparison." <<<"$manual_output"
+  grep -Fq "[pre-push] [verbose] manual refs:" <<<"$manual_output"
+  grep -Fq "[pre-push] result: passed." <<<"$manual_output"
+
+  no_upstream_repo="$tmpdir/no-upstream"
+  git init -q "$no_upstream_repo"
+  cd "$no_upstream_repo"
+  git config user.email "test@example.com"
+  git config user.name "Test User"
+  git config commit.gpgsign false
+  git config tag.gpgsign false
+  git config push.gpgSign false
+  mkdir -p docs
+  printf '%s\n' '# note' > docs/readme.md
+  git add docs/readme.md
+  git commit -q -m "seed"
+
+  if no_upstream_output="$(script -q -e -c "cd '$no_upstream_repo' && bash '$repo_root/.githooks/pre-push'" /dev/null 2>&1)"; then
+    echo "Expected manual pre-push invocation without upstream to fail" >&2
+    exit 1
+  fi
+  no_upstream_output="${no_upstream_output//$'\r'/}"
+  grep -Fq "no upstream configured" <<<"$no_upstream_output"
+  grep -Fq "git push -u origin" <<<"$no_upstream_output"
+
+  cd "$work_repo"
+fi
 
 mkdir -p scripts
 cat > scripts/broken.py <<'EOF'
@@ -58,4 +91,4 @@ fi
 
 grep -Fq "Lint checks failed" <<<"$output"
 grep -Fq "broken.py" <<<"$output"
-grep -Fq "SyntaxError" <<<"$output"
+grep -Eq "invalid syntax|never closed|expected" <<<"$output"

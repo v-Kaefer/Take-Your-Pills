@@ -60,6 +60,7 @@ git config core.hooksPath .githooks
 ```
 
 The tracked `pre-push` hook prints a sector-based change summary and runs targeted syntax checks on changed Python, shell, YAML, JSON, and TOML files before the push is accepted.
+For manual runs, execute `bash .githooks/pre-push` from a branch with an upstream configured; use `PRE_PUSH_VERBOSE=1` to print detailed progress logs.
 
 The `/scripts` tree is developer tooling for local/manual execution. CI no longer treats it as an automated validation target.
 

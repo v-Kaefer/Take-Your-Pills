@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
-from .comments import upsert_marked_comment
+from .comments import find_marked_comment, upsert_marked_comment
 from .github import GitHubClient, GitHubRequestError
 from .pr_validation import sections_from_body
 
@@ -413,6 +413,43 @@ def extract_release_context(body: str | None) -> ReleaseContext:
     return ReleaseContext(version=version, related_prs=related_prs, errors=errors, raw_version=version_text or None)
 
 
+def _extract_related_prs_from_release_comment(comment_body: str | None, main_pr_number: int) -> list[int]:
+    if not comment_body:
+        return []
+    seen: set[int] = set()
+    related: list[int] = []
+    for match in PR_NUMBER_PATTERN.finditer(comment_body):
+        pr_number = int(match.group(1))
+        if pr_number == main_pr_number or pr_number in seen:
+            continue
+        seen.add(pr_number)
+        related.append(pr_number)
+    return related
+
+
+def _previous_related_prs(client: GitHubClient, repo: str, pr_number: int) -> list[int]:
+    existing = find_marked_comment(client, repo, pr_number, RELEASE_PLAN_MARKER)
+    if not existing:
+        return []
+    return _extract_related_prs_from_release_comment(existing.get("body"), pr_number)
+
+
+def _remove_stale_develop_notices(
+    client: GitHubClient,
+    repo: str,
+    main_pr_number: int,
+    previous_related_prs: list[int],
+    current_related_prs: list[int],
+) -> None:
+    removed = sorted(set(previous_related_prs) - set(current_related_prs))
+    if not removed:
+        return
+    for develop_pr in removed:
+        if develop_pr == main_pr_number:
+            continue
+        upsert_marked_comment(client, repo, develop_pr, RELEASE_NOTICE_MARKER, "")
+
+
 def ensure_tag(client: GitHubClient, repo: str, tag: str, sha: str) -> str:
     ref_path = f"tags/{tag}"
     try:
@@ -425,8 +462,9 @@ def ensure_tag(client: GitHubClient, repo: str, tag: str, sha: str) -> str:
 
     current_sha = current["object"]["sha"]
     if current_sha != sha:
-        client.update_git_ref(repo, ref_path, sha, force=True)
-        return "updated"
+        raise RuntimeError(
+            f"Tag `{tag}` already points to `{current_sha}`; expected `{sha}`. Refusing to move existing release tag."
+        )
     return "unchanged"
 
 
@@ -508,10 +546,13 @@ def prepare_main_release(client: GitHubClient, repo: str, pr_number: int, body: 
         print(rendered)
         return 0 if not context.errors else 1
 
+    previous_related_prs = _previous_related_prs(client, repo, pr_number)
     upsert_marked_comment(client, repo, pr_number, RELEASE_PLAN_MARKER, rendered)
 
     if context.errors:
         return 1
+
+    _remove_stale_develop_notices(client, repo, pr_number, previous_related_prs, context.related_prs)
 
     notice = render_develop_release_notice(context, pr_number, "planned")
     for develop_pr in context.related_prs:
@@ -549,6 +590,7 @@ def publish_release(
         print(release_body)
         return 0
 
+    previous_related_prs = _previous_related_prs(client, repo, pr_number)
     ensure_tag(client, repo, context.version.canonical, merge_sha)
 
     try:
@@ -566,6 +608,7 @@ def publish_release(
 
     release_url = result.get("html_url")
     upsert_marked_comment(client, repo, pr_number, RELEASE_PLAN_MARKER, render_release_context_comment(context, pr_number, "released", release_url))
+    _remove_stale_develop_notices(client, repo, pr_number, previous_related_prs, context.related_prs)
     notice = render_develop_release_notice(context, pr_number, "released", release_url)
     for develop_pr in context.related_prs:
         upsert_marked_comment(client, repo, develop_pr, RELEASE_NOTICE_MARKER, notice)

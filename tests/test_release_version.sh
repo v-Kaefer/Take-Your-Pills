@@ -8,6 +8,12 @@ for path in "$workflow" "$preset"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
 
+grep -Fq "plan-release:" "$workflow"
+grep -Fq "publish-release:" "$workflow"
+grep -Fq "contents: read" "$workflow"
+grep -Fq "contents: write" "$workflow"
+grep -Fq "issues: write" "$workflow"
+
 grep -Fq "chickensoft-games/setup-godot@v2" "$workflow"
 grep -Fq "include-templates: true" "$workflow"
 grep -Fq 'godot --headless --path . \' "$workflow"

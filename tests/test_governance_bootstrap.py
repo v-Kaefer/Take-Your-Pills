@@ -323,6 +323,99 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("take-your-pills-godot.zip", final_body)
         self.assertIn("https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-godot.zip", final_body)
 
+    def test_release_publish_rejects_tag_sha_conflict(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.return_value = {"object": {"sha": "oldsha"}}
+        client.list_issue_comments.return_value = []
+
+        with self.assertRaises(RuntimeError) as ctx:
+            publish_release(client, "owner/repo", 42, body, "newsha")
+
+        self.assertIn("Refusing to move existing release tag", str(ctx.exception))
+
+    def test_release_prepare_main_removes_stale_develop_notice(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.list_issue_comments.return_value = [
+            {
+                "id": 1001,
+                "body": "\n".join(
+                    [
+                        "<!-- governance-release-plan -->",
+                        "## Release plan",
+                        "- State: planned",
+                        "- Release version: `final-1.2.3`",
+                        "- Main PR: #42",
+                        "- Related develop PRs:",
+                        "  - #12",
+                        "  - #15",
+                    ]
+                ),
+            }
+        ]
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="updated") as upsert_comment:
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=False)
+
+        self.assertEqual(result, 0)
+        upsert_comment.assert_any_call(client, "owner/repo", 15, "<!-- governance-release-notice -->", "")
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
+    def test_release_publish_removes_stale_develop_notice(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.side_effect = GitHubRequestError("GET", "/repos/owner/repo/releases/tags/final-1.2.3", 404, "missing")
+        client.create_release.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = [
+            {
+                "id": 1001,
+                "body": "\n".join(
+                    [
+                        "<!-- governance-release-plan -->",
+                        "## Release plan",
+                        "- State: planned",
+                        "- Release version: `final-1.2.3`",
+                        "- Main PR: #42",
+                        "- Related develop PRs:",
+                        "  - #12",
+                        "  - #15",
+                    ]
+                ),
+            }
+        ]
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="updated") as upsert_comment:
+            result = publish_release(client, "owner/repo", 42, body, "abc123")
+
+        self.assertEqual(result, 0)
+        upsert_comment.assert_any_call(client, "owner/repo", 15, "<!-- governance-release-notice -->", "")
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
     def test_render_release_body_lists_assets(self):
         context = extract_release_context(
             """## Release version

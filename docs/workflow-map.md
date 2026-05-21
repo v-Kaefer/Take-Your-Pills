@@ -72,6 +72,7 @@ O `governance-bootstrap.yml` fica como execução manual para sincronização e 
   - resume os arquivos e pastas afetados pelo push;
   - roda checagens sintáticas direcionadas para arquivos Python, shell, YAML, JSON e TOML alterados;
   - bloqueia o push se qualquer checagem falhar.
+  - em execução manual (`bash .githooks/pre-push`), usa o upstream da branch atual e imprime logs de progresso; `PRE_PUSH_VERBOSE=1` habilita logs detalhados.
 
 ## `governance-bootstrap.yml`
 

@@ -18,7 +18,6 @@ required=(
   "tests/test_pr_template.sh"
   "tests/test_pre_push_hook.sh"
   "tests/test_godot_ci.sh"
-  "scripts/validation/pre_push.py"
   "scripts/validation/validate_pr_body.py"
   ".githooks/pre-push"
   "governance_bootstrap/comments.py"
