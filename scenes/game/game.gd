@@ -8,6 +8,7 @@ enum GameState { RUNNING, PAUSED, GAME_OVER }
 @onready var player: Player = $World/Player
 @onready var chunks: ChunkManager = $World/Chunks
 @onready var hud: GameHUD = $HUD
+@onready var collect_sfx_player: AudioStreamPlayer = $CollectSfxPlayer
 
 var current_state: GameState = GameState.RUNNING
 var score: int = 0
@@ -82,6 +83,7 @@ func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int
 		return
 
 	score += score_value
+	collect_sfx_player.play()
 	_update_hud()
 
 

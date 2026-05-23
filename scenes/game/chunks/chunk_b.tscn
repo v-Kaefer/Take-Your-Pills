@@ -55,8 +55,5 @@ rect = Rect2(0, 0, 640, 360)
 [node name="PillCollectable" parent="." instance=ExtResource("2")]
 position = Vector2(224, 224)
 
-[node name="PillCollectable2" parent="." instance=ExtResource("2")]
-position = Vector2(352, 192)
-
 [node name="BoxCollectable" parent="." instance=ExtResource("3")]
 position = Vector2(512, 224)
