@@ -51,6 +51,8 @@ git config core.hooksPath .githooks
 ./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
 ```
 
+The pre-push hook requires Bash 4+. The default macOS `/bin/bash` is 3.2, so macOS contributors should install a newer Bash, for example with Homebrew, before enabling the hook.
+
 For full governance bootstrap execution with real writes, use:
 
 ```bash

@@ -2,6 +2,13 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
+grep -Fq "Bash 4+ is required" "$repo_root/.githooks/pre-push"
+
+if ((BASH_VERSINFO[0] < 4)); then
+  echo "Skipping pre-push execution tests because Bash 4+ is required."
+  exit 0
+fi
+
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 

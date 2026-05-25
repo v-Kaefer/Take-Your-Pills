@@ -5,6 +5,12 @@ ZERO_SHA="0000000000000000000000000000000000000000"
 LOG_PREFIX="[pre-push]"
 VERBOSE="${PRE_PUSH_VERBOSE:-0}"
 
+if ((BASH_VERSINFO[0] < 4)); then
+  echo "$LOG_PREFIX Bash 4+ is required for this hook; current version is ${BASH_VERSION:-unknown}." >&2
+  echo "$LOG_PREFIX On macOS, install a newer Bash and run the hook with that interpreter." >&2
+  exit 1
+fi
+
 remote_name="${1:-}"
 remote_url="${2:-}"
 

@@ -8,13 +8,14 @@ from unittest.mock import Mock, patch
 
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
-from governance_bootstrap.github import GitHubRequestError
+from governance_bootstrap.github import API_BASE, GitHubClient, GitHubRequestError
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.project import label_value
 from governance_bootstrap.release import (
     ReleaseAssetLink,
+    ReleaseVersion,
     extract_release_context,
     parse_name_status_lines,
     prepare_main_release,
@@ -27,6 +28,93 @@ from governance_bootstrap.release import (
 
 
 class GovernanceBootstrapTests(unittest.TestCase):
+    def test_github_client_release_wrappers_call_expected_endpoints(self):
+        client = GitHubClient("token")
+        version = ReleaseVersion("final", "1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.get_git_ref("owner/repo", "tags/final-1.2.3")
+            request_json.assert_called_once_with("GET", f"{API_BASE}/repos/owner/repo/git/ref/tags/final-1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.create_git_ref("owner/repo", "refs/tags/final-1.2.3", "abc123")
+            request_json.assert_called_once_with(
+                "POST",
+                f"{API_BASE}/repos/owner/repo/git/refs",
+                {"ref": "refs/tags/final-1.2.3", "sha": "abc123"},
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.get_release_by_tag("owner/repo", "final-1.2.3")
+            request_json.assert_called_once_with("GET", f"{API_BASE}/repos/owner/repo/releases/tags/final-1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.create_release("owner/repo", version, "abc123", "body")
+            request_json.assert_called_once_with(
+                "POST",
+                f"{API_BASE}/repos/owner/repo/releases",
+                {
+                    "tag_name": "final-1.2.3",
+                    "target_commitish": "abc123",
+                    "name": "final-1.2.3",
+                    "body": "body",
+                    "prerelease": False,
+                },
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.update_release("owner/repo", 77, version, "abc123", "body")
+            request_json.assert_called_once_with(
+                "PATCH",
+                f"{API_BASE}/repos/owner/repo/releases/77",
+                {
+                    "tag_name": "final-1.2.3",
+                    "target_commitish": "abc123",
+                    "name": "final-1.2.3",
+                    "body": "body",
+                    "prerelease": False,
+                },
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.delete_release_asset("owner/repo", 88)
+            request_json.assert_called_once_with("DELETE", f"{API_BASE}/repos/owner/repo/releases/assets/88")
+
+    def test_github_client_paginated_wrappers_call_expected_endpoints(self):
+        client = GitHubClient("token")
+
+        with patch.object(client, "paginated", return_value=[]) as paginated:
+            client.list_pull_request_files("owner/repo", 42)
+            paginated.assert_called_once_with(f"{API_BASE}/repos/owner/repo/pulls/42/files")
+
+        with patch.object(client, "paginated", return_value=[]) as paginated:
+            client.list_release_assets("owner/repo", 77)
+            paginated.assert_called_once_with(f"{API_BASE}/repos/owner/repo/releases/77/assets")
+
+    def test_github_client_upload_release_asset_sends_file_bytes(self):
+        client = GitHubClient("token")
+
+        with tempfile.NamedTemporaryFile() as asset:
+            asset.write(b"release-bytes")
+            asset.flush()
+
+            with patch.object(client, "request_data_json", return_value={"name": "build file.zip"}) as request_data_json:
+                result = client.upload_release_asset(
+                    "owner/repo",
+                    "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+                    asset.name,
+                    "build file.zip",
+                )
+
+        self.assertEqual(result, {"name": "build file.zip"})
+        method, url, data, headers = request_data_json.call_args.args
+        self.assertEqual(method, "POST")
+        self.assertEqual(url, "https://uploads.github.com/repos/owner/repo/releases/77/assets?name=build+file.zip")
+        self.assertEqual(data, b"release-bytes")
+        self.assertEqual(headers["Accept"], "application/vnd.github+json")
+        self.assertEqual(headers["Authorization"], "Bearer token")
+        self.assertEqual(headers["Content-Type"], "application/octet-stream")
+
     def test_auto_label_infers_type_status_priority_and_test(self):
         issue = {
             "title": "US-01 | Example",
