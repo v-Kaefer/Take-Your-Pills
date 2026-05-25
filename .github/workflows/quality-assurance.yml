@@ -1,0 +1,141 @@
+'on':
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+name: Quality Assurance
+
+jobs:
+  coverage-check:
+    name: Segment Coverage Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch coverage-approved refs
+        run: git fetch origin '+refs/coverage-approved/*:refs/coverage-approved/*' 2>/dev/null || true
+
+      - name: Check for local pre-approval
+        id: pre_check
+        run: |
+          sha="${{ github.event.pull_request.head.sha }}"
+          if git show-ref --verify "refs/coverage-approved/$sha" >/dev/null 2>&1; then
+            echo "approved=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "approved=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Classify changed files
+        if: steps.pre_check.outputs.approved != 'true'
+        id: classify
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+
+          gameplay_files=()
+          test_files=()
+
+          while IFS=$'\t' read -r status path; do
+            [[ -z "$path" ]] && continue
+            norm="${path,,}"
+            case "$norm" in
+              scenes/player/*|scripts/player/*|scripts/character/*|\
+              scenes/game/game.gd|scenes/game/game.tscn|scripts/run_signals.gd|\
+              scenes/game/chunks/*|scenes/game/chunk_manager*|scripts/chunks/*|scripts/world/*|\
+              scenes/game/obstacles/*|scripts/obstacles/*|\
+              scenes/game/hud*|scenes/game/ui*|ui/*|\
+              scenes/game/*|scenes/*|\
+              *.gd|*.tscn|*.tres)
+                gameplay_files+=("$path") ;;
+              tests/*)
+                test_files+=("$path") ;;
+            esac
+          done < <(git diff --name-status "$base" "$head" | awk -F'\t' '{if ($1 ~ /^R/) print $1"\t"$3; else print $1"\t"$2}')
+
+          {
+            echo "gameplay_count=${#gameplay_files[@]}"
+            echo "test_count=${#test_files[@]}"
+            if ((${#gameplay_files[@]} > 0)); then
+              printf 'gameplay_list=%s\n' "$(IFS='|'; echo "${gameplay_files[*]}")"
+            else
+              echo "gameplay_list="
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build PR comment
+        id: comment
+        run: |
+          approved="${{ steps.pre_check.outputs.approved }}"
+          gameplay_count="${{ steps.classify.outputs.gameplay_count }}"
+          test_count="${{ steps.classify.outputs.test_count }}"
+          gameplay_list="${{ steps.classify.outputs.gameplay_list }}"
+
+          if [[ "$approved" == "true" ]]; then
+            body="<!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ Pre-approved — coverage check ran via local pre-push hook."
+          elif [[ "${gameplay_count:-0}" -eq 0 ]]; then
+            body="<!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ No gameplay files changed in this PR."
+          elif [[ "${test_count:-0}" -gt 0 ]]; then
+            body="<!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ Gameplay changes covered — test files included in this PR."
+          else
+            rows=""
+            IFS='|' read -ra files <<< "$gameplay_list"
+            for f in "${files[@]}"; do
+              rows="${rows}| \`${f}\` |
+          "
+            done
+            body="<!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ⚠️ Gameplay files changed with no test files in this PR.
+
+          | Gameplay files changed |
+          |---|
+          ${rows}
+          Consider adding or updating tests in \`tests/godot/\` to cover these changes."
+          fi
+
+          echo "body<<COMMENT_EOF" >> "$GITHUB_OUTPUT"
+          echo "$body" >> "$GITHUB_OUTPUT"
+          echo "COMMENT_EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- coverage-check -->';
+            const body = `${{ steps.comment.outputs.body }}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

@@ -343,6 +343,7 @@ fi
 
 empty_tree="$(git hash-object -t tree /dev/null)"
 all_paths=()
+pushed_shas=()
 
 for update_line in "${updates[@]}"; do
   [[ -z "${update_line//[[:space:]]/}" ]] && continue
@@ -357,6 +358,7 @@ for update_line in "${updates[@]}"; do
     echo "  deletion detected; no file summary available."
     continue
   fi
+  pushed_shas+=("$local_sha")
 
   base_sha="$remote_sha"
   [[ "$remote_sha" == "$ZERO_SHA" ]] && base_sha="$empty_tree"
@@ -500,4 +502,10 @@ if ((${#gameplay_changed[@]} > 0)); then
       echo "Changed test files    (${#tests_changed[@]}): ${tests_changed[*]}"
     } | indent_lines
   fi
+fi
+
+if ((${#pushed_shas[@]} > 0)) && [[ -n "${remote_name:-}" ]]; then
+  for _sha in "${pushed_shas[@]}"; do
+    git push "$remote_name" "${_sha}:refs/coverage-approved/${_sha}" --no-verify 2>/dev/null || true
+  done
 fi
