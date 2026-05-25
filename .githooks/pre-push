@@ -468,3 +468,36 @@ log_step "result: passed."
     done
   fi
 } | indent_lines
+
+gameplay_changed=()
+tests_changed=()
+for _path in "${all_paths[@]}"; do
+  _sector_info="$(classify_sector "$_path")"
+  _sector_category="${_sector_info%%|*}"
+  if [[ "$_sector_category" == "gameplay" ]]; then
+    gameplay_changed+=("$_path")
+  fi
+  case "$_path" in
+    tests/*) tests_changed+=("$_path") ;;
+  esac
+done
+
+if ((${#gameplay_changed[@]} > 0)); then
+  echo "segment coverage check"
+  if ((${#tests_changed[@]} == 0)); then
+    {
+      echo "WARNING: gameplay files changed but no test files were included."
+      echo "Changed gameplay files:"
+      for _gp in "${gameplay_changed[@]}"; do
+        echo "  - $_gp"
+      done
+      echo "Consider adding or updating tests in tests/godot/ to cover these changes."
+    } | indent_lines
+  else
+    {
+      echo "Gameplay changes detected with test files present."
+      echo "Changed gameplay files (${#gameplay_changed[@]}): ${gameplay_changed[*]}"
+      echo "Changed test files    (${#tests_changed[@]}): ${tests_changed[*]}"
+    } | indent_lines
+  fi
+fi

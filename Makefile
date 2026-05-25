@@ -27,12 +27,6 @@ RUN_LABELS ?= true
 RUN_MILESTONES ?= true
 RUN_PROJECT ?= true
 RUN_ISSUES ?= true
-PR_NUMBER ?=
-PR_BODY ?=
-PR_BODY_FILE ?=
-MERGE_SHA ?=
-PR_TITLE ?=
-HOOKS_PATH ?=
 
 define require_repo
 	@test -n "$(REPO)" || { echo "Missing REPO. Set REPO or GITHUB_REPOSITORY."; exit 1; }
@@ -50,7 +44,7 @@ define require_title
 	@test -n "$(TITLE)" || { echo "Missing TITLE."; exit 1; }
 endef
 
-.PHONY: help labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync release_summarize_pr release_prepare_main release_publish bootstrap_local issue_create issue_update issue_delete
+.PHONY: help labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync bootstrap_local issue_create issue_update issue_delete
 
 help:
 	@printf '%s\n' \
@@ -61,10 +55,6 @@ help:
 		'  make project_sync PROJECT_NUMBER=123' \
 		'  make issues_generate' \
 		'  make issue_milestones_sync' \
-		'  make release_summarize_pr PR_NUMBER=123' \
-		'  make release_prepare_main PR_NUMBER=123 PR_BODY_FILE=path/to/body.md' \
-		'  make release_publish PR_NUMBER=123 MERGE_SHA=... PR_BODY_FILE=path/to/body.md' \
-		'  git config core.hooksPath .githooks' \
 		'  make bootstrap_local' \
 		'  make issue_create TITLE="..." BODY_FILE=... LABELS="status:backlog type:task"' \
 		'  make issue_update ISSUE_NUMBER=123 TITLE="..." ADD_LABELS="priority:high"' \
@@ -121,34 +111,6 @@ issue_milestones_sync:
 	@set -euo pipefail; \
 	args=($(PYTHON) scripts/github/issue_milestones/sync.py --repo "$(REPO)"); \
 	if [[ "$(CLEAR_NOT_PLANNED)" == "true" ]]; then args+=(--clear-not-planned); fi; \
-	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
-	"$${args[@]}"
-
-release_summarize_pr:
-	$(call require_repo)
-	@test -n "$(PR_NUMBER)" || { echo "Missing PR_NUMBER."; exit 1; }
-	@set -euo pipefail; \
-	args=($(PYTHON) -m governance_bootstrap release summarize-pr --repo "$(REPO)" --pr-number "$(PR_NUMBER)"); \
-	if [[ -n "$(PR_TITLE)" ]]; then args+=(--title "$(PR_TITLE)"); fi; \
-	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
-	"$${args[@]}"
-
-release_prepare_main:
-	$(call require_repo)
-	@test -n "$(PR_NUMBER)" || { echo "Missing PR_NUMBER."; exit 1; }
-	@set -euo pipefail; \
-	args=($(PYTHON) -m governance_bootstrap release prepare-main --repo "$(REPO)" --pr-number "$(PR_NUMBER)"); \
-	if [[ -n "$(PR_BODY_FILE)" ]]; then args+=(--body-file "$(PR_BODY_FILE)"); elif [[ -n "$(PR_BODY)" ]]; then args+=(--body "$(PR_BODY)"); fi; \
-	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
-	"$${args[@]}"
-
-release_publish:
-	$(call require_repo)
-	@test -n "$(PR_NUMBER)" || { echo "Missing PR_NUMBER."; exit 1; }
-	@test -n "$(MERGE_SHA)" || { echo "Missing MERGE_SHA."; exit 1; }
-	@set -euo pipefail; \
-	args=($(PYTHON) -m governance_bootstrap release publish --repo "$(REPO)" --pr-number "$(PR_NUMBER)" --merge-sha "$(MERGE_SHA)"); \
-	if [[ -n "$(PR_BODY_FILE)" ]]; then args+=(--body-file "$(PR_BODY_FILE)"); elif [[ -n "$(PR_BODY)" ]]; then args+=(--body "$(PR_BODY)"); fi; \
 	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
 	"$${args[@]}"
 

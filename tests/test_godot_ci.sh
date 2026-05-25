@@ -14,8 +14,12 @@ for path in "${required[@]}"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
 
-grep -Fq "version: 4.6.2" .github/workflows/godot-smoke.yml
-grep -Fq -- '--quit --log-file /tmp/godot-smoke.log' .github/workflows/godot-smoke.yml
+grep -Fq "firebelley/setup-godot@v1" .github/workflows/godot-smoke.yml
+grep -Fq "godot-version: '4.2.2'" .github/workflows/godot-smoke.yml
+grep -Fq 'if [ -f project.godot ]; then' .github/workflows/godot-smoke.yml
+grep -Fq 'godot --version || true' .github/workflows/godot-smoke.yml
+grep -Fq 'godot --headless --quit' .github/workflows/godot-smoke.yml
+grep -Fq 'Skipping smoke check: project.godot not found yet.' .github/workflows/godot-smoke.yml
 
 grep -Fq "godot-gdunit-labs/gdUnit4-action@v1.3.1" .github/workflows/game-tests.yml
 grep -Fq "godot-version: '4.6.2'" .github/workflows/game-tests.yml

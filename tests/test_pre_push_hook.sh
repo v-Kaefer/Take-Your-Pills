@@ -43,6 +43,9 @@ grep -Fq "Support changes" <<<"$output"
 grep -Fq "Documentation" <<<"$output"
 grep -Fq "Lint checks passed" <<<"$output"
 grep -Fq "[pre-push] mode: git hook stdin; reading refs queued by git push." <<<"$output"
+grep -Fq "segment coverage check" <<<"$output"
+grep -Fq "WARNING: gameplay files changed but no test files were included." <<<"$output"
+grep -Fq "scenes/player/player.gd" <<<"$output"
 
 if command -v script >/dev/null; then
   manual_output="$(script -q -e -c "cd '$work_repo' && PRE_PUSH_VERBOSE=1 bash '$repo_root/.githooks/pre-push'" /dev/null 2>&1)"
@@ -73,6 +76,20 @@ if command -v script >/dev/null; then
   grep -Fq "git push -u origin" <<<"$no_upstream_output"
 
   cd "$work_repo"
+fi
+
+mkdir -p tests/godot
+printf '%s\n' 'extends GdUnitTestSuite' > tests/godot/player_behavior_test.gd
+printf '%s\n' 'print("player updated again")' >> scenes/player/player.gd
+git add scenes/player/player.gd tests/godot/player_behavior_test.gd
+git commit -q -m "add gameplay + test together"
+
+output_with_tests="$(git push origin HEAD:main 2>&1)"
+grep -Fq "segment coverage check" <<<"$output_with_tests"
+grep -Fq "Gameplay changes detected with test files present." <<<"$output_with_tests"
+if grep -Fq "WARNING: gameplay files changed but no test files were included." <<<"$output_with_tests"; then
+  echo "Expected no coverage warning when test files are present" >&2
+  exit 1
 fi
 
 mkdir -p scripts

@@ -1,8 +1,7 @@
----
 name: "Task / Sub-issue"
 description: "Create a task linked to a User Story"
 title: "T-XX.X | "
-labels: ["type:task"]
+labels: ["type:task", "status:backlog"]
 body:
   - type: input
     id: parent_story

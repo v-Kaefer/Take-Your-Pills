@@ -1,7 +1,7 @@
 ---
 name: Game tests
 
-'on':
+"on":
   pull_request:
     paths:
       - project.godot
@@ -25,9 +25,9 @@ jobs:
       - name: Run GdUnit4 game tests
         uses: godot-gdunit-labs/gdUnit4-action@v1.3.1
         with:
-          godot-version: '4.6.2'
-          version: 'v6.1.3'
-          paths: 'res://tests/godot'
+          godot-version: "4.6.2"
+          version: "v6.1.3"
+          paths: "res://tests/godot"
           timeout: 10
           report-name: gdunit-report.xml
           warnings-as-errors: true

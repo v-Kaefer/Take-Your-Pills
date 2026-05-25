@@ -5,13 +5,20 @@ import json
 import os
 import sys
 
-from .release import parse_name_status_lines, prepare_main_release, publish_release, render_change_summary_comment, render_change_summary_report, summarize_change_items, summarize_pull_request
 from .github import GitHubClient, require_client
 from .issue_milestones import sync_issue_milestones
 from .issues import generate_issues
 from .labels import sync_labels
 from .milestones import sync_milestones
 from .project import create_project, sync_project
+from .release import (
+    parse_name_status_lines,
+    prepare_main_release,
+    publish_release,
+    render_change_summary_report,
+    summarize_change_items,
+    summarize_pull_request,
+)
 
 
 def load_bootstrap_config(path: str) -> dict:

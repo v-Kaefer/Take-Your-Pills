@@ -9,11 +9,21 @@ from unittest.mock import Mock, patch
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
 from governance_bootstrap.github import GitHubRequestError
-from governance_bootstrap.release import extract_release_context, parse_name_status_lines, prepare_main_release, publish_release, render_change_summary_comment, render_release_body, render_release_context_comment, summarize_change_items, ReleaseAssetLink
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.project import label_value
+from governance_bootstrap.release import (
+    ReleaseAssetLink,
+    extract_release_context,
+    parse_name_status_lines,
+    prepare_main_release,
+    publish_release,
+    render_change_summary_comment,
+    render_release_body,
+    render_release_context_comment,
+    summarize_change_items,
+)
 
 
 class GovernanceBootstrapTests(unittest.TestCase):
@@ -479,7 +489,6 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("State: planned", comment)
         self.assertIn("#7", comment)
         self.assertIn("#9", comment)
-
 
 if __name__ == "__main__":
     unittest.main()

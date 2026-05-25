@@ -3,7 +3,6 @@ Take Your Pills - É um jogo infinity runner, side-scroller, ambientado em um Ja
 
 ## Governança do repositório
 - Artefatos de governança: `/docs`, `/config`, `/.github`, `/scripts`
-- Conteúdo em `/scripts`: utilitários locais e manuais; não faz parte da validação automatizada do repositório.
 - Runbook de bootstrap: `/docs/repo/governance-bootstrap-runbook.pt-BR.md`
 - CLI reutilizável: `python -m governance_bootstrap`
 - Make targets: `make help`
