@@ -48,7 +48,11 @@ grep -Fq "Gameplay impact" <<<"$output"
 grep -Fq "Player systems" <<<"$output"
 grep -Fq "Support changes" <<<"$output"
 grep -Fq "Documentation" <<<"$output"
-grep -Fq "Lint checks passed" <<<"$output"
+grep -Fq "Lint checks: no lintable files detected." <<<"$output"
+if grep -Fq "Lint checks passed for" <<<"$output"; then
+  echo "Expected non-lintable-only changes to avoid reporting linted file success" >&2
+  exit 1
+fi
 grep -Fq "[pre-push] mode: git hook stdin; reading refs queued by git push." <<<"$output"
 grep -Fq "segment coverage check" <<<"$output"
 grep -Fq "WARNING: gameplay files changed but no test files were included." <<<"$output"
@@ -92,12 +96,20 @@ git add scenes/player/player.gd tests/godot/player_behavior_test.gd
 git commit -q -m "add gameplay + test together"
 
 output_with_tests="$(git push origin HEAD:main 2>&1)"
+grep -Fq "Lint checks: no lintable files detected." <<<"$output_with_tests"
 grep -Fq "segment coverage check" <<<"$output_with_tests"
 grep -Fq "Gameplay changes detected with test files present." <<<"$output_with_tests"
 if grep -Fq "WARNING: gameplay files changed but no test files were included." <<<"$output_with_tests"; then
   echo "Expected no coverage warning when test files are present" >&2
   exit 1
 fi
+
+printf '%s\n' '{"ok": true}' > metadata.json
+git add metadata.json
+git commit -q -m "add lintable json"
+
+output_with_lintable="$(git push origin HEAD:main 2>&1)"
+grep -Fq "Lint checks passed for 1 lintable file(s)." <<<"$output_with_lintable"
 
 mkdir -p scripts
 cat > scripts/broken.py <<'EOF'

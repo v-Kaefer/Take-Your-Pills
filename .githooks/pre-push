@@ -464,10 +464,10 @@ fi
 
 log_step "result: passed."
 {
-  if ((${#checked[@]} == 0)); then
+  if ((lintable_count == 0)); then
     echo "Lint checks: no lintable files detected."
   else
-    echo "Lint checks passed for ${#checked[@]} changed file(s)."
+    echo "Lint checks passed for ${lintable_count} lintable file(s)."
   fi
   if ((${#lint_warnings[@]})); then
     echo "Warnings:"
