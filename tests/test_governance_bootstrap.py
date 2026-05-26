@@ -4,17 +4,117 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from governance_bootstrap.auto_label import infer_issue_labels
 from governance_bootstrap.cli import main
+from governance_bootstrap.github import API_BASE, GitHubClient, GitHubRequestError
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.project import label_value
+from governance_bootstrap.release import (
+    ReleaseAssetLink,
+    ReleaseVersion,
+    extract_release_context,
+    parse_name_status_lines,
+    prepare_main_release,
+    publish_release,
+    render_change_summary_comment,
+    render_release_body,
+    render_release_context_comment,
+    summarize_change_items,
+)
 
 
 class GovernanceBootstrapTests(unittest.TestCase):
+    def test_github_client_release_wrappers_call_expected_endpoints(self):
+        client = GitHubClient("token")
+        version = ReleaseVersion("final", "1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.get_git_ref("owner/repo", "tags/final-1.2.3")
+            request_json.assert_called_once_with("GET", f"{API_BASE}/repos/owner/repo/git/ref/tags/final-1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.create_git_ref("owner/repo", "refs/tags/final-1.2.3", "abc123")
+            request_json.assert_called_once_with(
+                "POST",
+                f"{API_BASE}/repos/owner/repo/git/refs",
+                {"ref": "refs/tags/final-1.2.3", "sha": "abc123"},
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.get_release_by_tag("owner/repo", "final-1.2.3")
+            request_json.assert_called_once_with("GET", f"{API_BASE}/repos/owner/repo/releases/tags/final-1.2.3")
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.create_release("owner/repo", version, "abc123", "body")
+            request_json.assert_called_once_with(
+                "POST",
+                f"{API_BASE}/repos/owner/repo/releases",
+                {
+                    "tag_name": "final-1.2.3",
+                    "target_commitish": "abc123",
+                    "name": "final-1.2.3",
+                    "body": "body",
+                    "prerelease": False,
+                },
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.update_release("owner/repo", 77, version, "abc123", "body")
+            request_json.assert_called_once_with(
+                "PATCH",
+                f"{API_BASE}/repos/owner/repo/releases/77",
+                {
+                    "tag_name": "final-1.2.3",
+                    "target_commitish": "abc123",
+                    "name": "final-1.2.3",
+                    "body": "body",
+                    "prerelease": False,
+                },
+            )
+
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.delete_release_asset("owner/repo", 88)
+            request_json.assert_called_once_with("DELETE", f"{API_BASE}/repos/owner/repo/releases/assets/88")
+
+    def test_github_client_paginated_wrappers_call_expected_endpoints(self):
+        client = GitHubClient("token")
+
+        with patch.object(client, "paginated", return_value=[]) as paginated:
+            client.list_pull_request_files("owner/repo", 42)
+            paginated.assert_called_once_with(f"{API_BASE}/repos/owner/repo/pulls/42/files")
+
+        with patch.object(client, "paginated", return_value=[]) as paginated:
+            client.list_release_assets("owner/repo", 77)
+            paginated.assert_called_once_with(f"{API_BASE}/repos/owner/repo/releases/77/assets")
+
+    def test_github_client_upload_release_asset_sends_file_bytes(self):
+        client = GitHubClient("token")
+
+        with tempfile.NamedTemporaryFile() as asset:
+            asset.write(b"release-bytes")
+            asset.flush()
+
+            with patch.object(client, "request_data_json", return_value={"name": "build file.zip"}) as request_data_json:
+                result = client.upload_release_asset(
+                    "owner/repo",
+                    "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+                    asset.name,
+                    "build file.zip",
+                )
+
+        self.assertEqual(result, {"name": "build file.zip"})
+        method, url, data, headers = request_data_json.call_args.args
+        self.assertEqual(method, "POST")
+        self.assertEqual(url, "https://uploads.github.com/repos/owner/repo/releases/77/assets?name=build+file.zip")
+        self.assertEqual(data, b"release-bytes")
+        self.assertEqual(headers["Accept"], "application/vnd.github+json")
+        self.assertEqual(headers["Authorization"], "Bearer token")
+        self.assertEqual(headers["Content-Type"], "application/octet-stream")
+
     def test_auto_label_infers_type_status_priority_and_test(self):
         issue = {
             "title": "US-01 | Example",
@@ -185,6 +285,320 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("Closes #123", comment)
         self.assertIn("Steps: describe the commands", comment)
 
+    def test_release_context_parser_accepts_short_versions(self):
+        body = """## Release version
+- b0.1
+
+## Related develop PRs
+- #12
+- https://github.com/owner/repo/pull/15
+"""
+
+        context = extract_release_context(body)
+
+        self.assertIsNotNone(context.version)
+        self.assertEqual(context.version.canonical, "beta-0.1.0")
+        self.assertEqual(context.related_prs, [12, 15])
+        self.assertEqual(context.errors, [])
+
+    def test_release_prepare_main_dry_run_accepts_valid_version(self):
+        body = """## Release version
+- f1.2.3
+
+## Related develop PRs
+- #12
+- #15
+"""
+
+        client = Mock()
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=True)
+
+        self.assertEqual(result, 0)
+        self.assertIn("State: planned", output.getvalue())
+        self.assertIn("final-1.2.3", output.getvalue())
+        self.assertIn("#12", output.getvalue())
+        self.assertIn("#15", output.getvalue())
+
+    def test_release_prepare_main_dry_run_rejects_invalid_version(self):
+        body = """## Release version
+- maybe-later
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=True)
+
+        self.assertEqual(result, 1)
+        self.assertIn("Invalid release version", output.getvalue())
+        self.assertIn("Accepted forms:", output.getvalue())
+
+    def test_release_publish_creates_tag_and_release(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.side_effect = GitHubRequestError("GET", "/repos/owner/repo/releases/tags/final-1.2.3", 404, "missing")
+        client.create_release.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = []
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="created") as upsert_comment:
+            result = publish_release(client, "owner/repo", 42, body, "abc123")
+
+        self.assertEqual(result, 0)
+        client.create_git_ref.assert_called_once_with("owner/repo", "refs/tags/final-1.2.3", "abc123")
+        client.create_release.assert_called_once()
+        self.assertEqual(client.create_release.call_args.args[1].canonical, "final-1.2.3")
+        self.assertEqual(client.create_release.call_args.args[1].prerelease, False)
+        client.update_release.assert_called_once()
+        self.assertIn("Release `final-1.2.3`", client.update_release.call_args.args[4])
+        upsert_comment.assert_any_call(client, "owner/repo", 42, "<!-- governance-release-plan -->", unittest.mock.ANY)
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
+    def test_release_publish_uploads_assets_and_lists_downloads(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.list_release_assets.return_value = [{"id": 88, "name": "take-your-pills-windows.exe"}]
+        client.delete_release_asset.return_value = {}
+        client.upload_release_asset.side_effect = [
+            {"name": "take-your-pills-windows.exe", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-windows.exe"},
+            {"name": "take-your-pills-linux.x86_64", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-linux.x86_64"},
+            {"name": "take-your-pills-godot.zip", "browser_download_url": "https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-godot.zip"},
+        ]
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = []
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="created"):
+            result = publish_release(
+                client,
+                "owner/repo",
+                42,
+                body,
+                "abc123",
+                asset_paths=[
+                    "dist/release/take-your-pills-windows.exe",
+                    "dist/release/take-your-pills-linux.x86_64",
+                    "dist/release/take-your-pills-godot.zip",
+                ],
+            )
+
+        self.assertEqual(result, 0)
+        client.delete_release_asset.assert_called_once_with("owner/repo", 88)
+        self.assertEqual(client.upload_release_asset.call_count, 3)
+        final_body = client.update_release.call_args.args[4]
+        self.assertIn("## Downloads", final_body)
+        self.assertIn("take-your-pills-windows.exe", final_body)
+        self.assertIn("take-your-pills-linux.x86_64", final_body)
+        self.assertIn("take-your-pills-godot.zip", final_body)
+        self.assertIn("https://github.com/owner/repo/releases/download/final-1.2.3/take-your-pills-godot.zip", final_body)
+
+    def test_release_publish_rejects_tag_sha_conflict(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.return_value = {"object": {"sha": "oldsha"}}
+        client.list_issue_comments.return_value = []
+
+        with self.assertRaises(RuntimeError) as ctx:
+            publish_release(client, "owner/repo", 42, body, "newsha")
+
+        self.assertIn("Refusing to move existing release tag", str(ctx.exception))
+
+    def test_release_prepare_main_removes_stale_develop_notice(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.list_issue_comments.return_value = [
+            {
+                "id": 1001,
+                "body": "\n".join(
+                    [
+                        "<!-- governance-release-plan -->",
+                        "## Release plan",
+                        "- State: planned",
+                        "- Release version: `final-1.2.3`",
+                        "- Main PR: #42",
+                        "- Related develop PRs:",
+                        "  - #12",
+                        "  - #15",
+                    ]
+                ),
+            }
+        ]
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="updated") as upsert_comment:
+            result = prepare_main_release(client, "owner/repo", 42, body, dry_run=False)
+
+        self.assertEqual(result, 0)
+        upsert_comment.assert_any_call(client, "owner/repo", 15, "<!-- governance-release-notice -->", "")
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
+    def test_release_publish_removes_stale_develop_notice(self):
+        body = """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+
+        client = Mock()
+        client.get_git_ref.side_effect = GitHubRequestError("GET", "/repos/owner/repo/git/ref/tags/final-1.2.3", 404, "missing")
+        client.get_release_by_tag.side_effect = GitHubRequestError("GET", "/repos/owner/repo/releases/tags/final-1.2.3", 404, "missing")
+        client.create_release.return_value = {
+            "id": 77,
+            "html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3",
+            "upload_url": "https://uploads.github.com/repos/owner/repo/releases/77/assets{?name,label}",
+        }
+        client.update_release.return_value = {"html_url": "https://github.com/owner/repo/releases/tag/final-1.2.3"}
+        client.list_issue_comments.return_value = [
+            {
+                "id": 1001,
+                "body": "\n".join(
+                    [
+                        "<!-- governance-release-plan -->",
+                        "## Release plan",
+                        "- State: planned",
+                        "- Release version: `final-1.2.3`",
+                        "- Main PR: #42",
+                        "- Related develop PRs:",
+                        "  - #12",
+                        "  - #15",
+                    ]
+                ),
+            }
+        ]
+
+        with patch("governance_bootstrap.release.upsert_marked_comment", return_value="updated") as upsert_comment:
+            result = publish_release(client, "owner/repo", 42, body, "abc123")
+
+        self.assertEqual(result, 0)
+        upsert_comment.assert_any_call(client, "owner/repo", 15, "<!-- governance-release-notice -->", "")
+        upsert_comment.assert_any_call(client, "owner/repo", 12, "<!-- governance-release-notice -->", unittest.mock.ANY)
+
+    def test_render_release_body_lists_assets(self):
+        context = extract_release_context(
+            """## Release version
+- final-1.2.3
+
+## Related develop PRs
+- #12
+"""
+        )
+
+        body = render_release_body(
+            context,
+            42,
+            "abc123",
+            assets=[
+                ReleaseAssetLink(name="take-your-pills-windows.exe", url="https://example.invalid/windows"),
+                ReleaseAssetLink(name="take-your-pills-godot.zip", url="https://example.invalid/godot"),
+            ],
+        )
+
+        self.assertIn("## Downloads", body)
+        self.assertIn("[take-your-pills-windows.exe](https://example.invalid/windows)", body)
+        self.assertIn("[take-your-pills-godot.zip](https://example.invalid/godot)", body)
+
+    def test_change_summary_groups_paths_by_game_area(self):
+        items = parse_name_status_lines(
+            "\n".join(
+                [
+                    "M\tscenes/player/player.gd",
+                    "A\tscenes/game/chunks/chunk_d.tscn",
+                    "M\tdocs/workflow-map.md",
+                ]
+            )
+        )
+
+        summary = summarize_change_items(items)
+        comment = render_change_summary_comment(summary)
+
+        self.assertIn("Gameplay impact", comment)
+        self.assertIn("Support changes", comment)
+        self.assertIn("Player systems", comment)
+        self.assertIn("Chunk generation", comment)
+        self.assertIn("Documentation", comment)
+        self.assertIn("Top-level folders: scenes (2), docs (1).", comment)
+        self.assertNotIn("Likely game areas", comment)
+
+    def test_parse_name_status_lines_accepts_plain_and_whitespace_paths(self):
+        items = parse_name_status_lines(
+            "\n".join(
+                [
+                    "scenes/player/player.gd",
+                    "M docs/workflow-map.md",
+                    "A\ttests/test_release_version.sh",
+                    "R100\tdocs/old.md\tdocs/new.md",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            [(item.status, item.path) for item in items],
+            [
+                ("modified", "scenes/player/player.gd"),
+                ("modified", "docs/workflow-map.md"),
+                ("added", "tests/test_release_version.sh"),
+                ("renamed", "docs/new.md"),
+            ],
+        )
+
+    def test_release_context_comment_mentions_related_prs(self):
+        context = extract_release_context(
+            """## Release version
+- final-1.0.0
+
+## Related develop PRs
+- #7
+- #9
+"""
+        )
+
+        comment = render_release_context_comment(context, 42, "planned")
+
+        self.assertIn("final-1.0.0", comment)
+        self.assertIn("State: planned", comment)
+        self.assertIn("#7", comment)
+        self.assertIn("#9", comment)
 
 if __name__ == "__main__":
     unittest.main()

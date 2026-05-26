@@ -1,7 +1,7 @@
 name: "User Story"
 description: "Create a new user story item"
 title: "US-XX | "
-labels: ["type:user-story"]
+labels: ["type:user-story", "status:backlog"]
 body:
   - type: input
     id: summary
