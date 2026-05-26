@@ -17,7 +17,6 @@ var score: int = 0
 func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
-	RunSignals.collectable_collected.connect(_on_collectable_collected)
 	hud.connect_start(_on_start_button_pressed)
 	hud.connect_resume(_on_resume_button_pressed)
 	hud.connect_restart(_on_restart_button_pressed)
@@ -120,7 +119,6 @@ func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int
 		return
 
 	score += score_value
-	collect_sfx_player.play()
 	_update_hud()
 
 
