@@ -10,7 +10,7 @@
 ## Validation performed
 - Dry-run issue/sub-issue generation executed from manifest
 - Command:
-  - `python scripts/github/generate_issues.py config/stories/backlog-manifest.json --dry-run --repo v-Kaefer/Take-Your-Pills`
+  - `python scripts/github/issues/generate.py config/stories/backlog-manifest.json --dry-run --repo v-Kaefer/Take-Your-Pills`
 
 ## Pending validations (require admin/repo permissions)
 - Open simulated PR task -> phase

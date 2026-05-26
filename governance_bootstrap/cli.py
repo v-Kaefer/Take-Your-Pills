@@ -3,14 +3,22 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 
-from .auto_label import apply_auto_labels
-from .github import GitHubClient, get_token, require_client
+from .github import GitHubClient, require_client
 from .issue_milestones import sync_issue_milestones
 from .issues import generate_issues
 from .labels import sync_labels
 from .milestones import sync_milestones
 from .project import create_project, sync_project
+from .release import (
+    parse_name_status_lines,
+    prepare_main_release,
+    publish_release,
+    render_change_summary_report,
+    summarize_change_items,
+    summarize_pull_request,
+)
 
 
 def load_bootstrap_config(path: str) -> dict:
@@ -23,11 +31,6 @@ def repo_arg(value: str | None) -> str:
     if not repo:
         raise SystemExit("Missing --repo and GITHUB_REPOSITORY")
     return repo
-
-
-def optional_client() -> GitHubClient | None:
-    token = get_token()
-    return GitHubClient(token) if token else None
 
 
 def cmd_labels_sync(args) -> int:
@@ -73,12 +76,51 @@ def cmd_issue_milestones_sync(args) -> int:
     return 0
 
 
-def cmd_auto_label_apply(args) -> int:
-    event_path = args.event_path or os.getenv("GITHUB_EVENT_PATH")
-    if not event_path:
-        print("Missing --event-path or GITHUB_EVENT_PATH")
+def cmd_release_summarize_paths(args) -> int:
+    if args.stdin:
+        text = sys.stdin.read()
+        items = parse_name_status_lines(text)
+    else:
+        items = parse_name_status_lines("\n".join(args.name_status or []))
+    body = render_change_summary_report(summarize_change_items(items), title=args.title)
+    print(body)
+    return 0
+
+
+def cmd_release_summarize_pr(args) -> int:
+    return summarize_pull_request(require_client(), repo_arg(args.repo), args.pr_number, dry_run=args.dry_run, title=args.title)
+
+
+def cmd_release_prepare_main(args) -> int:
+    body = args.body
+    if not body and args.body_file:
+        with open(args.body_file, "r", encoding="utf-8") as f:
+            body = f.read()
+    body = body or os.getenv("PR_BODY")
+    client = GitHubClient("") if args.dry_run else require_client()
+    return prepare_main_release(client, repo_arg(args.repo), args.pr_number, body, dry_run=args.dry_run)
+
+
+def cmd_release_publish(args) -> int:
+    body = args.body
+    if not body and args.body_file:
+        with open(args.body_file, "r", encoding="utf-8") as f:
+            body = f.read()
+    body = body or os.getenv("PR_BODY")
+    merge_sha = args.merge_sha or os.getenv("PR_MERGE_SHA") or os.getenv("GITHUB_SHA")
+    if not merge_sha:
+        print("Missing --merge-sha or PR_MERGE_SHA/GITHUB_SHA")
         return 1
-    return apply_auto_labels(repo_arg(args.repo), event_path, args.labels_file, optional_client(), dry_run=args.dry_run)
+    client = GitHubClient("") if args.dry_run else require_client()
+    return publish_release(
+        client,
+        repo_arg(args.repo),
+        args.pr_number,
+        body,
+        merge_sha,
+        asset_paths=args.asset or [],
+        dry_run=args.dry_run,
+    )
 
 
 def cmd_bootstrap(args) -> int:
@@ -173,14 +215,39 @@ def build_parser() -> argparse.ArgumentParser:
     issue_milestones_sync.add_argument("--dry-run", action="store_true")
     issue_milestones_sync.set_defaults(func=cmd_issue_milestones_sync)
 
-    auto_label = sub.add_parser("auto-label")
-    auto_label_sub = auto_label.add_subparsers(dest="auto_label_command", required=True)
-    auto_label_apply = auto_label_sub.add_parser("apply")
-    auto_label_apply.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
-    auto_label_apply.add_argument("--event-path", default=os.getenv("GITHUB_EVENT_PATH"))
-    auto_label_apply.add_argument("--labels-file", default="config/project/labels.json")
-    auto_label_apply.add_argument("--dry-run", action="store_true")
-    auto_label_apply.set_defaults(func=cmd_auto_label_apply)
+    release = sub.add_parser("release")
+    release_sub = release.add_subparsers(dest="release_command", required=True)
+
+    release_summarize_paths = release_sub.add_parser("summarize-paths")
+    release_summarize_paths.add_argument("--stdin", action="store_true")
+    release_summarize_paths.add_argument("--title")
+    release_summarize_paths.add_argument("name_status", nargs="*")
+    release_summarize_paths.set_defaults(func=cmd_release_summarize_paths)
+
+    release_summarize_pr = release_sub.add_parser("summarize-pr")
+    release_summarize_pr.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
+    release_summarize_pr.add_argument("--pr-number", type=int, required=True)
+    release_summarize_pr.add_argument("--title")
+    release_summarize_pr.add_argument("--dry-run", action="store_true")
+    release_summarize_pr.set_defaults(func=cmd_release_summarize_pr)
+
+    release_prepare_main = release_sub.add_parser("prepare-main")
+    release_prepare_main.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
+    release_prepare_main.add_argument("--pr-number", type=int, required=True)
+    release_prepare_main.add_argument("--body")
+    release_prepare_main.add_argument("--body-file")
+    release_prepare_main.add_argument("--dry-run", action="store_true")
+    release_prepare_main.set_defaults(func=cmd_release_prepare_main)
+
+    release_publish = release_sub.add_parser("publish")
+    release_publish.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
+    release_publish.add_argument("--pr-number", type=int, required=True)
+    release_publish.add_argument("--body")
+    release_publish.add_argument("--body-file")
+    release_publish.add_argument("--merge-sha")
+    release_publish.add_argument("--asset", action="append", default=[], help="Path to a release asset to upload")
+    release_publish.add_argument("--dry-run", action="store_true")
+    release_publish.set_defaults(func=cmd_release_publish)
 
     bootstrap = sub.add_parser("bootstrap")
     bootstrap.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))

@@ -23,9 +23,12 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPO_NAME: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           python3 scripts/validation/validate_pr_body.py \
-            --branch "${{ github.event.pull_request.head.ref }}" \
-            --repo "${{ github.repository }}" \
-            --pr-number "${{ github.event.pull_request.number }}" \
+            --branch "$HEAD_REF" \
+            --repo "$REPO_NAME" \
+            --pr-number "$PR_NUMBER" \
             --comment
