@@ -8,6 +8,7 @@ It uses three project-area buckets so the same groups can be reused in the table
 | Path | Area | Trigger / entrypoint | Purpose | Key dependencies | Status |
 | --- | --- | --- | --- | --- | --- |
 | `.github/workflows/pr-metadata.yml` | `infra` | `pull_request_target` on `opened`, `synchronize`, `reopened`, `edited` | Validate branch naming and PR body contract before the review flow starts. | `scripts/validation/validate_pr_body.py`, PR template | Active |
+| `.github/workflows/pr-hygiene.yml` | `infra` | `pull_request_target` on PR lifecycle events | Sync PR labels, milestone, assignees, linked task relationship, and Project status from the linked task. | `governance_bootstrap.pr_hygiene`, `GOVERNANCE_PAT`, `GOVERNANCE_PROJECT_NUMBER` | Active |
 | `.github/workflows/main-source-branch.yml` | `infra` | `pull_request` targeting `main` | Enforce that `main` is merged from `develop` in the same repository. | GitHub PR metadata only | Active |
 | `.github/workflows/release-version.yml` | `infra` | `pull_request_target` to `main`, plus `closed` merge handling | Plan releases from the PR body, update linked `develop` PRs, export Godot builds, create the tag and GitHub Release, and attach release assets. | `governance_bootstrap.release`, `export_presets.cfg`, Godot export templates | Active |
 | `.github/workflows/quality-assurance.yml` | `infra` | `pull_request` on `opened`, `synchronize`, `reopened` | Check segment coverage for gameplay changes and upsert a sticky PR comment for same-repo PRs. | `.githooks/pre-push` coverage approval refs, `git diff --name-status`, `actions/github-script` | Active |
@@ -21,6 +22,7 @@ It uses three project-area buckets so the same groups can be reused in the table
 
 ### Notes
 
+- `pr-hygiene.yml` depends on PR bodies linking tasks with `Closes #N`, `Fixes #N`, or `Resolves #N`.
 - `release-version.yml` depends on the release CLI path (`python -m governance_bootstrap release ...`) and `export_presets.cfg`.
 - `godot-smoke.yml` is only a bootstrap check; `game-tests.yml` is the refined gameplay suite.
 - `repo-quality.yml` is retired. The living baseline now sits in `scripts/validation/repo_quality.sh`.
@@ -33,7 +35,7 @@ These are the project-area buckets used throughout this file and the Sankey diag
 | Area | Scope | Typical entries |
 | --- | --- | --- |
 | `godot` | Gameplay content, Godot engine checks, and game-test fixtures. | `godot-smoke.yml`, `game-tests.yml`, `project.godot`, `export_presets.cfg`, `tests/godot/*` |
-| `infra` | Repository policy, release automation, GitHub helpers, and local validation. | `pr-metadata.yml`, `main-source-branch.yml`, `release-version.yml`, `governance-bootstrap.yml`, `governance_bootstrap/cli.py`, `governance_bootstrap/comments.py`, `.githooks/pre-push`, `scripts/validation/repo_quality.sh` |
+| `infra` | Repository policy, release automation, GitHub helpers, and local validation. | `pr-metadata.yml`, `pr-hygiene.yml`, `main-source-branch.yml`, `release-version.yml`, `governance-bootstrap.yml`, `governance_bootstrap/cli.py`, `governance_bootstrap/comments.py`, `.githooks/pre-push`, `scripts/validation/repo_quality.sh` |
 | `legacy` | Retired or compatibility-only automation. | `develop-change-summary.yml`, `repo-quality.yml`, `scripts/github/archive/*.py`, `scripts/github/issues/*.sh` |
 
 ## GitHub Interaction Helpers
@@ -69,6 +71,7 @@ godot,project.godot,1
 godot,export_presets.cfg,1
 godot,tests/godot/*,1
 infra,.github/workflows/pr-metadata.yml,1
+infra,.github/workflows/pr-hygiene.yml,1
 infra,.github/workflows/main-source-branch.yml,1
 infra,.github/workflows/release-version.yml,1
 infra,.github/workflows/quality-assurance.yml,1
