@@ -1,0 +1,39 @@
+---
+name: PR hygiene
+
+"on":
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - closed
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  hygiene:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Sync PR hygiene
+        env:
+          GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GOVERNANCE_PROJECT_NUMBER: ${{ vars.GOVERNANCE_PROJECT_NUMBER }}
+        run: |
+          python -m governance_bootstrap pr hygiene \
+            --repo "$GITHUB_REPOSITORY" \
+            --event-path "$GITHUB_EVENT_PATH"
