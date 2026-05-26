@@ -44,7 +44,7 @@ define require_title
 	@test -n "$(TITLE)" || { echo "Missing TITLE."; exit 1; }
 endef
 
-.PHONY: help setup labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync bootstrap_local issue_create issue_update issue_delete
+.PHONY: help labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync bootstrap_local issue_create issue_update issue_delete
 
 help:
 	@printf '%s\n' \
