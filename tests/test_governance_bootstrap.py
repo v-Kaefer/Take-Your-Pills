@@ -12,6 +12,14 @@ from governance_bootstrap.github import API_BASE, GitHubClient, GitHubRequestErr
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
+from governance_bootstrap.pr_hygiene import (
+    apply_pr_hygiene,
+    linked_task_number,
+    project_status_for_event,
+    status_option_id,
+    sync_pr_metadata,
+)
+from governance_bootstrap.pr_hygiene import PullRequestContext as HygienePullRequestContext
 from governance_bootstrap.project import label_value
 from governance_bootstrap.release import (
     ReleaseAssetLink,
@@ -284,6 +292,197 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("PR body", comment)
         self.assertIn("Closes #123", comment)
         self.assertIn("Steps: describe the commands", comment)
+
+    def test_pr_hygiene_extracts_linked_task_number(self):
+        self.assertEqual(linked_task_number("## Linked Issue\n- Closes #12"), 12)
+        self.assertEqual(linked_task_number("Fixes: #44"), 44)
+        self.assertEqual(linked_task_number("Resolves #101"), 101)
+        self.assertIsNone(linked_task_number("Related to #9"))
+
+    def test_pr_hygiene_status_mapping_respects_drafts_and_merge(self):
+        base = {
+            "number": 7,
+            "body": "Closes #12",
+            "base_ref": "develop",
+            "head_ref": "feat/x",
+            "author": "alice",
+            "merged": False,
+        }
+
+        self.assertEqual(project_status_for_event(HygienePullRequestContext(action="opened", draft=True, **base)), "In progress")
+        self.assertEqual(project_status_for_event(HygienePullRequestContext(action="converted_to_draft", draft=False, **base)), "In progress")
+        self.assertEqual(project_status_for_event(HygienePullRequestContext(action="ready_for_review", draft=False, **base)), "In review")
+        self.assertEqual(project_status_for_event(HygienePullRequestContext(action="opened", draft=False, **base)), "In review")
+        self.assertEqual(project_status_for_event(HygienePullRequestContext(action="closed", draft=False, merged=True, **{k: v for k, v in base.items() if k != "merged"})), "Done")
+
+    def test_pr_hygiene_finds_status_option_tolerantly(self):
+        field = {
+            "options": [
+                {"id": "todo", "name": "Todo"},
+                {"id": "in_review", "name": "In review"},
+                {"id": "done", "name": "Done"},
+            ]
+        }
+
+        self.assertEqual(status_option_id(field, "In Review"), "in_review")
+        self.assertEqual(status_option_id(field, "in-review"), "in_review")
+
+    def test_pr_hygiene_syncs_pr_metadata_from_task(self):
+        client = Mock()
+        ctx = HygienePullRequestContext(
+            number=33,
+            action="opened",
+            body="Closes #12",
+            base_ref="develop",
+            head_ref="feat/phase-2/task",
+            author="alice",
+            draft=False,
+            merged=False,
+        )
+        task = {
+            "number": 12,
+            "labels": [{"name": "type:task"}, {"name": "priority:critical"}, {"name": "status:backlog"}, {"name": "test:smoke"}],
+            "milestone": {"number": 2},
+            "assignees": [{"login": "bob"}],
+        }
+        pr_issue = {
+            "number": 33,
+            "labels": [{"name": "type:task"}],
+            "milestone": {"number": 1},
+            "assignees": [],
+        }
+
+        sync_pr_metadata(client, "owner/repo", ctx, task, pr_issue)
+
+        client.add_issue_labels.assert_called_once_with("owner/repo", 33, ["priority:critical", "test:smoke"])
+        client.update_issue_milestone.assert_called_once_with("owner/repo", 33, 2)
+        client.add_issue_assignees.assert_called_once_with("owner/repo", 33, ["bob"])
+
+    def test_pr_hygiene_self_assigns_task_and_pr_when_task_has_no_assignee(self):
+        client = Mock()
+        ctx = HygienePullRequestContext(
+            number=33,
+            action="opened",
+            body="Closes #12",
+            base_ref="develop",
+            head_ref="feat/phase-2/task",
+            author="alice",
+            draft=False,
+            merged=False,
+        )
+        task = {
+            "number": 12,
+            "labels": [],
+            "milestone": None,
+            "assignees": [],
+        }
+        pr_issue = {"number": 33, "labels": [], "milestone": None, "assignees": []}
+
+        sync_pr_metadata(client, "owner/repo", ctx, task, pr_issue)
+
+        client.add_issue_assignees.assert_any_call("owner/repo", 12, ["alice"])
+        client.add_issue_assignees.assert_any_call("owner/repo", 33, ["alice"])
+
+    def test_pr_hygiene_fails_without_linked_task(self):
+        event = {
+            "action": "opened",
+            "pull_request": {
+                "number": 33,
+                "body": "No linked task",
+                "base": {"ref": "develop"},
+                "head": {"ref": "feat/phase-2/task"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        client = Mock()
+
+        with patch("governance_bootstrap.pr_hygiene.upsert_marked_comment") as upsert_comment:
+            result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 1)
+        upsert_comment.assert_called_once()
+        self.assertIn("No linked implementation task", upsert_comment.call_args.args[4])
+
+    def test_pr_hygiene_applies_status_to_linked_task(self):
+        event = {
+            "action": "ready_for_review",
+            "pull_request": {
+                "number": 33,
+                "body": "Closes #12",
+                "base": {"ref": "develop"},
+                "head": {"ref": "feat/phase-2/task"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        task = {"number": 12, "labels": [], "milestone": None, "assignees": [], "body": ""}
+        pr_issue = {"number": 33, "labels": [], "milestone": None, "assignees": []}
+        client = Mock()
+        client.get_issue.side_effect = [task, pr_issue]
+
+        with (
+            patch("governance_bootstrap.pr_hygiene.sync_pr_metadata") as sync_metadata,
+            patch("governance_bootstrap.pr_hygiene.sync_task_project_status") as sync_status,
+            patch("governance_bootstrap.pr_hygiene.sync_parent_relationship") as sync_relationship,
+            patch("governance_bootstrap.pr_hygiene.upsert_marked_comment"),
+        ):
+            result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 0)
+        sync_metadata.assert_called_once()
+        sync_status.assert_called_once_with(client, "owner/repo", 4, task, "In review", owner=None, dry_run=False)
+        sync_relationship.assert_called_once()
+
+    def test_pr_hygiene_ignores_develop_to_main_release_pr(self):
+        event = {
+            "action": "opened",
+            "pull_request": {
+                "number": 203,
+                "body": "",
+                "base": {"ref": "main"},
+                "head": {"ref": "develop"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        client = Mock()
+
+        result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 0)
+        client.get_issue.assert_not_called()
+
+    def test_pr_hygiene_dry_run_cli_still_requires_real_client_for_reads(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":33,"body":"Closes #12","base":{"ref":"develop"},"head":{"ref":"feat/task"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+            client = Mock()
+
+            with (
+                patch("governance_bootstrap.cli.require_client", return_value=client) as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                        "--dry-run",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_called_once_with()
+        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=True)
 
     def test_release_context_parser_accepts_short_versions(self):
         body = """## Release version

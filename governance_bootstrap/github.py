@@ -88,6 +88,18 @@ class GitHubClient:
     def delete_issue_comment(self, repo: str, comment_id: int):
         return self.request_json("DELETE", f"{API_BASE}/repos/{repo}/issues/comments/{comment_id}")
 
+    def get_issue(self, repo: str, number: int):
+        return self.request_json("GET", f"{API_BASE}/repos/{repo}/issues/{number}")
+
+    def add_issue_labels(self, repo: str, number: int, labels: list[str]):
+        return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/labels", {"labels": labels})
+
+    def add_issue_assignees(self, repo: str, number: int, assignees: list[str]):
+        return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/assignees", {"assignees": assignees})
+
+    def update_issue_milestone(self, repo: str, number: int, milestone_number: int):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"milestone": milestone_number})
+
     def get_git_ref(self, repo: str, ref: str):
         encoded_ref = urllib.parse.quote(ref, safe="/")
         return self.request_json("GET", f"{API_BASE}/repos/{repo}/git/ref/{encoded_ref}")

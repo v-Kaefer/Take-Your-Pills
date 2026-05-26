@@ -4,6 +4,7 @@ set -euo pipefail
 required=(
   ".github/pull_request_template.md"
   ".github/workflows/pr-metadata.yml"
+  ".github/workflows/pr-hygiene.yml"
   ".github/workflows/main-source-branch.yml"
   ".github/workflows/release-version.yml"
   ".github/workflows/quality-assurance.yml"
@@ -19,8 +20,10 @@ required=(
   "export_presets.cfg"
   "pyproject.toml"
   "governance_bootstrap/comments.py"
+  "governance_bootstrap/pr_hygiene.py"
   "governance_bootstrap/release.py"
   "tests/test_governance_bootstrap.py"
+  "tests/test_pr_hygiene.sh"
   "tests/test_pre_push_hook.sh"
   "tests/test_quality_assurance.sh"
   "tests/test_release_version.sh"
