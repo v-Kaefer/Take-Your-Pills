@@ -21,6 +21,7 @@ required=(
   "governance_bootstrap/release.py"
   "tests/test_governance_bootstrap.py"
   "tests/test_pre_push_hook.sh"
+  "tests/test_quality_assurance.sh"
   "tests/test_release_version.sh"
   "tests/test_godot_ci.sh"
   "scripts/validation/validate_pr_body.py"

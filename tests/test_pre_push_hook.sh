@@ -104,6 +104,15 @@ if grep -Fq "WARNING: gameplay files changed but no test files were included." <
   exit 1
 fi
 
+rm tests/godot/player_behavior_test.gd
+printf '%s\n' 'print("player updated after deleting test")' >> scenes/player/player.gd
+git add scenes/player/player.gd tests/godot/player_behavior_test.gd
+git commit -q -m "delete gameplay test while changing gameplay"
+
+output_with_deleted_test="$(git push origin HEAD:main 2>&1)"
+grep -Fq "segment coverage check" <<<"$output_with_deleted_test"
+grep -Fq "WARNING: gameplay files changed but no test files were included." <<<"$output_with_deleted_test"
+
 printf '%s\n' '{"ok": true}' > metadata.json
 git add metadata.json
 git commit -q -m "add lintable json"

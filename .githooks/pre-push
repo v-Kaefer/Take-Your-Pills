@@ -349,6 +349,7 @@ fi
 
 empty_tree="$(git hash-object -t tree /dev/null)"
 all_paths=()
+all_status_paths=()
 pushed_shas=()
 
 for update_line in "${updates[@]}"; do
@@ -380,9 +381,11 @@ for update_line in "${updates[@]}"; do
 
   for line in "${diff_lines[@]}"; do
     parsed="$(parse_diff_paths "$line")"
+    status="${parsed%%$'\t'*}"
     path="${parsed#*$'\t'}"
     [[ -n "$path" ]] || continue
     all_paths+=("$path")
+    all_status_paths+=("$status"$'\t'"$path")
   done
 done
 
@@ -479,14 +482,19 @@ log_step "result: passed."
 
 gameplay_changed=()
 tests_changed=()
-for _path in "${all_paths[@]}"; do
+for _entry in "${all_status_paths[@]}"; do
+  _status="${_entry%%$'\t'*}"
+  _path="${_entry#*$'\t'}"
   _sector_info="$(classify_sector "$_path")"
   _sector_category="${_sector_info%%|*}"
   if [[ "$_sector_category" == "gameplay" ]]; then
     gameplay_changed+=("$_path")
   fi
   case "$_path" in
-    tests/*) tests_changed+=("$_path") ;;
+    tests/*)
+      if [[ "$_status" != "removed" ]]; then
+        tests_changed+=("$_path")
+      fi ;;
   esac
 done
 

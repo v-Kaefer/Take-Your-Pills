@@ -31,17 +31,25 @@ jobs:
             echo "approved=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Classify changed files
-        if: steps.pre_check.outputs.approved != 'true'
-        id: classify
+      - name: Build coverage comment
+        id: comment
+        env:
+          APPROVED: ${{ steps.pre_check.outputs.approved }}
+          COVERAGE_COMMENT_FILE: ${{ runner.temp }}/coverage-comment.md
         run: |
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
+          comment_file="$COVERAGE_COMMENT_FILE"
 
           gameplay_files=()
           test_files=()
 
-          while IFS=$'\t' read -r status path; do
+          while IFS=$'\t' read -r raw_status first_path second_path; do
+            status="${raw_status%%[0-9]*}"
+            path="$first_path"
+            if [[ "$status" == "R" || "$status" == "C" ]]; then
+              path="$second_path"
+            fi
             [[ -z "$path" ]] && continue
             norm="${path,,}"
             case "$norm" in
@@ -54,72 +62,65 @@ jobs:
               *.gd|*.tscn|*.tres)
                 gameplay_files+=("$path") ;;
               tests/*)
-                test_files+=("$path") ;;
+                if [[ "$status" != "D" ]]; then
+                  test_files+=("$path")
+                fi ;;
             esac
-          done < <(git diff --name-status "$base" "$head" | awk -F'\t' '{if ($1 ~ /^R/) print $1"\t"$3; else print $1"\t"$2}')
+          done < <(git diff --name-status "$base" "$head")
 
-          {
-            echo "gameplay_count=${#gameplay_files[@]}"
-            echo "test_count=${#test_files[@]}"
-            if ((${#gameplay_files[@]} > 0)); then
-              printf 'gameplay_list=%s\n' "$(IFS='|'; echo "${gameplay_files[*]}")"
-            else
-              echo "gameplay_list="
-            fi
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Build PR comment
-        id: comment
-        run: |
-          approved="${{ steps.pre_check.outputs.approved }}"
-          gameplay_count="${{ steps.classify.outputs.gameplay_count }}"
-          test_count="${{ steps.classify.outputs.test_count }}"
-          gameplay_list="${{ steps.classify.outputs.gameplay_list }}"
-
-          if [[ "$approved" == "true" ]]; then
-            body="<!-- coverage-check -->
+          if [[ "$APPROVED" == "true" ]]; then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
           ## Segment Coverage Check
 
-          ✅ Pre-approved — coverage check ran via local pre-push hook."
-          elif [[ "${gameplay_count:-0}" -eq 0 ]]; then
-            body="<!-- coverage-check -->
+          ✅ Pre-approved — coverage check ran via local pre-push hook.
+          COMMENT
+          elif ((${#gameplay_files[@]} == 0)); then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
           ## Segment Coverage Check
 
-          ✅ No gameplay files changed in this PR."
-          elif [[ "${test_count:-0}" -gt 0 ]]; then
-            body="<!-- coverage-check -->
+          ✅ No gameplay files changed in this PR.
+          COMMENT
+          elif ((${#test_files[@]} > 0)); then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
           ## Segment Coverage Check
 
-          ✅ Gameplay changes covered — test files included in this PR."
+          ✅ Gameplay changes covered — test files included in this PR.
+          COMMENT
           else
-            rows=""
-            IFS='|' read -ra files <<< "$gameplay_list"
-            for f in "${files[@]}"; do
-              rows="${rows}| \`${f}\` |
-          "
-            done
-            body="<!-- coverage-check -->
+            {
+              cat <<'COMMENT'
+          <!-- coverage-check -->
           ## Segment Coverage Check
 
           ⚠️ Gameplay files changed with no test files in this PR.
 
           | Gameplay files changed |
           |---|
-          ${rows}
-          Consider adding or updating tests in \`tests/godot/\` to cover these changes."
+          COMMENT
+              for file in "${gameplay_files[@]}"; do
+                printf '| `%s` |\n' "$file"
+              done
+              echo
+              echo 'Consider adding or updating tests in `tests/godot/` to cover these changes.'
+            } > "$comment_file"
           fi
 
-          echo "body<<COMMENT_EOF" >> "$GITHUB_OUTPUT"
-          echo "$body" >> "$GITHUB_OUTPUT"
-          echo "COMMENT_EOF" >> "$GITHUB_OUTPUT"
+          cat "$comment_file" >> "$GITHUB_STEP_SUMMARY"
+          echo "comment_file=$comment_file" >> "$GITHUB_OUTPUT"
 
       - name: Upsert PR comment
         if: github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
+        env:
+          COVERAGE_COMMENT_FILE: ${{ steps.comment.outputs.comment_file }}
         with:
           script: |
+            const fs = require('fs');
             const marker = '<!-- coverage-check -->';
-            const body = `${{ steps.comment.outputs.body }}`;
+            const body = fs.readFileSync(process.env.COVERAGE_COMMENT_FILE, 'utf8');
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
