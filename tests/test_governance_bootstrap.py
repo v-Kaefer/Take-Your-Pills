@@ -456,6 +456,34 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(result, 0)
         client.get_issue.assert_not_called()
 
+    def test_pr_hygiene_dry_run_cli_still_requires_real_client_for_reads(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":33,"body":"Closes #12","base":{"ref":"develop"},"head":{"ref":"feat/task"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+            client = Mock()
+
+            with (
+                patch("governance_bootstrap.cli.require_client", return_value=client) as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                        "--dry-run",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_called_once_with()
+        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=True)
+
     def test_release_context_parser_accepts_short_versions(self):
         body = """## Release version
 - b0.1

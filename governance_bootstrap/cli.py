@@ -81,7 +81,7 @@ def cmd_pr_hygiene(args) -> int:
     event_path = args.event_path or os.getenv("GITHUB_EVENT_PATH")
     if not event_path:
         raise SystemExit("Missing --event-path and GITHUB_EVENT_PATH")
-    client = GitHubClient("") if args.dry_run else require_client()
+    client = require_client()
     return apply_pr_hygiene_from_path(
         client,
         repo_arg(args.repo),
