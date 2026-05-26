@@ -44,7 +44,7 @@ define require_title
 	@test -n "$(TITLE)" || { echo "Missing TITLE."; exit 1; }
 endef
 
-.PHONY: help labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync auto_label_apply bootstrap_local issue_create issue_update issue_delete
+.PHONY: help labels_sync milestones_sync project_create project_sync issues_generate issue_milestones_sync bootstrap_local issue_create issue_update issue_delete
 
 help:
 	@printf '%s\n' \
@@ -55,7 +55,6 @@ help:
 		'  make project_sync PROJECT_NUMBER=123' \
 		'  make issues_generate' \
 		'  make issue_milestones_sync' \
-		'  make auto_label_apply EVENT_PATH=/path/to/event.json' \
 		'  make bootstrap_local' \
 		'  make issue_create TITLE="..." BODY_FILE=... LABELS="status:backlog type:task"' \
 		'  make issue_update ISSUE_NUMBER=123 TITLE="..." ADD_LABELS="priority:high"' \
@@ -112,15 +111,6 @@ issue_milestones_sync:
 	@set -euo pipefail; \
 	args=($(PYTHON) scripts/github/issue_milestones/sync.py --repo "$(REPO)"); \
 	if [[ "$(CLEAR_NOT_PLANNED)" == "true" ]]; then args+=(--clear-not-planned); fi; \
-	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
-	"$${args[@]}"
-
-auto_label_apply:
-	$(call require_repo)
-	@set -euo pipefail; \
-	args=($(PYTHON) scripts/github/auto_label/apply.py --repo "$(REPO)"); \
-	if [[ -n "$(EVENT_PATH)" ]]; then args+=(--event-path "$(EVENT_PATH)"); fi; \
-	if [[ -n "$(LABELS_FILE)" ]]; then args+=(--labels-file "$(LABELS_FILE)"); fi; \
 	if [[ "$(DRY_RUN)" == "true" ]]; then args+=(--dry-run); fi; \
 	"$${args[@]}"
 
