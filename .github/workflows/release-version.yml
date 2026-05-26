@@ -1,0 +1,102 @@
+---
+name: Release version
+
+'on':
+  pull_request_target:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, edited, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  plan-release:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Validate release version before merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python -m governance_bootstrap release prepare-main \
+            --repo "$GITHUB_REPOSITORY" \
+            --pr-number "$PR_NUMBER" \
+            --dry-run
+
+      - name: Plan release and update develop PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python -m governance_bootstrap release prepare-main \
+            --repo "$GITHUB_REPOSITORY" \
+            --pr-number "$PR_NUMBER"
+
+  publish-release:
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: Setup Godot for release exports
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.2
+          include-templates: true
+
+      - name: Build release exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/release
+          godot --headless --path . \
+            --export-release "Windows Desktop" \
+            build/release/take-your-pills-windows.exe
+          godot --headless --path . \
+            --export-release "Linux/X11" \
+            build/release/take-your-pills-linux.x86_64
+          godot --headless --path . \
+            --export-pack "Linux/X11" \
+            build/release/take-your-pills-godot.zip
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          python -m governance_bootstrap release publish \
+            --repo "$GITHUB_REPOSITORY" \
+            --pr-number "$PR_NUMBER" \
+            --merge-sha "$PR_MERGE_SHA" \
+            --asset build/release/take-your-pills-windows.exe \
+            --asset build/release/take-your-pills-linux.x86_64 \
+            --asset build/release/take-your-pills-godot.zip

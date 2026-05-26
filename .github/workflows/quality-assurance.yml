@@ -1,0 +1,144 @@
+'on':
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+name: Quality Assurance
+
+jobs:
+  coverage-check:
+    name: Segment Coverage Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch coverage-approved refs
+        run: git fetch origin '+refs/coverage-approved/*:refs/coverage-approved/*' 2>/dev/null || true
+
+      - name: Check for local pre-approval
+        id: pre_check
+        run: |
+          sha="${{ github.event.pull_request.head.sha }}"
+          if git show-ref --verify "refs/coverage-approved/$sha" >/dev/null 2>&1; then
+            echo "approved=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "approved=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build coverage comment
+        id: comment
+        env:
+          APPROVED: ${{ steps.pre_check.outputs.approved }}
+          COVERAGE_COMMENT_FILE: ${{ runner.temp }}/coverage-comment.md
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          comment_file="$COVERAGE_COMMENT_FILE"
+
+          gameplay_files=()
+          test_files=()
+
+          while IFS=$'\t' read -r raw_status first_path second_path; do
+            status="${raw_status%%[0-9]*}"
+            path="$first_path"
+            if [[ "$status" == "R" || "$status" == "C" ]]; then
+              path="$second_path"
+            fi
+            [[ -z "$path" ]] && continue
+            norm="${path,,}"
+            case "$norm" in
+              scenes/player/*|scripts/player/*|scripts/character/*|\
+              scenes/game/game.gd|scenes/game/game.tscn|scripts/run_signals.gd|\
+              scenes/game/chunks/*|scenes/game/chunk_manager*|scripts/chunks/*|scripts/world/*|\
+              scenes/game/obstacles/*|scripts/obstacles/*|\
+              scenes/game/hud*|scenes/game/ui*|ui/*|\
+              scenes/game/*|scenes/*|\
+              *.gd|*.tscn|*.tres)
+                gameplay_files+=("$path") ;;
+              tests/*)
+                if [[ "$status" != "D" ]]; then
+                  test_files+=("$path")
+                fi ;;
+            esac
+          done < <(git diff --name-status "$base" "$head")
+
+          if [[ "$APPROVED" == "true" ]]; then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ Pre-approved — coverage check ran via local pre-push hook.
+          COMMENT
+          elif ((${#gameplay_files[@]} == 0)); then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ No gameplay files changed in this PR.
+          COMMENT
+          elif ((${#test_files[@]} > 0)); then
+            cat > "$comment_file" <<'COMMENT'
+          <!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ✅ Gameplay changes covered — test files included in this PR.
+          COMMENT
+          else
+            {
+              cat <<'COMMENT'
+          <!-- coverage-check -->
+          ## Segment Coverage Check
+
+          ⚠️ Gameplay files changed with no test files in this PR.
+
+          | Gameplay files changed |
+          |---|
+          COMMENT
+              for file in "${gameplay_files[@]}"; do
+                printf '| `%s` |\n' "$file"
+              done
+              echo
+              echo 'Consider adding or updating tests in `tests/godot/` to cover these changes.'
+            } > "$comment_file"
+          fi
+
+          cat "$comment_file" >> "$GITHUB_STEP_SUMMARY"
+          echo "comment_file=$comment_file" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert PR comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        env:
+          COVERAGE_COMMENT_FILE: ${{ steps.comment.outputs.comment_file }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- coverage-check -->';
+            const body = fs.readFileSync(process.env.COVERAGE_COMMENT_FILE, 'utf8');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
