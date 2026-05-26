@@ -3,8 +3,10 @@ set -euo pipefail
 
 workflow=".github/workflows/quality-assurance.yml"
 metadata=".github/workflows/pr-metadata.yml"
+workflow_map="docs/workflow-map.md"
+repo_quality="scripts/validation/repo_quality.sh"
 
-for path in "$workflow" "$metadata"; do
+for path in "$workflow" "$metadata" "$workflow_map" "$repo_quality"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
 
@@ -31,5 +33,9 @@ if grep -Fq -- '--branch "${{ github.event.pull_request.head.ref }}"' "$metadata
   echo "PR metadata workflow should pass the head ref through an environment variable." >&2
   exit 1
 fi
+
+grep -Fq '.github/workflows/quality-assurance.yml' "$workflow_map"
+grep -Fq 'infra,.github/workflows/quality-assurance.yml,1' "$workflow_map"
+grep -Fq '".github/workflows/quality-assurance.yml"' "$repo_quality"
 
 echo "Quality assurance workflow contract OK"

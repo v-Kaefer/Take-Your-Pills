@@ -10,6 +10,7 @@ It uses three project-area buckets so the same groups can be reused in the table
 | `.github/workflows/pr-metadata.yml` | `infra` | `pull_request_target` on `opened`, `synchronize`, `reopened`, `edited` | Validate branch naming and PR body contract before the review flow starts. | `scripts/validation/validate_pr_body.py`, PR template | Active |
 | `.github/workflows/main-source-branch.yml` | `infra` | `pull_request` targeting `main` | Enforce that `main` is merged from `develop` in the same repository. | GitHub PR metadata only | Active |
 | `.github/workflows/release-version.yml` | `infra` | `pull_request_target` to `main`, plus `closed` merge handling | Plan releases from the PR body, update linked `develop` PRs, export Godot builds, create the tag and GitHub Release, and attach release assets. | `governance_bootstrap.release`, `export_presets.cfg`, Godot export templates | Active |
+| `.github/workflows/quality-assurance.yml` | `infra` | `pull_request` on `opened`, `synchronize`, `reopened` | Check segment coverage for gameplay changes and upsert a sticky PR comment for same-repo PRs. | `.githooks/pre-push` coverage approval refs, `git diff --name-status`, `actions/github-script` | Active |
 | `.github/workflows/godot-smoke.yml` | `godot` | `pull_request` | Lightweight Godot boot check when the project file exists. | `project.godot`, Godot runner | Active |
 | `.github/workflows/game-tests.yml` | `godot` | `pull_request` path filter plus `workflow_dispatch` | Refined Godot gameplay suite for player, obstacle, chunk, and game-flow behavior. | `tests/godot/*`, `godot-gdunit-labs/gdUnit4-action@v1.3.1` | Active |
 | `.github/workflows/governance-bootstrap.yml` | `infra` | `workflow_dispatch` | Manual sync of labels, milestones, project setup, and issue generation. | `governance_bootstrap.cli`, `GOVERNANCE_PAT` | Active |
@@ -60,7 +61,7 @@ This Sankey uses the project-area buckets above so the diagram stays aligned wit
 ```mermaid
 sankey-beta
 Repository,godot,5
-Repository,infra,11
+Repository,infra,12
 Repository,legacy,4
 godot,.github/workflows/godot-smoke.yml,1
 godot,.github/workflows/game-tests.yml,1
@@ -70,6 +71,7 @@ godot,tests/godot/*,1
 infra,.github/workflows/pr-metadata.yml,1
 infra,.github/workflows/main-source-branch.yml,1
 infra,.github/workflows/release-version.yml,1
+infra,.github/workflows/quality-assurance.yml,1
 infra,.github/workflows/governance-bootstrap.yml,1
 infra,governance_bootstrap/cli.py,1
 infra,governance_bootstrap/comments.py,1

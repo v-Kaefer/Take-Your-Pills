@@ -6,6 +6,7 @@ required=(
   ".github/workflows/pr-metadata.yml"
   ".github/workflows/main-source-branch.yml"
   ".github/workflows/release-version.yml"
+  ".github/workflows/quality-assurance.yml"
   ".github/workflows/godot-smoke.yml"
   ".github/workflows/game-tests.yml"
   ".github/workflows/governance-bootstrap.yml"
