@@ -130,13 +130,13 @@ Full map: `docs/workflow-map.md`
 
 | Tool | Path | Purpose |
 |---|---|---|
-| Pre-push hook | `.githooks/pre-push` | Change summary, YAML/Python/JSON lint; requires Bash 4+ |
+| Pre-push hook | `.githooks/pre-push` | Change summary, YAML/Python/JSON lint; requires Bash 4.3+ |
 | Repo quality check | `scripts/validation/repo_quality.sh` | Asserts required files exist |
 | PR body validator | `scripts/validation/validate_pr_body.py` | Local PR validation before push |
 
 Enable hook: `git config core.hooksPath .githooks`
 
-macOS ships `/bin/bash` 3.2 by default. Install and use Bash 4+ before enabling the local pre-push hook on macOS.
+macOS ships `/bin/bash` 3.2 by default. Install and use Bash 4.3+ before enabling the local pre-push hook on macOS.
 
 ### Governance CLI
 

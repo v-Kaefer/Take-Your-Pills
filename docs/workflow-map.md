@@ -15,7 +15,7 @@ It uses three project-area buckets so the same groups can be reused in the table
 | `.github/workflows/governance-bootstrap.yml` | `infra` | `workflow_dispatch` | Manual sync of labels, milestones, project setup, and issue generation. | `governance_bootstrap.cli`, `GOVERNANCE_PAT` | Active |
 | `.github/workflows/develop-change-summary.yml` | `legacy` | `pull_request_target` to `develop` | Legacy grouped change summary for PRs opened against `develop`. | `governance_bootstrap.release` summary helpers | Legacy |
 | `.github/workflows/repo-quality.yml` | `legacy` | Repository workflow check | Historical workflow-level baseline gate. Its responsibilities now live in `scripts/validation/repo_quality.sh`. | `scripts/validation/repo_quality.sh` | Retired |
-| `.githooks/pre-push` | `infra` | Local Git hook | Path-gated checks before push. Runs only the checks that match the files changed in the push. | Bash 4+, Git upstream detection, syntax/lint checks | Local-only |
+| `.githooks/pre-push` | `infra` | Local Git hook | Path-gated checks before push. Runs only the checks that match the files changed in the push. | Bash 4.3+, Git upstream detection, syntax/lint checks | Local-only |
 | `scripts/validation/repo_quality.sh` | `infra` | Local validation script | Baseline file check used by local validation and bootstrap flows. | Repo layout, contract tests | Local-only |
 
 ### Notes
@@ -23,7 +23,7 @@ It uses three project-area buckets so the same groups can be reused in the table
 - `release-version.yml` depends on the release CLI path (`python -m governance_bootstrap release ...`) and `export_presets.cfg`.
 - `godot-smoke.yml` is only a bootstrap check; `game-tests.yml` is the refined gameplay suite.
 - `repo-quality.yml` is retired. The living baseline now sits in `scripts/validation/repo_quality.sh`.
-- `.githooks/pre-push` requires Bash 4+; macOS contributors should not run it with the default `/bin/bash` 3.2.
+- `.githooks/pre-push` requires Bash 4.3+; macOS contributors should not run it with the default `/bin/bash` 3.2.
 
 ## Areas
 

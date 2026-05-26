@@ -15,16 +15,16 @@ for path in "${required[@]}"; do
 done
 
 grep -Fq "firebelley/setup-godot@v1" .github/workflows/godot-smoke.yml
-grep -Fq "godot-version: '4.2.2'" .github/workflows/godot-smoke.yml
+grep -Eq "godot-version:[[:space:]]*['\"]?4[.]2[.]2['\"]?$" .github/workflows/godot-smoke.yml
 grep -Fq 'if [ -f project.godot ]; then' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --version || true' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --headless --quit' .github/workflows/godot-smoke.yml
 grep -Fq 'Skipping smoke check: project.godot not found yet.' .github/workflows/godot-smoke.yml
 
 grep -Fq "godot-gdunit-labs/gdUnit4-action@v1.3.1" .github/workflows/game-tests.yml
-grep -Fq "godot-version: '4.6.2'" .github/workflows/game-tests.yml
-grep -Fq "version: 'v6.1.3'" .github/workflows/game-tests.yml
-grep -Fq "paths: 'res://tests/godot'" .github/workflows/game-tests.yml
+grep -Eq "godot-version:[[:space:]]*['\"]?4[.]6[.]2['\"]?$" .github/workflows/game-tests.yml
+grep -Eq "version:[[:space:]]*['\"]?v6[.]1[.]3['\"]?$" .github/workflows/game-tests.yml
+grep -Eq "paths:[[:space:]]*['\"]?res://tests/godot['\"]?$" .github/workflows/game-tests.yml
 grep -Fq "warnings-as-errors: true" .github/workflows/game-tests.yml
 grep -Fq "checks: write" .github/workflows/game-tests.yml
 

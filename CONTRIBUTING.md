@@ -24,6 +24,7 @@ Follow `/.github/pull_request_template.md` and keep these sections filled:
 - `## Summary`
 - `## How to test`
 - `## Evidence`
+- `## Known risks` with limitations, follow-ups, or `None`
 - `## DoD checklist`
 
 The PR metadata workflow rejects empty sections, template placeholders, issue links outside `## Linked Issue`, and missing test type. Validate a PR body locally with:
@@ -51,7 +52,7 @@ git config core.hooksPath .githooks
 ./scripts/github/bootstrap_local.sh --repo v-Kaefer/Take-Your-Pills --dry-run --skip-labels
 ```
 
-The pre-push hook requires Bash 4+. The default macOS `/bin/bash` is 3.2, so macOS contributors should install a newer Bash, for example with Homebrew, before enabling the hook.
+The pre-push hook requires Bash 4.3+. The default macOS `/bin/bash` is 3.2, so macOS contributors should install a newer Bash, for example with Homebrew, before enabling the hook.
 
 For full governance bootstrap execution with real writes, use:
 
