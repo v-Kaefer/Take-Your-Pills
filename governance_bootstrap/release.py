@@ -200,11 +200,16 @@ def parse_name_status_lines(text: str) -> list[ChangeItem]:
         line = raw_line.strip()
         if not line:
             continue
-        parts = raw_line.split("\t")
-        status = normalize_change_status(parts[0] if parts else "")
+        parts = line.split("\t")
         if len(parts) == 1:
-            items.append(ChangeItem(status=status, path=parts[0].strip()))
+            whitespace_parts = line.split(maxsplit=1)
+            status = normalize_change_status(whitespace_parts[0])
+            if len(whitespace_parts) == 2 and status in set(STATUS_ALIASES.values()):
+                items.append(ChangeItem(status=status, path=whitespace_parts[1].strip()))
+            else:
+                items.append(ChangeItem(status="modified", path=line))
             continue
+        status = normalize_change_status(parts[0])
         if len(parts) >= 3 and status in {"renamed", "copied"}:
             path = parts[-1].strip()
         else:

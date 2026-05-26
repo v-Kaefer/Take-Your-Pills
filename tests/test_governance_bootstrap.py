@@ -560,6 +560,28 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("Top-level folders: scenes (2), docs (1).", comment)
         self.assertNotIn("Likely game areas", comment)
 
+    def test_parse_name_status_lines_accepts_plain_and_whitespace_paths(self):
+        items = parse_name_status_lines(
+            "\n".join(
+                [
+                    "scenes/player/player.gd",
+                    "M docs/workflow-map.md",
+                    "A\ttests/test_release_version.sh",
+                    "R100\tdocs/old.md\tdocs/new.md",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            [(item.status, item.path) for item in items],
+            [
+                ("modified", "scenes/player/player.gd"),
+                ("modified", "docs/workflow-map.md"),
+                ("added", "tests/test_release_version.sh"),
+                ("renamed", "docs/new.md"),
+            ],
+        )
+
     def test_release_context_comment_mentions_related_prs(self):
         context = extract_release_context(
             """## Release version

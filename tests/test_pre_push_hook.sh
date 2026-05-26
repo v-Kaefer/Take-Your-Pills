@@ -31,8 +31,7 @@ printf '%s\n' 'extends Node' > scenes/player/player.gd
 git add scenes/player/player.gd
 git commit -q -m "initial"
 git branch -M main
-git push -q origin main
-git branch --set-upstream-to=origin/main main >/dev/null
+git push -q -u origin main
 
 git config core.hooksPath "$repo_root/.githooks"
 
