@@ -532,6 +532,8 @@ def _upload_release_assets(
             )
         )
     return uploaded_assets
+
+
 def summarize_pull_request(client: GitHubClient, repo: str, pr_number: int, dry_run: bool = False, title: str | None = None) -> int:
     files = client.list_pull_request_files(repo, pr_number)
     items = [ChangeItem(status=item.get("status"), path=item.get("filename", "")) for item in files]
