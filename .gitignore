@@ -14,3 +14,11 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+/.embold
+
+# Python tooling artifacts
+__pycache__/
+*.pyc
+
+# Extra
+.codex
