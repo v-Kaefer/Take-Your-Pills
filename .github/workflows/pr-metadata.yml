@@ -22,7 +22,7 @@ jobs:
       - name: Validate branch naming and PR metadata
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-          GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           REPO_NAME: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
