@@ -252,6 +252,16 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("feat/repo-governance-bootstrap", findings[0].fix)
         self.assertIn("blank", findings[1].problem)
 
+    def test_pr_validation_accepts_develop_for_main_release_pr(self):
+        findings = validate_pull_request("develop", "## Linked Issue\n- Closes #12", base_ref="main")
+
+        self.assertFalse(any(finding.section == "Branch name" for finding in findings))
+
+    def test_pr_validation_still_rejects_develop_for_non_main_prs(self):
+        findings = validate_branch_name("develop", base_ref="develop")
+
+        self.assertEqual([finding.section for finding in findings], ["Branch name"])
+
     def test_pr_body_validation_rejects_placeholder_steps(self):
         body = """## Linked Issue
 - Closes #12
