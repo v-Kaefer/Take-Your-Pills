@@ -112,7 +112,7 @@ def validate_pr_body(body: str | None) -> list[ValidationFinding]:
             ValidationFinding(
                 section="PR body",
                 problem="The PR body is blank.",
-                fix="Start from `.github/pull_request_template.md` and fill all required sections. For `develop -> main` PRs, also replace the release-only placeholders with the real release metadata.",
+                fix="Start from `.github/pull_request_template.md` and fill all required sections: Linked Issue, Milestone, Summary, How to test, Evidence, Known risks, and DoD checklist.",
             )
         ]
 

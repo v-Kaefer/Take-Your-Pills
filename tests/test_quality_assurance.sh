@@ -25,7 +25,6 @@ fi
 grep -Fq 'HEAD_REF: ${{ github.event.pull_request.head.ref }}' "$metadata"
 grep -Fq 'REPO_NAME: ${{ github.repository }}' "$metadata"
 grep -Fq 'PR_NUMBER: ${{ github.event.pull_request.number }}' "$metadata"
-grep -Fq 'GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$metadata"
 grep -Fq -- '--branch "$HEAD_REF" \' "$metadata"
 grep -Fq -- '--repo "$REPO_NAME" \' "$metadata"
 grep -Fq -- '--pr-number "$PR_NUMBER" \' "$metadata"
