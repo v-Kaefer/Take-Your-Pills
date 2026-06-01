@@ -1,5 +1,5 @@
 ---
-name: Release version
+name: Release version update
 
 "on":
   pull_request_target:
