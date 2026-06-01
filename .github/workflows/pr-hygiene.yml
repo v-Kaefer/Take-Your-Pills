@@ -30,7 +30,8 @@ jobs:
 
       - name: Sync PR hygiene
         env:
-          GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
+          GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GOVERNANCE_PROJECT_NUMBER: ${{ vars.GOVERNANCE_PROJECT_NUMBER }}
         run: |
