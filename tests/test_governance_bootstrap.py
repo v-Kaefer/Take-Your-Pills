@@ -456,6 +456,35 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(result, 0)
         client.get_issue.assert_not_called()
 
+    def test_pr_hygiene_cli_skips_client_requirement_for_develop_to_main_release_pr(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":203,"body":"","base":{"ref":"main"},"head":{"ref":"develop"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+
+            with (
+                patch("governance_bootstrap.cli.require_client") as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_not_called()
+        client = apply_hygiene.call_args.args[0]
+        self.assertIsInstance(client, GitHubClient)
+        self.assertEqual(client.token, "")
+        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=False)
+
     def test_pr_hygiene_dry_run_cli_still_requires_real_client_for_reads(self):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
             event.write('{"action":"opened","pull_request":{"number":33,"body":"Closes #12","base":{"ref":"develop"},"head":{"ref":"feat/task"},"user":{"login":"alice"},"draft":false,"merged":false}}')
