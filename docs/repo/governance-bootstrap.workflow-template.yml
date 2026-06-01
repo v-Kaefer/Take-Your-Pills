@@ -37,8 +37,8 @@ jobs:
 
       - name: Run bootstrap
         env:
-          GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}
-          GH_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
+          GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           args="--config governance.bootstrap.json"

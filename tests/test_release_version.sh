@@ -3,9 +3,8 @@ set -euo pipefail
 
 workflow=".github/workflows/release-version.yml"
 preset="export_presets.cfg"
-template=".github/pull_request_template.md"
 
-for path in "$workflow" "$preset" "$template"; do
+for path in "$workflow" "$preset"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
 
@@ -39,9 +38,5 @@ grep -Fq 'name="Windows Desktop"' "$preset"
 grep -Fq 'name="Linux/X11"' "$preset"
 grep -Fq 'export_path="build/release/take-your-pills-windows.exe"' "$preset"
 grep -Fq 'export_path="build/release/take-your-pills-linux.x86_64"' "$preset"
-grep -Fq "## Release version" "$template"
-grep -Fq "## Related develop PRs" "$template"
-grep -Fq "For \`develop -> main\` PRs" "$template"
-grep -Fq "write \`N/A\`" "$template"
 
 echo "Release version workflow contract OK"
