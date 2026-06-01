@@ -18,7 +18,7 @@ This repository now carries the reusable bootstrap engine as the Python package 
 
 ## Consumer Setup
 1. Copy `governance.bootstrap.json`, `config/project`, `config/stories` and the workflow into the consumer repo.
-2. Add a repository secret named `TAKE_YOUR_PILLS_PAT`.
+2. Add a repository secret named `GOVERNANCE_PAT`.
 3. Give the token access to repo issues and Project v2 operations.
 4. Run the manual workflow with `dry_run=true`.
 5. Run again with `dry_run=false` when the dry-run output is correct.
