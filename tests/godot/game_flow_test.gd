@@ -36,8 +36,9 @@ func test_start_transitions_to_running_state() -> void:
 	var chunks := game.get_node("World/Chunks") as ChunkManager
 	var main_menu := game.get_node("HUD/MainMenu") as Control
 	var state_label := game.get_node("HUD/MarginContainer/VBoxContainer/StateLabel") as Label
+	var start_button := game.get_node("HUD/MainMenu/Panel/VBoxContainer/StartButton") as Button
 
-	game.call("_start_run")
+	start_button.emit_signal("pressed")
 	await runner.simulate_frames(1)
 
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
@@ -45,6 +46,29 @@ func test_start_transitions_to_running_state() -> void:
 	assert_bool(chunks.scrolling_enabled).is_true()
 	assert_bool(main_menu.visible).is_false()
 	assert_str(state_label.text).contains("State: RUNNING")
+
+
+func test_collectable_score_persists_after_next_frame() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var baseline_score := game.score
+	RunSignals.collectable_collected.emit(null, game.player, 100)
+	await runner.simulate_frames(1)
+
+	var score_after_collect := game.score
+
+	assert_int(score_after_collect).is_greater(baseline_score)
+
+	await runner.simulate_frames(1)
+
+	assert_int(game.score).is_greater_equal(score_after_collect)
 
 
 func test_pause_and_resume_from_running_state() -> void:

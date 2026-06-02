@@ -23,6 +23,7 @@ required=(
   "governance_bootstrap/pr_hygiene.py"
   "governance_bootstrap/release.py"
   "tests/test_governance_bootstrap.py"
+  "tests/test_governance_bootstrap_workflow.sh"
   "tests/test_pr_hygiene.sh"
   "tests/test_pre_push_hook.sh"
   "tests/test_quality_assurance.sh"
