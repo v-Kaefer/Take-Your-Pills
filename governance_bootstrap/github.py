@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import time
+from typing import Any
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -88,7 +89,7 @@ class GitHubClient:
     def delete_issue_comment(self, repo: str, comment_id: int):
         return self.request_json("DELETE", f"{API_BASE}/repos/{repo}/issues/comments/{comment_id}")
 
-    def get_issue(self, repo: str, number: int):
+    def get_issue(self, repo: str, number: int) -> dict[str, Any]:
         return self.request_json("GET", f"{API_BASE}/repos/{repo}/issues/{number}")
 
     def add_issue_labels(self, repo: str, number: int, labels: list[str]):
@@ -113,6 +114,9 @@ class GitHubClient:
     def get_release_by_tag(self, repo: str, tag: str):
         encoded_tag = urllib.parse.quote(tag, safe="")
         return self.request_json("GET", f"{API_BASE}/repos/{repo}/releases/tags/{encoded_tag}")
+
+    def list_releases(self, repo: str) -> list[dict[str, Any]]:
+        return self.paginated(f"{API_BASE}/repos/{repo}/releases")
 
     def create_release(self, repo: str, version, sha: str, body: str):
         payload = {
