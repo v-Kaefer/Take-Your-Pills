@@ -67,7 +67,7 @@ def meaningful_lines(lines: list[str]) -> list[str]:
     return values
 
 
-def validate_branch_name(branch: str | None) -> list[ValidationFinding]:
+def validate_branch_name(branch: str | None, base_ref: str | None = None) -> list[ValidationFinding]:
     if not branch or not branch.strip():
         return [
             ValidationFinding(
@@ -78,6 +78,9 @@ def validate_branch_name(branch: str | None) -> list[ValidationFinding]:
         ]
 
     branch = branch.strip()
+    if branch == "develop" and (base_ref or "").strip() == "main":
+        return []
+
     if BRANCH_PATTERN.fullmatch(branch):
         return []
 
@@ -182,8 +185,8 @@ def validate_pr_body(body: str | None) -> list[ValidationFinding]:
     return findings
 
 
-def validate_pull_request(branch: str | None, body: str | None) -> list[ValidationFinding]:
-    return validate_branch_name(branch) + validate_pr_body(body)
+def validate_pull_request(branch: str | None, body: str | None, base_ref: str | None = None) -> list[ValidationFinding]:
+    return validate_branch_name(branch, base_ref=base_ref) + validate_pr_body(body)
 
 
 def render_failure_comment(findings: list[ValidationFinding]) -> str:

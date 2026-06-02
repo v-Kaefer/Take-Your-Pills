@@ -13,6 +13,13 @@ grep -Fq "publish-release:" "$workflow"
 grep -Fq "contents: read" "$workflow"
 grep -Fq "contents: write" "$workflow"
 grep -Fq "issues: write" "$workflow"
+grep -Fq 'GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
+grep -Fq 'GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
+
+if grep -Fq 'Validate release version before merge' "$workflow" && grep -A5 -F 'Validate release version before merge' "$workflow" | grep -Fq 'GITHUB_TOKEN:'; then
+  echo "Release dry-run validation should not inject a token." >&2
+  exit 1
+fi
 
 grep -Fq "chickensoft-games/setup-godot@v2" "$workflow"
 grep -Fq "include-templates: true" "$workflow"
