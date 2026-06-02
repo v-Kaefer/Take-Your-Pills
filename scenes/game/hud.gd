@@ -3,6 +3,7 @@ class_name GameHUD
 
 @onready var state_label: Label = $MarginContainer/VBoxContainer/StateLabel
 @onready var score_label: Label = $MarginContainer/VBoxContainer/ScoreLabel
+@onready var distance_label: Label = $MarginContainer/VBoxContainer/DistanceLabel
 @onready var main_menu: Control = $MainMenu
 @onready var pause_menu: Control = $PauseMenu
 @onready var game_over_menu: Control = $GameOverMenu
@@ -24,6 +25,11 @@ func update_state(state_text: String, control_note: String, extra_note: String =
 func update_score(score: int) -> void:
 	score_label.text = "Score: %06d" % score
 
+func update_distance(distance: float) -> void:
+	distance_label.text = "Distance: %d m" % int(distance)
+
+func show_game_over() -> void:
+	restart_button.show()
 func show_main_menu() -> void:
 	hide_menus()
 	main_menu.show()
