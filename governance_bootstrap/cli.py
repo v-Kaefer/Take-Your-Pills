@@ -11,7 +11,7 @@ from .issues import generate_issues
 from .labels import sync_labels
 from .milestones import sync_milestones
 from .project import create_project, sync_project
-from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_release_pr, load_event, project_number_arg
+from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_hotfix_pr, is_release_pr, load_event, project_number_arg
 from .release import (
     parse_name_status_lines,
     prepare_main_release,
@@ -82,7 +82,8 @@ def cmd_pr_hygiene(args) -> int:
     if not event_path:
         raise SystemExit("Missing --event-path and GITHUB_EVENT_PATH")
     event = load_event(event_path)
-    client = GitHubClient("") if is_release_pr(context_from_event(event)) else require_client()
+    ctx = context_from_event(event)
+    client = GitHubClient("") if is_release_pr(ctx) or is_hotfix_pr(ctx) else require_client()
     return apply_pr_hygiene_from_path(
         client,
         repo_arg(args.repo),

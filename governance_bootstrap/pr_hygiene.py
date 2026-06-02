@@ -67,6 +67,10 @@ def is_release_pr(ctx: PullRequestContext) -> bool:
     return ctx.base_ref == "main" and ctx.head_ref == "develop"
 
 
+def is_hotfix_pr(ctx: PullRequestContext) -> bool:
+    return bool(re.fullmatch(r"hotfix/[a-z0-9._/-]+", ctx.head_ref or ""))
+
+
 def label_names(item: dict) -> set[str]:
     return {label["name"] for label in item.get("labels", [])}
 
@@ -229,6 +233,9 @@ def apply_pr_hygiene(
     ctx = context_from_event(event)
     if is_release_pr(ctx):
         print("Skipping PR hygiene for develop -> main release PR.")
+        return 0
+    if is_hotfix_pr(ctx):
+        print("Skipping PR hygiene for hotfix PR.")
         return 0
 
     task_number = linked_task_number(ctx.body)

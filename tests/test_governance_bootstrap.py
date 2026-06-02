@@ -14,6 +14,7 @@ from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.pr_hygiene import (
     apply_pr_hygiene,
+    is_hotfix_pr,
     linked_task_number,
     project_status_for_event,
     status_option_id,
@@ -257,6 +258,11 @@ class GovernanceBootstrapTests(unittest.TestCase):
 
         self.assertFalse(any(finding.section == "Branch name" for finding in findings))
 
+    def test_pr_validation_skips_body_requirements_for_hotfix_branch(self):
+        findings = validate_pull_request("hotfix/release-workflow", "", base_ref="develop")
+
+        self.assertEqual(findings, [])
+
     def test_pr_validation_still_rejects_develop_for_non_main_prs(self):
         findings = validate_branch_name("develop", base_ref="develop")
 
@@ -290,6 +296,34 @@ class GovernanceBootstrapTests(unittest.TestCase):
 
         self.assertTrue(any(finding.section == "Summary" for finding in findings))
         self.assertTrue(any(finding.section == "How to test" and "test steps" in finding.problem for finding in findings))
+
+    def test_pr_body_validation_accepts_template_bulleted_concrete_steps(self):
+        body = """## Linked Issue
+- Resolves #184
+
+## Milestone
+- MS0
+
+## Summary
+- Fix release automation wiring.
+
+## How to test
+- Test type: automated
+- Steps: ran release workflow contract tests and governance unit tests.
+
+## Evidence
+- Local validation passed.
+
+## Known risks
+- None
+
+## DoD checklist
+- [x] Scope implemented as defined
+"""
+
+        findings = validate_pr_body(body)
+
+        self.assertFalse(any(finding.section == "How to test" for finding in findings))
 
     def test_render_failure_comment_includes_fix_guidance(self):
         findings = validate_branch_name("bad-branch") + validate_pr_body("")
@@ -466,9 +500,88 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(result, 0)
         client.get_issue.assert_not_called()
 
+    def test_pr_hygiene_ignores_hotfix_pr(self):
+        event = {
+            "action": "opened",
+            "pull_request": {
+                "number": 220,
+                "body": "",
+                "base": {"ref": "develop"},
+                "head": {"ref": "hotfix/workflow-pipeline"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        client = Mock()
+
+        result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 0)
+        client.get_issue.assert_not_called()
+
+    def test_pr_hygiene_identifies_hotfix_prs(self):
+        self.assertTrue(
+            is_hotfix_pr(
+                HygienePullRequestContext(
+                    number=220,
+                    action="opened",
+                    body="",
+                    base_ref="develop",
+                    head_ref="hotfix/workflow-pipeline",
+                    author="alice",
+                    draft=False,
+                    merged=False,
+                )
+            )
+        )
+        self.assertFalse(
+            is_hotfix_pr(
+                HygienePullRequestContext(
+                    number=220,
+                    action="opened",
+                    body="",
+                    base_ref="develop",
+                    head_ref="fix/workflow-pipeline",
+                    author="alice",
+                    draft=False,
+                    merged=False,
+                )
+            )
+        )
+
     def test_pr_hygiene_cli_skips_client_requirement_for_develop_to_main_release_pr(self):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
             event.write('{"action":"opened","pull_request":{"number":203,"body":"","base":{"ref":"main"},"head":{"ref":"develop"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+
+            with (
+                patch("governance_bootstrap.cli.require_client") as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_not_called()
+        client = apply_hygiene.call_args.args[0]
+        self.assertIsInstance(client, GitHubClient)
+        self.assertEqual(client.token, "")
+        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=False)
+
+    def test_pr_hygiene_cli_skips_client_requirement_for_hotfix_pr(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":220,"body":"","base":{"ref":"develop"},"head":{"ref":"hotfix/workflow-pipeline"},"user":{"login":"alice"},"draft":false,"merged":false}}')
             event.flush()
 
             with (

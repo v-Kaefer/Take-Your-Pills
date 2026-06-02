@@ -8,6 +8,7 @@ from .github import GitHubClient
 
 VALIDATION_MARKER = "<!-- governance-pr-validation -->"
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|refactor|test|hotfix|phase|task)\/[a-z0-9._/-]+$")
+HOTFIX_PATTERN = re.compile(r"^hotfix\/[a-z0-9._/-]+$")
 
 REQUIRED_SECTIONS = [
     ("linked issue", "Linked Issue"),
@@ -67,6 +68,10 @@ def meaningful_lines(lines: list[str]) -> list[str]:
     return values
 
 
+def is_hotfix_branch(branch: str | None) -> bool:
+    return bool(branch and HOTFIX_PATTERN.fullmatch(branch.strip()))
+
+
 def validate_branch_name(branch: str | None, base_ref: str | None = None) -> list[ValidationFinding]:
     if not branch or not branch.strip():
         return [
@@ -96,7 +101,7 @@ def validate_branch_name(branch: str | None, base_ref: str | None = None) -> lis
 def has_concrete_steps(lines: list[str]) -> bool:
     saw_steps = False
     for line in lines:
-        match = re.match(r"^\s*steps:\s*(.*?)\s*$", line, re.IGNORECASE)
+        match = re.match(r"^\s*(?:[-*]\s*)?steps:\s*(.*?)\s*$", line, re.IGNORECASE)
         if match:
             saw_steps = True
             remainder = match.group(1).strip()
@@ -186,7 +191,10 @@ def validate_pr_body(body: str | None) -> list[ValidationFinding]:
 
 
 def validate_pull_request(branch: str | None, body: str | None, base_ref: str | None = None) -> list[ValidationFinding]:
-    return validate_branch_name(branch, base_ref=base_ref) + validate_pr_body(body)
+    branch_findings = validate_branch_name(branch, base_ref=base_ref)
+    if is_hotfix_branch(branch):
+        return branch_findings
+    return branch_findings + validate_pr_body(body)
 
 
 def render_failure_comment(findings: list[ValidationFinding]) -> str:

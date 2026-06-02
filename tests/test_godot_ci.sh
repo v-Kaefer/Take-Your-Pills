@@ -14,8 +14,12 @@ for path in "${required[@]}"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
 
-grep -Fq "firebelley/setup-godot@v1" .github/workflows/godot-smoke.yml
-grep -Eq "godot-version:[[:space:]]*['\"]?4[.]2[.]2['\"]?$" .github/workflows/godot-smoke.yml
+grep -Fq "chickensoft-games/setup-godot@v2" .github/workflows/godot-smoke.yml
+grep -Eq "version:[[:space:]]*['\"]?4[.]6[.]2['\"]?$" .github/workflows/godot-smoke.yml
+if grep -Fq "firebelley/setup-godot" .github/workflows/godot-smoke.yml; then
+  echo "Godot smoke workflow must not use the unavailable firebelley setup action." >&2
+  exit 1
+fi
 grep -Fq 'if [ -f project.godot ]; then' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --version || true' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --headless --quit' .github/workflows/godot-smoke.yml
