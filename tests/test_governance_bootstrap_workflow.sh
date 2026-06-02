@@ -11,12 +11,11 @@ grep -Fq "run_milestones_sync:" "$workflow"
 grep -Fq "run_issue_generation:" "$workflow"
 grep -Fq "run_project_creation:" "$workflow"
 grep -Fq "dry_run:" "$workflow"
-grep -Fq 'GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
-grep -Fq 'GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
 
-if grep -Fq "TAKE_YOUR_PILLS_PAT" "$workflow"; then
-  echo "Governance bootstrap workflow must use GOVERNANCE_PAT." >&2
-  exit 1
-fi
+grep -A4 -F "Sync labels" "$workflow" | grep -Fq 'GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}'
+grep -A4 -F "Sync milestones" "$workflow" | grep -Fq 'GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}'
+grep -A4 -F "Create project v2" "$workflow" | grep -Fq 'GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}'
+grep -A5 -F "Generate issues and tasks" "$workflow" | grep -Fq 'GITHUB_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}'
+grep -A5 -F "Generate issues and tasks" "$workflow" | grep -Fq 'GH_TOKEN: ${{ secrets.TAKE_YOUR_PILLS_PAT }}'
 
 echo "Governance bootstrap workflow contract OK"
