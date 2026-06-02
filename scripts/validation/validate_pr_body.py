@@ -25,12 +25,13 @@ def main():
     parser = argparse.ArgumentParser(description="Validate repository PR body metadata")
     parser.add_argument("--file", help="Read PR body from a file")
     parser.add_argument("--branch", help="Validate the PR branch name too")
+    parser.add_argument("--base-branch", help="Base branch for branch validation exceptions")
     parser.add_argument("--repo", help="Repository owner/name for PR comment updates")
     parser.add_argument("--pr-number", type=int, help="PR number for sticky comment updates")
     parser.add_argument("--comment", action="store_true", help="Create or update the sticky PR validation comment")
     args = parser.parse_args()
 
-    findings = validate_pull_request(args.branch, read_body(args))
+    findings = validate_pull_request(args.branch, read_body(args), base_ref=args.base_branch)
     if findings:
         for finding in findings:
             print(f"{finding.section}: {finding.problem}", file=sys.stderr)
