@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/collectables/collectable_base.gd" id="1"]
+
+[sub_resource type="CircleShape2D" id="1"]
+radius = 14.0
+
+[node name="CollectableBase" type="Area2D"]
+script = ExtResource("1")
+z_index = 5
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -14, 12, -7, 12, 7, 0, 14, -12, 7, -12, -7)
+color = Color(0.31, 0.78, 0.86, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")

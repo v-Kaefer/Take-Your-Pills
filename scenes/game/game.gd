@@ -2,13 +2,13 @@ extends Node2D
 class_name Game
 
 const DEFAULT_SCROLL_SPEED := 240.0
-const SCORE_DISTANCE_DIVISOR := 10.0
 
 enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $World/Player
 @onready var chunks: ChunkManager = $World/Chunks
 @onready var hud: GameHUD = $HUD
+@onready var collect_sfx_player: AudioStreamPlayer = $CollectSfxPlayer
 
 var current_state: GameState = GameState.MAIN_MENU
 var score: int = 0
@@ -25,6 +25,7 @@ var current_speed_multiplier: float = 1.0
 func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
+	RunSignals.collectable_collected.connect(_on_collectable_collected)
 	hud.connect_start(_on_start_button_pressed)
 	hud.connect_resume(_on_resume_button_pressed)
 	hud.connect_restart(_on_restart_button_pressed)
@@ -143,6 +144,9 @@ func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int
 		return
 
 	score += score_value
+	collect_sfx_player.play()
+
+
 	_update_hud()
 
 
