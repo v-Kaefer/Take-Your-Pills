@@ -4,13 +4,13 @@ class_name Game
 const DEFAULT_SCROLL_SPEED := 240.0
 const SCORE_DISTANCE_DIVISOR := 10.0
 
-enum GameState { RUNNING, PAUSED, GAME_OVER }
+enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $World/Player
 @onready var chunks: ChunkManager = $World/Chunks
 @onready var hud: GameHUD = $HUD
 
-var current_state: GameState = GameState.RUNNING
+var current_state: GameState = GameState.MAIN_MENU
 var score: int = 0
 var distance: float = 0.0
 var bonus_score: int = 0
@@ -25,10 +25,13 @@ var current_speed_multiplier: float = 1.0
 func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
+	hud.connect_start(_on_start_button_pressed)
+	hud.connect_resume(_on_resume_button_pressed)
 	hud.connect_restart(_on_restart_button_pressed)
 	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
-	chunks.start_run()
-	player.start_run()
+	chunks.pause_run()
+	player.pause_run()
+	hud.show_main_menu()
 	_update_hud()
 
 
@@ -63,11 +66,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("game_over_debug"):
-		_set_game_over()
+		if current_state == GameState.RUNNING:
+			_set_game_over()
 		get_viewport().set_input_as_handled()
 		return
 
 	if event.is_action_pressed(player.jump_action_name):
+		if current_state == GameState.MAIN_MENU:
+			get_viewport().set_input_as_handled()
+			_start_run()
+			return
 		if current_state == GameState.GAME_OVER:
 			get_viewport().set_input_as_handled()
 			_restart_run()
@@ -79,18 +87,39 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _toggle_pause() -> void:
-	if current_state == GameState.GAME_OVER:
+	if current_state == GameState.MAIN_MENU or current_state == GameState.GAME_OVER:
 		return
 
 	if current_state == GameState.RUNNING:
 		current_state = GameState.PAUSED
 		chunks.pause_run()
 		player.pause_run()
+		hud.show_pause_menu()
 	else:
-		current_state = GameState.RUNNING
-		chunks.start_run()
-		player.start_run()
+		_resume_run()
 
+	_update_hud()
+
+
+func _start_run() -> void:
+	if current_state != GameState.MAIN_MENU:
+		return
+
+	current_state = GameState.RUNNING
+	hud.hide_menus()
+	chunks.start_run()
+	player.start_run()
+	_update_hud()
+
+
+func _resume_run() -> void:
+	if current_state != GameState.PAUSED:
+		return
+
+	current_state = GameState.RUNNING
+	hud.hide_menus()
+	chunks.start_run()
+	player.start_run()
 	_update_hud()
 
 
@@ -101,12 +130,28 @@ func _set_game_over() -> void:
 	current_state = GameState.GAME_OVER
 	chunks.end_run()
 	player.end_run()
-	hud.show_game_over()
+	hud.show_game_over(score)
 	_update_hud()
 
 
 func _on_player_hit_obstacle(_obstacle: Node, _body: Node) -> void:
 	_set_game_over()
+
+
+func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int) -> void:
+	if current_state != GameState.RUNNING:
+		return
+
+	score += score_value
+	_update_hud()
+
+
+func _on_start_button_pressed() -> void:
+	_start_run()
+
+
+func _on_resume_button_pressed() -> void:
+	_resume_run()
 
 
 func _on_restart_button_pressed() -> void:
@@ -118,14 +163,20 @@ func _restart_run() -> void:
 
 
 func _update_hud() -> void:
-	var state_text := "RUNNING"
-	if current_state == GameState.PAUSED:
+	var state_text := "MENU"
+	if current_state == GameState.RUNNING:
+		state_text = "RUNNING"
+	elif current_state == GameState.PAUSED:
 		state_text = "PAUSED"
 	elif current_state == GameState.GAME_OVER:
 		state_text = "GAME OVER"
 
-	var control_note := "Jump: %s | Esc: pause | Backspace: game over" % _action_hints(player.jump_action_name)
-	if current_state == GameState.GAME_OVER:
+	var control_note := "Start: button / %s" % _action_hints(player.jump_action_name)
+	if current_state == GameState.RUNNING:
+		control_note = "Jump: %s | Esc: pause | Backspace: game over" % _action_hints(player.jump_action_name)
+	elif current_state == GameState.PAUSED:
+		control_note = "Resume: button / Esc | Restart: button"
+	elif current_state == GameState.GAME_OVER:
 		control_note = "Jump: restart | Restart: button"
 
 	hud.update_state(state_text, control_note)
