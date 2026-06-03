@@ -26,6 +26,7 @@ from governance_bootstrap.release import (
     ReleaseAssetLink,
     ReleaseVersion,
     bump_patch,
+    detect_related_develop_prs,
     extract_release_context,
     latest_release_version,
     parse_name_status_lines,
@@ -1020,6 +1021,45 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("State: planned", comment)
         self.assertIn("#7", comment)
         self.assertIn("#9", comment)
+
+    def test_detect_related_develop_prs_filters_by_merged_at(self):
+        client = GitHubClient("token")
+        pulls = [
+            {"number": 10, "merged_at": "2099-01-10T00:00:00Z", "user": {"login": "alice"}},
+            {"number": 9,  "merged_at": "2099-01-09T00:00:00Z", "user": {"login": "bob"}},
+            {"number": 8,  "merged_at": "2000-01-01T00:00:00Z", "user": {"login": "alice"}},
+        ]
+        with patch.object(client, "paginated", return_value=pulls):
+            with patch.object(client, "request_json", return_value=[]):
+                result = detect_related_develop_prs(client, "owner/repo", since_iso="2099-01-05T00:00:00Z")
+        self.assertEqual(result, [10, 9])
+
+    def test_detect_related_develop_prs_filters_by_author(self):
+        client = GitHubClient("token")
+        pulls = [
+            {"number": 10, "merged_at": "2099-01-10T00:00:00Z", "user": {"login": "alice"}},
+            {"number": 9,  "merged_at": "2099-01-09T00:00:00Z", "user": {"login": "bob"}},
+        ]
+        with patch.object(client, "paginated", return_value=pulls):
+            with patch.object(client, "request_json", return_value=[]):
+                result = detect_related_develop_prs(client, "owner/repo", since_iso="2099-01-01T00:00:00Z", author="alice")
+        self.assertEqual(result, [10])
+
+    def test_prepare_main_release_auto_detects_when_no_related_prs(self):
+        client = GitHubClient("token")
+        body = "## Release version\n- final-1.0.0\n\n## Related develop PRs\n- [ ] Not a Release\n"
+        pulls = [
+            {"number": 42, "merged_at": "2099-01-10T00:00:00Z", "user": {"login": "alice"}},
+        ]
+        with patch.object(client, "paginated", return_value=pulls):
+            with patch.object(client, "request_json", return_value={}):
+                with patch("governance_bootstrap.release.upsert_marked_comment"):
+                    with patch("governance_bootstrap.release._previous_related_prs", return_value=[]):
+                        with patch("governance_bootstrap.release._remove_stale_develop_notices"):
+                            buf = io.StringIO()
+                            with redirect_stdout(buf):
+                                result = prepare_main_release(client, "owner/repo", 99, body, dry_run=False)
+        self.assertEqual(result, 0)
 
     def test_bump_patch_version(self):
         self.assertEqual(bump_patch(ReleaseVersion("final", "1.2.3")), ReleaseVersion("final", "1.2.4"))
