@@ -27,7 +27,7 @@ jobs:
             echo "This workflow only validates PRs targeting main."
             exit 1
           fi
-          if [[ "$HEAD_REPO" != "$EXPECTED_REPO" || "$HEAD_REF" != "develop" ]]; then
-            echo "PRs targeting main must come from $EXPECTED_REPO:develop." >&2
+          if [[ "$HEAD_REPO" != "$EXPECTED_REPO" || ( "$HEAD_REF" != "develop" && ! "$HEAD_REF" =~ ^hotfix/ ) ]]; then
+            echo "PRs targeting main must come from $EXPECTED_REPO:develop or a hotfix/ branch." >&2
             exit 1
           fi

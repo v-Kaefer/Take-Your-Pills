@@ -14,6 +14,7 @@ from governance_bootstrap.issues import generate_issues
 from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.pr_hygiene import (
     apply_pr_hygiene,
+    is_hotfix_pr,
     linked_task_number,
     project_status_for_event,
     status_option_id,
@@ -24,9 +25,12 @@ from governance_bootstrap.project import label_value
 from governance_bootstrap.release import (
     ReleaseAssetLink,
     ReleaseVersion,
+    bump_patch,
     extract_release_context,
+    latest_release_version,
     parse_name_status_lines,
     prepare_main_release,
+    publish_hotfix_release,
     publish_release,
     render_change_summary_comment,
     render_release_body,
@@ -250,19 +254,24 @@ class GovernanceBootstrapTests(unittest.TestCase):
 
         self.assertEqual([finding.section for finding in findings], ["Branch name", "PR body"])
         self.assertIn("feat/repo-governance-bootstrap", findings[0].fix)
-        self.assertIn("blank", findings[1].problem)
+        self.assertIn("vazio", findings[1].problem.lower())
 
     def test_pr_validation_accepts_develop_for_main_release_pr(self):
         findings = validate_pull_request("develop", "## Linked Issue\n- Closes #12", base_ref="main")
 
         self.assertFalse(any(finding.section == "Branch name" for finding in findings))
 
+    def test_pr_validation_skips_body_requirements_for_hotfix_branch(self):
+        findings = validate_pull_request("hotfix/release-workflow", "", base_ref="develop")
+
+        self.assertEqual(findings, [])
+
     def test_pr_validation_still_rejects_develop_for_non_main_prs(self):
         findings = validate_branch_name("develop", base_ref="develop")
 
         self.assertEqual([finding.section for finding in findings], ["Branch name"])
 
-    def test_pr_body_validation_rejects_placeholder_steps(self):
+    def test_pr_body_validation_rejects_unchecked_test_section(self):
         body = """## Linked Issue
 - Closes #12
 
@@ -272,12 +281,9 @@ class GovernanceBootstrapTests(unittest.TestCase):
 ## Summary
 - Replace me
 
-## How to test
-- Test type: manual
-- Steps: describe the commands, manual flow, or verification evidence
-
-## Evidence
-- [ ] Screenshot/GIF attached (when applicable)
+## Teste
+- [ ] Sim, ha teste implementado
+- [ ] Nao, nao ha teste implementado
 
 ## Known risks
 - None
@@ -289,19 +295,117 @@ class GovernanceBootstrapTests(unittest.TestCase):
         findings = validate_pr_body(body)
 
         self.assertTrue(any(finding.section == "Summary" for finding in findings))
-        self.assertTrue(any(finding.section == "How to test" and "test steps" in finding.problem for finding in findings))
+        self.assertTrue(any(finding.section == "Teste" and "selecione" in finding.problem.lower() for finding in findings))
+
+    def test_pr_body_validation_accepts_template_checkbox_selection(self):
+        body = """## Linked Issue
+- Resolves #184
+
+## Milestone
+- MS0
+
+## Summary
+- Corrige a automacao de release.
+
+## Teste
+- [x] Sim, ha teste implementado
+- [ ] Nao, nao ha teste implementado
+
+## Known risks
+- None
+
+## DoD checklist
+- [x] Scope implemented as defined
+"""
+
+        findings = validate_pr_body(body)
+
+        self.assertFalse(any(finding.section == "Teste" for finding in findings))
+
+    def test_pr_body_validation_accepts_no_test_selection(self):
+        body = """## Linked Issue
+- Resolves #184
+
+## Milestone
+- MS0
+
+## Summary
+- Corrige a automacao de release.
+
+## Teste
+- [ ] Sim, ha teste implementado
+- [x] Nao, nao ha teste implementado
+
+## Known risks
+- None
+
+## DoD checklist
+- [x] Scope implemented as defined
+"""
+
+        findings = validate_pr_body(body)
+
+        self.assertFalse(any(finding.section == "Teste" for finding in findings))
+
+    def test_pr_body_validation_accepts_accented_test_selection(self):
+        body = """## Linked Issue
+- Resolves #184
+
+## Milestone
+- MS0
+
+## Summary
+- Corrige a automacao de release.
+
+## Teste
+- [x] Sim, há teste implementado
+- [ ] Não, não há teste implementado
+
+## Known risks
+- None
+
+## DoD checklist
+- [x] Scope implemented as defined
+"""
+
+        findings = validate_pr_body(body)
+
+        self.assertFalse(any(finding.section == "Teste" for finding in findings))
 
     def test_render_failure_comment_includes_fix_guidance(self):
-        findings = validate_branch_name("bad-branch") + validate_pr_body("")
+        findings = validate_branch_name("bad-branch") + validate_pr_body(
+            """## Linked Issue
+- Closes #12
+
+## Milestone
+- MS1
+
+## Summary
+- Replace me
+
+## Teste
+- [ ] Sim, ha teste implementado
+- [ ] Nao, nao ha teste implementado
+
+## Known risks
+- None
+
+## DoD checklist
+- [ ] Scope implemented as defined
+"""
+        )
 
         comment = render_failure_comment(findings)
 
         self.assertIn("<!-- governance-pr-validation -->", comment)
-        self.assertIn("## PR validation failed", comment)
+        self.assertIn("## Validacao do PR falhou", comment)
         self.assertIn("Branch name", comment)
-        self.assertIn("PR body", comment)
+        self.assertIn("Nome da branch", comment)
+        self.assertIn("Teste", comment)
         self.assertIn("Closes #123", comment)
-        self.assertIn("Steps: describe the commands", comment)
+        self.assertIn("Estrutura obrigatoria do PR", comment)
+        self.assertIn("## Teste", comment)
+        self.assertIn("Marque apenas uma das opcoes", comment)
 
     def test_pr_hygiene_extracts_linked_task_number(self):
         self.assertEqual(linked_task_number("## Linked Issue\n- Closes #12"), 12)
@@ -466,9 +570,88 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(result, 0)
         client.get_issue.assert_not_called()
 
+    def test_pr_hygiene_ignores_hotfix_pr(self):
+        event = {
+            "action": "opened",
+            "pull_request": {
+                "number": 220,
+                "body": "",
+                "base": {"ref": "develop"},
+                "head": {"ref": "hotfix/workflow-pipeline"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        client = Mock()
+
+        result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 0)
+        client.get_issue.assert_not_called()
+
+    def test_pr_hygiene_identifies_hotfix_prs(self):
+        self.assertTrue(
+            is_hotfix_pr(
+                HygienePullRequestContext(
+                    number=220,
+                    action="opened",
+                    body="",
+                    base_ref="develop",
+                    head_ref="hotfix/workflow-pipeline",
+                    author="alice",
+                    draft=False,
+                    merged=False,
+                )
+            )
+        )
+        self.assertFalse(
+            is_hotfix_pr(
+                HygienePullRequestContext(
+                    number=220,
+                    action="opened",
+                    body="",
+                    base_ref="develop",
+                    head_ref="fix/workflow-pipeline",
+                    author="alice",
+                    draft=False,
+                    merged=False,
+                )
+            )
+        )
+
     def test_pr_hygiene_cli_skips_client_requirement_for_develop_to_main_release_pr(self):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
             event.write('{"action":"opened","pull_request":{"number":203,"body":"","base":{"ref":"main"},"head":{"ref":"develop"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+
+            with (
+                patch("governance_bootstrap.cli.require_client") as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_not_called()
+        client = apply_hygiene.call_args.args[0]
+        self.assertIsInstance(client, GitHubClient)
+        self.assertEqual(client.token, "")
+        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=False)
+
+    def test_pr_hygiene_cli_skips_client_requirement_for_hotfix_pr(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":220,"body":"","base":{"ref":"develop"},"head":{"ref":"hotfix/workflow-pipeline"},"user":{"login":"alice"},"draft":false,"merged":false}}')
             event.flush()
 
             with (
@@ -837,6 +1020,37 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertIn("State: planned", comment)
         self.assertIn("#7", comment)
         self.assertIn("#9", comment)
+
+    def test_bump_patch_version(self):
+        self.assertEqual(bump_patch(ReleaseVersion("final", "1.2.3")), ReleaseVersion("final", "1.2.4"))
+        self.assertEqual(bump_patch(ReleaseVersion("alpha", "0.0.9")), ReleaseVersion("alpha", "0.0.10"))
+        self.assertEqual(bump_patch(ReleaseVersion("beta", "2.1.0")), ReleaseVersion("beta", "2.1.1"))
+
+    def test_latest_release_version_parses_tag(self):
+        client = GitHubClient("token")
+        with patch.object(client, "paginated", return_value=[{"tag_name": "final-1.2.3"}, {"tag_name": "final-1.2.2"}]):
+            version = latest_release_version(client, "owner/repo")
+        self.assertIsNotNone(version)
+        self.assertEqual(version.channel, "final")
+        self.assertEqual(version.version, "1.2.3")
+
+    def test_latest_release_version_no_releases(self):
+        client = GitHubClient("token")
+        with patch.object(client, "paginated", return_value=[]):
+            version = latest_release_version(client, "owner/repo")
+        self.assertIsNone(version)
+
+    def test_publish_hotfix_release_dry_run(self):
+        client = GitHubClient("token")
+        with patch.object(client, "paginated", return_value=[{"tag_name": "final-1.2.3"}]):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                result = publish_hotfix_release(client, "owner/repo", 42, "deadbeef", dry_run=True)
+        self.assertEqual(result, 0)
+        output = buf.getvalue()
+        self.assertIn("final-1.2.4", output)
+        self.assertIn("#42", output)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -48,7 +48,7 @@ python -m governance_bootstrap bootstrap --repo v-Kaefer/Take-Your-Pills --dry-r
 
 ## 4) Observações
 - Para reutilizar em outro projeto, copie/adapte os manifests em `config/project`, `config/stories` e `governance.bootstrap.json`.
-- O segredo esperado pelo workflow manual é `GOVERNANCE_PAT`.
+- O workflow manual usa `TAKE_YOUR_PILLS_PAT` para labels, milestones e issues; `GOVERNANCE_PAT` fica reservado para Project v2.
 - Responsáveis por fase estão `TBD` em `config/phases/phase-review-policy.json`.
 - Loja e ranking online estão marcados como stretch no manifesto.
 - Base de teste Godot definida como GDUnit4 em política de testes.

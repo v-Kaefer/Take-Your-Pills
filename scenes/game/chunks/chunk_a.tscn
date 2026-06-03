@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/chunks/chunk.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="4"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(640, 96)
@@ -53,3 +55,9 @@ rect = Rect2(0, 0, 640, 360)
 
 [node name="Obstacle" parent="." instance=ExtResource("2")]
 position = Vector2(448, 248)
+
+[node name="PillCollectable" parent="." instance=ExtResource("3")]
+position = Vector2(288, 224)
+
+[node name="BoxCollectable" parent="." instance=ExtResource("4")]
+position = Vector2(560, 224)

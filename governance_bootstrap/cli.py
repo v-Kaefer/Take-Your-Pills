@@ -11,10 +11,11 @@ from .issues import generate_issues
 from .labels import sync_labels
 from .milestones import sync_milestones
 from .project import create_project, sync_project
-from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_release_pr, load_event, project_number_arg
+from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_hotfix_pr, is_release_pr, load_event, project_number_arg
 from .release import (
     parse_name_status_lines,
     prepare_main_release,
+    publish_hotfix_release,
     publish_release,
     render_change_summary_report,
     summarize_change_items,
@@ -82,7 +83,8 @@ def cmd_pr_hygiene(args) -> int:
     if not event_path:
         raise SystemExit("Missing --event-path and GITHUB_EVENT_PATH")
     event = load_event(event_path)
-    client = GitHubClient("") if is_release_pr(context_from_event(event)) else require_client()
+    ctx = context_from_event(event)
+    client = GitHubClient("") if is_release_pr(ctx) or is_hotfix_pr(ctx) else require_client()
     return apply_pr_hygiene_from_path(
         client,
         repo_arg(args.repo),
@@ -116,6 +118,22 @@ def cmd_release_prepare_main(args) -> int:
     body = body or os.getenv("PR_BODY")
     client = GitHubClient("") if args.dry_run else require_client()
     return prepare_main_release(client, repo_arg(args.repo), args.pr_number, body, dry_run=args.dry_run)
+
+
+def cmd_release_publish_hotfix(args) -> int:
+    merge_sha = args.merge_sha or os.getenv("PR_MERGE_SHA") or os.getenv("GITHUB_SHA")
+    if not merge_sha:
+        print("Missing --merge-sha or PR_MERGE_SHA/GITHUB_SHA")
+        return 1
+    client = GitHubClient("") if args.dry_run else require_client()
+    return publish_hotfix_release(
+        client,
+        repo_arg(args.repo),
+        args.pr_number,
+        merge_sha,
+        asset_paths=args.asset or [],
+        dry_run=args.dry_run,
+    )
 
 
 def cmd_release_publish(args) -> int:
@@ -275,6 +293,14 @@ def build_parser() -> argparse.ArgumentParser:
     release_publish.add_argument("--asset", action="append", default=[], help="Path to a release asset to upload")
     release_publish.add_argument("--dry-run", action="store_true")
     release_publish.set_defaults(func=cmd_release_publish)
+
+    release_publish_hotfix = release_sub.add_parser("publish-hotfix")
+    release_publish_hotfix.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
+    release_publish_hotfix.add_argument("--pr-number", type=int, required=True)
+    release_publish_hotfix.add_argument("--merge-sha")
+    release_publish_hotfix.add_argument("--asset", action="append", default=[], help="Path to a release asset to upload")
+    release_publish_hotfix.add_argument("--dry-run", action="store_true")
+    release_publish_hotfix.set_defaults(func=cmd_release_publish_hotfix)
 
     bootstrap = sub.add_parser("bootstrap")
     bootstrap.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))

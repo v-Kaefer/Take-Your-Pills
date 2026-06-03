@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/collectables/collectable_base.gd" id="1"]
+
+[sub_resource type="CapsuleShape2D" id="1"]
+radius = 8.0
+height = 28.0
+
+[node name="PillCollectable" type="Area2D"]
+script = ExtResource("1")
+score_value = 100
+collectable_type = &"pill"
+z_index = 5
+
+[node name="Visual" type="Polygon2D" parent="."]
+rotation = 1.5708
+polygon = PackedVector2Array(-14, -8, 14, -8, 14, 8, -14, 8)
+color = Color(0.31, 0.78, 0.86, 1)
+
+[node name="CenterStripe" type="Polygon2D" parent="."]
+rotation = 1.5708
+polygon = PackedVector2Array(-2, -8, 2, -8, 2, 8, -2, 8)
+color = Color(0.96, 0.96, 0.92, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("1")
