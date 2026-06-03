@@ -111,6 +111,20 @@ class GitHubClient:
     def list_pull_request_files(self, repo: str, pr_number: int):
         return self.paginated(f"{API_BASE}/repos/{repo}/pulls/{pr_number}/files")
 
+    def list_pulls(
+        self,
+        repo: str,
+        *,
+        state: str = "open",
+        base: str | None = None,
+        sort: str = "updated",
+        direction: str = "desc",
+    ) -> list[dict[str, Any]]:
+        params: dict[str, str] = {"state": state, "sort": sort, "direction": direction, "per_page": "100"}
+        if base:
+            params["base"] = base
+        return self.paginated(f"{API_BASE}/repos/{repo}/pulls?{urllib.parse.urlencode(params)}")
+
     def get_release_by_tag(self, repo: str, tag: str):
         encoded_tag = urllib.parse.quote(tag, safe="")
         return self.request_json("GET", f"{API_BASE}/repos/{repo}/releases/tags/{encoded_tag}")

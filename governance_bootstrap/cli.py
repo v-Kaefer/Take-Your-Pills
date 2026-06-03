@@ -13,6 +13,7 @@ from .milestones import sync_milestones
 from .project import create_project, sync_project
 from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_hotfix_pr, is_release_pr, load_event, project_number_arg
 from .release import (
+    detect_related_develop_prs,
     parse_name_status_lines,
     prepare_main_release,
     publish_hotfix_release,
@@ -117,7 +118,14 @@ def cmd_release_prepare_main(args) -> int:
             body = f.read()
     body = body or os.getenv("PR_BODY")
     client = GitHubClient("") if args.dry_run else require_client()
-    return prepare_main_release(client, repo_arg(args.repo), args.pr_number, body, dry_run=args.dry_run)
+    return prepare_main_release(
+        client,
+        repo_arg(args.repo),
+        args.pr_number,
+        body,
+        dry_run=args.dry_run,
+        author=args.author or os.getenv("PR_AUTHOR") or None,
+    )
 
 
 def cmd_release_publish_hotfix(args) -> int:
@@ -281,6 +289,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_prepare_main.add_argument("--pr-number", type=int, required=True)
     release_prepare_main.add_argument("--body")
     release_prepare_main.add_argument("--body-file")
+    release_prepare_main.add_argument("--author", default=None, help="Filter auto-detected PRs by this GitHub login")
     release_prepare_main.add_argument("--dry-run", action="store_true")
     release_prepare_main.set_defaults(func=cmd_release_prepare_main)
 
