@@ -22,9 +22,9 @@
 - [ ] Nenhuma quebra critica conhecida foi introduzida
 
 ## Release version
+- [ ] Not a Release
 - Para PRs `develop -> main`, use `alpha-0.0.1`, `beta-0.1.0` ou `final-1.0.0`.
-- Para qualquer outro PR, escreva `N/A`.
 
 ## Related develop PRs
+- [ ] Not a Release
 - Para PRs `develop -> main`, liste os numeros das PRs relacionadas como `#123`.
-- Para qualquer outro PR, escreva `N/A`.
