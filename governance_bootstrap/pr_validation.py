@@ -49,6 +49,9 @@ def normalize_header(header: str) -> str:
     return " ".join(normalized.strip().lower().split())
 
 
+_TEST_OPTION_KEYS = {normalize_header(lbl).rstrip(".") for lbl in TEST_OPTION_LABELS}
+
+
 def sections_from_body(body: str) -> dict[str, list[str]]:
     sections: dict[str, list[str]] = {}
     current = None
@@ -98,14 +101,14 @@ def validate_test_section(lines: list[str]) -> list[ValidationFinding]:
             extra_lines.append(stripped)
             continue
 
-        label = normalize_header(match.group("label"))
-        if label not in TEST_OPTION_LABELS:
+        label_key = normalize_header(match.group("label")).rstrip(".")
+        if label_key not in _TEST_OPTION_KEYS:
             extra_lines.append(stripped)
             continue
 
-        seen_options.add(label)
+        seen_options.add(label_key)
         if match.group("mark").strip().lower() == "x":
-            selected_options.add(label)
+            selected_options.add(label_key)
 
     if extra_lines:
         return [
@@ -116,7 +119,7 @@ def validate_test_section(lines: list[str]) -> list[ValidationFinding]:
             )
         ]
 
-    if seen_options != TEST_OPTION_LABELS:
+    if seen_options != _TEST_OPTION_KEYS:
         return [
             ValidationFinding(
                 section="Teste",
