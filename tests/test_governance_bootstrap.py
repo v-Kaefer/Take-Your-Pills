@@ -399,14 +399,14 @@ class GovernanceBootstrapTests(unittest.TestCase):
         comment = render_failure_comment(findings)
 
         self.assertIn("<!-- governance-pr-validation -->", comment)
-        self.assertIn("## Validacao do PR falhou", comment)
+        self.assertIn("## Validação do PR falhou", comment)
         self.assertIn("Branch name", comment)
         self.assertIn("Nome da branch", comment)
         self.assertIn("Teste", comment)
-        self.assertIn("Closes #123", comment)
-        self.assertIn("Estrutura obrigatoria do PR", comment)
+        self.assertIn("Closes #321", comment)
+        self.assertIn("Estrutura obrigatória do PR", comment)
         self.assertIn("## Teste", comment)
-        self.assertIn("Marque apenas uma das opcoes", comment)
+        self.assertIn("Selecione exatamente", comment)
 
     def test_pr_hygiene_extracts_linked_task_number(self):
         self.assertEqual(linked_task_number("## Linked Issue\n- Closes #12"), 12)
