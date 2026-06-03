@@ -10,7 +10,7 @@
 
 ### Branch hierarchy
 ```
-main          ← stable, releasable; receives only from develop
+main          ← stable, releasable; receives from develop (releases) and hotfix/... (emergency patches)
 develop       ← continuous integration
 phase/<name>  ← per-phase work branch (optional; feature branches may come directly from develop)
 feat/<scope>  ← feature work
@@ -24,7 +24,7 @@ task/<scope>
 
 Rules:
 - No direct commits to `main`
-- `main` receives only stable merges via PR
+- `main` receives stable merges via PR from `develop` (releases) or `hotfix/...` (emergency patches)
 - Features enter `develop` first
 - PRs must be single-topic; long branches must be split or integrated early
 - Every open branch must declare: what works · what is missing · known issues · next step expected
@@ -105,7 +105,7 @@ Smoke check: `godot-smoke.yml` (firebelley/setup-godot, Godot 4.2.2)
 - No open P0/P1 bugs against phase scope
 
 ### Project level
-- `develop` merged to `main` via release PR
+- `develop` merged to `main` via release PR, or a `hotfix/...` branch for emergency patches
 - Version tagged (`alpha-x.y.z`, `beta-x.y.z`, or `final-x.y.z`)
 - GitHub Release created with exported builds
 
@@ -118,10 +118,10 @@ Smoke check: `godot-smoke.yml` (firebelley/setup-godot, Godot 4.2.2)
 | Workflow | Trigger | Purpose |
 |---|---|---|
 | `pr-metadata.yml` | PR opened/updated | Validates branch naming + PR body contract |
-| `main-source-branch.yml` | PR to `main` | Enforces source must be `develop` |
+| `main-source-branch.yml` | PR to `main` | Enforces source must be `develop` or `hotfix/...` |
 | `godot-smoke.yml` | PR opened/updated | Lightweight Godot headless check |
 | `game-tests.yml` | PR touching game paths | Full GdUnit4 test suite |
-| `release-version.yml` | PR to `main` (opened/merged) | Release planning and publish |
+| `release-version.yml` | PR to `main` (opened/merged) | Release planning and publish; hotfix merges auto-bump the patch version |
 | `governance-bootstrap.yml` | Manual dispatch | Label/milestone/issue sync |
 
 Full map: `docs/workflow-map.md`

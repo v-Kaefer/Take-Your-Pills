@@ -10,6 +10,7 @@
 1. task -> phase
 2. phase -> develop
 3. develop -> main
+4. hotfix/... -> main  (emergency fixes; auto-publishes a patch release on merge)
 
 ## Naming
 - Feature convention default: `feat/<scope>`
