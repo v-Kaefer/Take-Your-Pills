@@ -7,6 +7,7 @@ This repository now carries the reusable bootstrap engine as the Python package 
 - GitHub milestone sync from `config/project/milestones.json`.
 - GitHub Project v2 creation and issue sync from `config/project/project-definition.json`.
 - Issue/task generation from `config/stories/backlog-manifest.json`.
+- Branch-driven PR autofill for story-linked metadata and related task context.
 - Auto-label and issue milestone helpers.
 
 ## What Stays Project-Specific
