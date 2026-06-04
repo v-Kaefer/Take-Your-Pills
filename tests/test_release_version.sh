@@ -13,8 +13,13 @@ grep -Fq "publish-release:" "$workflow"
 grep -Fq "contents: read" "$workflow"
 grep -Fq "contents: write" "$workflow"
 grep -Fq "issues: write" "$workflow"
-grep -Fq 'GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
-grep -Fq 'GH_TOKEN: ${{ secrets.GOVERNANCE_PAT }}' "$workflow"
+grep -Fq 'GITHUB_TOKEN: ${{ github.token }}' "$workflow"
+grep -Fq 'GH_TOKEN: ${{ github.token }}' "$workflow"
+
+if grep -Fq 'secrets.GOVERNANCE_PAT' "$workflow"; then
+  echo "Release workflow must use the built-in Actions token, not GOVERNANCE_PAT." >&2
+  exit 1
+fi
 
 if grep -Fq 'Validate release version before merge' "$workflow" && grep -A5 -F 'Validate release version before merge' "$workflow" | grep -Fq 'GITHUB_TOKEN:'; then
   echo "Release dry-run validation should not inject a token." >&2

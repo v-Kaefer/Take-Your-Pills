@@ -1,34 +1,30 @@
 ## Linked Issue
 - Closes #123
+- Troque `#123` pela issue que esta PR resolve.
 
 ## Milestone
 - MS0
+- Use o milestone correto da entrega.
 
 ## Summary
-- What changed and why.
+- Explique o que mudou e por que.
 
-## How to test
-- Test type: automated | smoke | manual
-- Steps: describe the commands, manual flow, or verification evidence you ran.
-
-## Evidence
-- [ ] Screenshot/GIF attached (when applicable)
-- [ ] Log/output attached (when applicable)
-- [ ] Manual checklist executed (when applicable)
+## Teste
+- [ ] Sim, ha teste implementado
+- [ ] Nao, nao ha teste implementado
 
 ## Known risks
-- List any known limitations, or write `None` if there are none.
+- Liste quaisquer limitacoes conhecidas ou escreva `None` se nao houver.
 
 ## DoD checklist
-- [ ] Scope implemented as defined
-- [ ] Tests executed and documented
-- [ ] Evidence attached
-- [ ] No known critical breakage introduced
+- [ ] Escopo implementado conforme definido
+- [ ] Opcao de teste selecionada
+- [ ] Nenhuma quebra critica conhecida foi introduzida
 
 ## Release version
-- For `develop -> main` PRs, use `alpha-0.0.1`, `beta-0.1.0`, or `final-1.0.0`.
-- For any other PR, write `N/A`.
+- [ ] Not a Release
+- Para PRs `develop -> main`, use `alpha-0.0.1`, `beta-0.1.0` ou `final-1.0.0`.
 
 ## Related develop PRs
-- For `develop -> main` PRs, list the related PR numbers like `#123`.
-- For any other PR, write `N/A`.
+- [ ] Not a Release
+- Para PRs `develop -> main`, liste os numeros das PRs relacionadas como `#123`.

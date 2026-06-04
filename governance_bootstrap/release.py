@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import datetime
 from pathlib import Path
 import re
 
@@ -328,7 +329,13 @@ def render_change_summary_comment(summary: ChangeSummary, title: str | None = No
     return "\n".join([CHANGE_SUMMARY_MARKER, *_render_change_summary_lines(summary, title=title)])
 
 
-def render_release_context_comment(context: ReleaseContext, main_pr_number: int, state: str, release_url: str | None = None) -> str:
+def render_release_context_comment(
+    context: ReleaseContext,
+    main_pr_number: int,
+    state: str,
+    release_url: str | None = None,
+    auto_detected: bool = False,
+) -> str:
     lines = [RELEASE_PLAN_MARKER, "## Release plan", ""]
     if context.errors:
         lines.append("The release metadata is incomplete.")
@@ -346,7 +353,8 @@ def render_release_context_comment(context: ReleaseContext, main_pr_number: int,
     lines.append(f"- Release version: `{context.version.canonical}`")
     lines.append(f"- Main PR: #{main_pr_number}")
     if context.related_prs:
-        lines.append("- Related develop PRs:")
+        label = "Related develop PRs (auto-detected)" if auto_detected else "Related develop PRs"
+        lines.append(f"- {label}:")
         for pr_number in context.related_prs:
             lines.append(f"  - #{pr_number}")
     if release_url:
@@ -546,9 +554,117 @@ def summarize_pull_request(client: GitHubClient, repo: str, pr_number: int, dry_
     return 0
 
 
-def prepare_main_release(client: GitHubClient, repo: str, pr_number: int, body: str | None, dry_run: bool = False) -> int:
+def latest_release_version(client: GitHubClient, repo: str) -> ReleaseVersion | None:
+    for release in client.list_releases(repo):
+        tag = release.get("tag_name", "")
+        match = VERSION_PATTERN.fullmatch(tag)
+        if match:
+            channel = CHANNEL_ALIASES[match.group("channel").lower()]
+            version_value = match.group("version")
+            if len(version_value.split(".")) == 2:
+                version_value = f"{version_value}.0"
+            return ReleaseVersion(channel=channel, version=version_value)
+    return None
+
+
+def bump_patch(version: ReleaseVersion) -> ReleaseVersion:
+    parts = version.version.split(".")
+    parts[-1] = str(int(parts[-1]) + 1)
+    return ReleaseVersion(channel=version.channel, version=".".join(parts))
+
+
+def publish_hotfix_release(
+    client: GitHubClient,
+    repo: str,
+    pr_number: int,
+    merge_sha: str,
+    asset_paths: list[str] | None = None,
+    dry_run: bool = False,
+) -> int:
+    base_version = latest_release_version(client, repo)
+    if base_version is None:
+        print("No existing release found; cannot determine hotfix version.")
+        return 1
+    hotfix_version = bump_patch(base_version)
+    context = ReleaseContext(version=hotfix_version, related_prs=[], errors=[], raw_version=None)
+    release_body = render_release_body(context, pr_number, merge_sha)
+    if dry_run:
+        print(f"Hotfix version: {hotfix_version.canonical}")
+        print(release_body)
+        return 0
+    ensure_tag(client, repo, hotfix_version.canonical, merge_sha)
+    try:
+        release = client.get_release_by_tag(repo, hotfix_version.canonical)
+    except GitHubRequestError as exc:
+        if exc.status != 404:
+            raise
+        release = client.create_release(repo, hotfix_version, merge_sha, release_body)
+    release_id = release["id"]
+    upload_url = release.get("upload_url", "").split("{", 1)[0]
+    release_assets = _normalize_release_assets(asset_paths)
+    uploaded_assets = _upload_release_assets(client, repo, upload_url, release_id, release_assets)
+    final_body = render_release_body(context, pr_number, merge_sha, assets=uploaded_assets)
+    result = client.update_release(repo, release_id, hotfix_version, merge_sha, final_body)
+    release_url = result.get("html_url")
+    upsert_marked_comment(
+        client, repo, pr_number, RELEASE_PLAN_MARKER,
+        render_release_context_comment(context, pr_number, "released", release_url),
+    )
+    return 0
+
+
+def detect_related_develop_prs(
+    client: GitHubClient,
+    repo: str,
+    since_iso: str | None = None,
+    author: str | None = None,
+) -> list[int]:
+    cutoff = since_iso
+    if not cutoff:
+        releases = client.list_releases(repo)
+        if releases:
+            cutoff = releases[0].get("published_at")
+    if not cutoff:
+        cutoff = (
+            datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    pulls = client.list_pulls(repo, state="closed", base="develop")
+    numbers: list[int] = []
+    for pr in pulls:
+        merged_at = pr.get("merged_at")
+        if not merged_at or merged_at < cutoff:
+            continue
+        if author and pr.get("user", {}).get("login") != author:
+            continue
+        numbers.append(pr["number"])
+    return sorted(numbers, reverse=True)
+
+
+def prepare_main_release(
+    client: GitHubClient,
+    repo: str,
+    pr_number: int,
+    body: str | None,
+    dry_run: bool = False,
+    author: str | None = None,
+) -> int:
     context = extract_release_context(body)
-    rendered = render_release_context_comment(context, pr_number, "planned")
+
+    auto_detected = False
+    if not context.related_prs and not dry_run:
+        detected = detect_related_develop_prs(client, repo, author=author)
+        if detected:
+            auto_detected = True
+            errors = [e for e in context.errors if "related develop" not in e.lower()]
+            context = ReleaseContext(
+                version=context.version,
+                related_prs=detected,
+                errors=errors,
+                raw_version=context.raw_version,
+            )
+
+    rendered = render_release_context_comment(context, pr_number, "planned", auto_detected=auto_detected)
     if dry_run:
         print(rendered)
         return 0 if not context.errors else 1

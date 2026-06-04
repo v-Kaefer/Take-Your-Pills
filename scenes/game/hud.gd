@@ -28,8 +28,6 @@ func update_score(score: int) -> void:
 func update_distance(distance: float) -> void:
 	distance_label.text = "Distance: %d m" % int(distance)
 
-func show_game_over() -> void:
-	restart_button.show()
 func show_main_menu() -> void:
 	hide_menus()
 	main_menu.show()

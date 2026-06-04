@@ -2,6 +2,7 @@ extends Node2D
 class_name Game
 
 const DEFAULT_SCROLL_SPEED := 240.0
+const SCORE_DISTANCE_DIVISOR := 10.0
 
 enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
@@ -143,10 +144,8 @@ func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int
 	if current_state != GameState.RUNNING:
 		return
 
-	score += score_value
+	add_score(score_value)
 	collect_sfx_player.play()
-
-
 	_update_hud()
 
 
