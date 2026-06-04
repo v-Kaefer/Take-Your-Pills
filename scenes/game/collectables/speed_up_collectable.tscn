@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/collectables/speed_up_collectable.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(20, 20)
+
+[node name="SpeedUpCollectable" type="Area2D"]
+script = ExtResource("1")
+score_value = 50
+collectable_type = &"speed_up"
+z_index = 5
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-10, -10, 10, -10, 10, 10, -10, 10)
+color = Color(1.0, 0.35, 0.1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")

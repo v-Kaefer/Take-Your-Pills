@@ -28,12 +28,41 @@ text = "Score: 000000"
 [node name="DistanceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Distance: 0m"
+text = "Distance: 0 m"
+
+[node name="SpeedContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpeedIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Stripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Stripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="Stripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="Stripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "State: MENU\nControls: Start: button"
+text = "State: MENU\nControls: Start: button / Space"
 
 [node name="MainMenu" type="Control" parent="."]
 anchors_preset = 15
