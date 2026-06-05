@@ -375,7 +375,7 @@ def apply_pr_autofill(
             if dry_run:
                 print("[DRY-RUN] Would update PR body with Linked Issue and Milestone.")
             else:
-                client.update_issue_body(repo, int(pr["number"]), updated_body)
+                client.update_pull_request_body(repo, int(pr["number"]), updated_body)
         else:
             notes.append("PR body already matched the resolved story and milestone.")
     else:
