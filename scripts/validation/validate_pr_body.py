@@ -6,14 +6,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from governance_bootstrap.github import require_client
-from governance_bootstrap.pr_validation import upsert_validation_comment, validate_pull_request
+from governance_bootstrap.github import GitHubRequestError, get_token, require_client
+from governance_bootstrap.pr_validation import load_issue_body, upsert_validation_comment, validate_pull_request
 
 
 def read_body(args):
     if args.file:
         with open(args.file, "r", encoding="utf-8") as f:
             return f.read()
+    if args.repo and args.pr_number and get_token():
+        try:
+            return load_issue_body(require_client(), args.repo, args.pr_number)
+        except GitHubRequestError as exc:
+            print(f"warning: could not fetch live PR body: {exc}", file=sys.stderr)
     if os.environ.get("PR_BODY"):
         return os.environ["PR_BODY"]
     if not sys.stdin.isatty():

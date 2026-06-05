@@ -11,7 +11,8 @@ from governance_bootstrap.cli import main
 from governance_bootstrap.github import API_BASE, GitHubClient, GitHubRequestError
 from governance_bootstrap.issue_milestones import milestone_from_body, parent_issue_number_from_body
 from governance_bootstrap.issues import generate_issues
-from governance_bootstrap.pr_validation import render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
+from governance_bootstrap.pr_autofill import apply_pr_autofill, branch_story_number, rewrite_pr_body
+from governance_bootstrap.pr_validation import load_issue_body, render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.pr_hygiene import (
     apply_pr_hygiene,
     is_hotfix_pr,
@@ -93,6 +94,14 @@ class GovernanceBootstrapTests(unittest.TestCase):
             client.delete_release_asset("owner/repo", 88)
             request_json.assert_called_once_with("DELETE", f"{API_BASE}/repos/owner/repo/releases/assets/88")
 
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.update_issue_body("owner/repo", 123, "updated body")
+            request_json.assert_called_once_with(
+                "PATCH",
+                f"{API_BASE}/repos/owner/repo/issues/123",
+                {"body": "updated body"},
+            )
+
     def test_github_client_paginated_wrappers_call_expected_endpoints(self):
         client = GitHubClient("token")
 
@@ -139,6 +148,126 @@ class GovernanceBootstrapTests(unittest.TestCase):
             infer_issue_labels(issue),
             {"type:user-story", "status:backlog", "priority:high", "test:smoke"},
         )
+
+    def test_pr_autofill_parses_story_number_from_branch(self):
+        self.assertEqual(branch_story_number("feat/US-08-speed"), 8)
+        self.assertEqual(branch_story_number("feat/US-08_add-speed"), 8)
+        self.assertEqual(branch_story_number("task/us-18"), 18)
+        self.assertIsNone(branch_story_number("feat/no-ticket"))
+
+    def test_pr_autofill_rewrites_linked_issue_and_milestone_sections(self):
+        body = """## Linked Issue
+- Closes #123
+- Troque `#123` pela issue que esta PR resolve.
+
+## Milestone
+- MS0
+- Use o milestone correto da entrega.
+
+## Summary
+- Corrige o fluxo.
+"""
+
+        updated, changed = rewrite_pr_body(body, 44, "MS2")
+
+        self.assertTrue(changed)
+        self.assertIn("## Linked Issue", updated)
+        self.assertIn("Closes #44", updated)
+        self.assertIn("Troque `#44` pela issue que esta PR resolve.", updated)
+        self.assertIn("## Milestone", updated)
+        self.assertIn("- MS2", updated)
+        self.assertIn("## Summary", updated)
+
+    def test_load_issue_body_reads_body_from_github_issue(self):
+        client = Mock()
+        client.get_issue.return_value = {"body": "## Linked Issue\n- Closes #12"}
+
+        self.assertEqual(load_issue_body(client, "owner/repo", 12), "## Linked Issue\n- Closes #12")
+
+    def test_pr_autofill_updates_body_and_lists_related_tasks(self):
+        manifest = "config/stories/backlog-manifest.json"
+        event = {
+            "action": "opened",
+            "pull_request": {
+                "number": 99,
+                "body": """## Linked Issue
+- Closes #123
+- Troque `#123` pela issue que esta PR resolve.
+
+## Milestone
+- MS0
+- Use o milestone correto da entrega.
+
+## Summary
+- Explique o que mudou e por que.
+
+## Teste
+- [ ] Sim, ha teste implementado
+- [ ] Nao, nao ha teste implementado
+
+## Known risks
+- None
+
+## DoD checklist
+- [ ] Escopo implementado conforme definido
+- [ ] Opcao de teste selecionada
+- [ ] Nenhuma quebra critica conhecida foi introduzida
+""",
+                "head": {"ref": "feat/US-08-speed-boost"},
+            },
+        }
+
+        client = Mock()
+        client.paginated.return_value = [
+            {
+                "number": 44,
+                "title": "US-08 | Implementar efeito adverso e variação de velocidade",
+                "state": "open",
+                "body": "Como jogador, quero sentir o efeito adverso das pílulas ao acumular speed-ups.",
+                "milestone": {"title": "MS2"},
+            },
+            {
+                "number": 45,
+                "title": "T-08.1 | Criar contador de speed-ups",
+                "state": "open",
+                "body": "Parent story: US-08 (#44)\n\n## Technical scope\n- TBD",
+            },
+            {
+                "number": 46,
+                "title": "T-08.2 | Implementar gatilho do estado adverso",
+                "state": "open",
+                "body": "Parent story: US-08 (#44)\n\n## Technical scope\n- TBD",
+            },
+            {
+                "number": 47,
+                "title": "T-08.3 | Aplicar alteração temporária de velocidade",
+                "state": "open",
+                "body": "Parent story: US-08 (#44)\n\n## Technical scope\n- TBD",
+            },
+            {
+                "number": 48,
+                "title": "T-08.4 | Exibir feedback do estado adverso",
+                "state": "open",
+                "body": "Parent story: US-08 (#44)\n\n## Technical scope\n- TBD",
+            },
+        ]
+        client.update_issue_body.return_value = {}
+
+        with patch("governance_bootstrap.pr_autofill.upsert_marked_comment", return_value="updated") as upsert_comment:
+            result = apply_pr_autofill(client, "owner/repo", event, manifest)
+
+        self.assertEqual(result, 0)
+        client.update_issue_body.assert_called_once()
+        updated_body = client.update_issue_body.call_args.args[2]
+        self.assertIn("Closes #44", updated_body)
+        self.assertIn("- MS2", updated_body)
+        self.assertIn("## Summary", updated_body)
+
+        comment_body = upsert_comment.call_args.args[4]
+        self.assertIn("US-08", comment_body)
+        self.assertIn("US-08 | Implementar efeito adverso e variação de velocidade", comment_body)
+        self.assertIn("T-08.1 | Criar contador de speed-ups", comment_body)
+        self.assertIn("#45", comment_body)
 
     def test_issue_metadata_parsers_accept_generic_milestones(self):
         body = "Parent story: US-01 (#42)\n\n- Milestone: Release-1.0"
@@ -261,6 +390,16 @@ class GovernanceBootstrapTests(unittest.TestCase):
         findings = validate_pull_request("develop", "## Linked Issue\n- Closes #12", base_ref="main")
 
         self.assertFalse(any(finding.section == "Branch name" for finding in findings))
+
+    def test_pr_validation_accepts_uppercase_story_key_in_branch(self):
+        findings = validate_branch_name("feat/US-08", base_ref="develop")
+
+        self.assertEqual(findings, [])
+
+    def test_pr_validation_accepts_uppercase_story_key_for_hotfix_skip(self):
+        findings = validate_pull_request("hotfix/US-08", "", base_ref="develop")
+
+        self.assertEqual(findings, [])
 
     def test_pr_validation_skips_body_requirements_for_hotfix_branch(self):
         findings = validate_pull_request("hotfix/release-workflow", "", base_ref="develop")
