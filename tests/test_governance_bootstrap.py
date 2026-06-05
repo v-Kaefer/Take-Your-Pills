@@ -102,6 +102,14 @@ class GovernanceBootstrapTests(unittest.TestCase):
                 {"body": "updated body"},
             )
 
+        with patch.object(client, "request_json", return_value={}) as request_json:
+            client.update_pull_request_body("owner/repo", 123, "updated body")
+            request_json.assert_called_once_with(
+                "PATCH",
+                f"{API_BASE}/repos/owner/repo/pulls/123",
+                {"body": "updated body"},
+            )
+
     def test_github_client_paginated_wrappers_call_expected_endpoints(self):
         client = GitHubClient("token")
 
@@ -251,14 +259,14 @@ class GovernanceBootstrapTests(unittest.TestCase):
                 "body": "Parent story: US-08 (#44)\n\n## Technical scope\n- TBD",
             },
         ]
-        client.update_issue_body.return_value = {}
+        client.update_pull_request_body.return_value = {}
 
         with patch("governance_bootstrap.pr_autofill.upsert_marked_comment", return_value="updated") as upsert_comment:
             result = apply_pr_autofill(client, "owner/repo", event, manifest)
 
         self.assertEqual(result, 0)
-        client.update_issue_body.assert_called_once()
-        updated_body = client.update_issue_body.call_args.args[2]
+        client.update_pull_request_body.assert_called_once()
+        updated_body = client.update_pull_request_body.call_args.args[2]
         self.assertIn("Closes #44", updated_body)
         self.assertIn("- MS2", updated_body)
         self.assertIn("## Summary", updated_body)
@@ -676,6 +684,7 @@ class GovernanceBootstrapTests(unittest.TestCase):
         pr_issue = {"number": 33, "labels": [], "milestone": None, "assignees": []}
         client = Mock()
         client.get_issue.side_effect = [task, pr_issue]
+        project_client = Mock()
 
         with (
             patch("governance_bootstrap.pr_hygiene.sync_pr_metadata") as sync_metadata,
@@ -683,12 +692,44 @@ class GovernanceBootstrapTests(unittest.TestCase):
             patch("governance_bootstrap.pr_hygiene.sync_parent_relationship") as sync_relationship,
             patch("governance_bootstrap.pr_hygiene.upsert_marked_comment"),
         ):
+            result = apply_pr_hygiene(client, "owner/repo", event, 4, project_client=project_client)
+
+        self.assertEqual(result, 0)
+        sync_metadata.assert_called_once()
+        sync_status.assert_called_once_with(project_client, "owner/repo", 4, task, "In review", owner=None, dry_run=False)
+        sync_relationship.assert_called_once()
+
+    def test_pr_hygiene_skips_project_sync_without_governance_pat(self):
+        event = {
+            "action": "ready_for_review",
+            "pull_request": {
+                "number": 33,
+                "body": "Closes #12",
+                "base": {"ref": "develop"},
+                "head": {"ref": "feat/phase-2/task"},
+                "user": {"login": "alice"},
+                "draft": False,
+                "merged": False,
+            },
+        }
+        task = {"number": 12, "labels": [], "milestone": None, "assignees": [], "body": ""}
+        pr_issue = {"number": 33, "labels": [], "milestone": None, "assignees": []}
+        client = Mock()
+        client.get_issue.side_effect = [task, pr_issue]
+
+        with (
+            patch("governance_bootstrap.pr_hygiene.sync_pr_metadata") as sync_metadata,
+            patch("governance_bootstrap.pr_hygiene.sync_task_project_status") as sync_status,
+            patch("governance_bootstrap.pr_hygiene.sync_parent_relationship") as sync_relationship,
+            patch("governance_bootstrap.pr_hygiene.upsert_marked_comment") as upsert_comment,
+        ):
             result = apply_pr_hygiene(client, "owner/repo", event, 4)
 
         self.assertEqual(result, 0)
         sync_metadata.assert_called_once()
-        sync_status.assert_called_once_with(client, "owner/repo", 4, task, "In review", owner=None, dry_run=False)
+        sync_status.assert_not_called()
         sync_relationship.assert_called_once()
+        self.assertIn("skipped because `GOVERNANCE_PAT` is not configured", upsert_comment.call_args.args[4])
 
     def test_pr_hygiene_ignores_develop_to_main_release_pr(self):
         event = {
@@ -787,7 +828,15 @@ class GovernanceBootstrapTests(unittest.TestCase):
         client = apply_hygiene.call_args.args[0]
         self.assertIsInstance(client, GitHubClient)
         self.assertEqual(client.token, "")
-        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=False)
+        apply_hygiene.assert_called_once_with(
+            client,
+            "owner/repo",
+            event.name,
+            4,
+            project_client=None,
+            owner=None,
+            dry_run=False,
+        )
 
     def test_pr_hygiene_cli_skips_client_requirement_for_hotfix_pr(self):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
@@ -816,7 +865,15 @@ class GovernanceBootstrapTests(unittest.TestCase):
         client = apply_hygiene.call_args.args[0]
         self.assertIsInstance(client, GitHubClient)
         self.assertEqual(client.token, "")
-        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=False)
+        apply_hygiene.assert_called_once_with(
+            client,
+            "owner/repo",
+            event.name,
+            4,
+            project_client=None,
+            owner=None,
+            dry_run=False,
+        )
 
     def test_pr_hygiene_dry_run_cli_still_requires_real_client_for_reads(self):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
@@ -844,7 +901,49 @@ class GovernanceBootstrapTests(unittest.TestCase):
 
         self.assertEqual(result, 0)
         require_client.assert_called_once_with()
-        apply_hygiene.assert_called_once_with(client, "owner/repo", event.name, 4, owner=None, dry_run=True)
+        apply_hygiene.assert_called_once_with(
+            client,
+            "owner/repo",
+            event.name,
+            4,
+            project_client=None,
+            owner=None,
+            dry_run=True,
+        )
+
+    def test_pr_hygiene_cli_uses_governance_pat_for_optional_project_sync(self):
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8") as event:
+            event.write('{"action":"opened","pull_request":{"number":33,"body":"Closes #12","base":{"ref":"develop"},"head":{"ref":"feat/task"},"user":{"login":"alice"},"draft":false,"merged":false}}')
+            event.flush()
+            client = Mock()
+
+            with (
+                patch.dict(os.environ, {"GOVERNANCE_PAT": "project-token"}, clear=False),
+                patch("governance_bootstrap.cli.require_client", return_value=client) as require_client,
+                patch("governance_bootstrap.cli.apply_pr_hygiene_from_path", return_value=0) as apply_hygiene,
+            ):
+                result = main(
+                    [
+                        "pr",
+                        "hygiene",
+                        "--repo",
+                        "owner/repo",
+                        "--event-path",
+                        event.name,
+                        "--project-number",
+                        "4",
+                    ]
+                )
+
+        self.assertEqual(result, 0)
+        require_client.assert_called_once_with()
+        args = apply_hygiene.call_args.args
+        self.assertIs(args[0], client)
+        self.assertEqual(args[1], "owner/repo")
+        self.assertEqual(args[2], event.name)
+        self.assertEqual(args[3], 4)
+        self.assertIsInstance(apply_hygiene.call_args.kwargs["project_client"], GitHubClient)
+        self.assertEqual(apply_hygiene.call_args.kwargs["project_client"].token, "project-token")
 
     def test_release_context_parser_accepts_short_versions(self):
         body = """## Release version

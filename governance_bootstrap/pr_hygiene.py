@@ -119,14 +119,20 @@ def render_failure_comment(message: str) -> str:
     )
 
 
-def render_success_comment(ctx: PullRequestContext, task_number: int, status: str) -> str:
+def render_success_comment(
+    ctx: PullRequestContext,
+    task_number: int,
+    status: str,
+    project_sync_note: str,
+) -> str:
     return "\n".join(
         [
             HYGIENE_MARKER,
             "## PR hygiene",
             "",
             f"- Linked task: #{task_number}",
-            f"- Project status: `{status}`",
+            f"- Project status target: `{status}`",
+            f"- Project sync: {project_sync_note}",
             f"- PR: #{ctx.number}",
         ]
     )
@@ -226,7 +232,8 @@ def apply_pr_hygiene(
     client: GitHubClient,
     repo: str,
     event: dict,
-    project_number: int,
+    project_number: int | None,
+    project_client: GitHubClient | None = None,
     owner: str | None = None,
     dry_run: bool = False,
 ) -> int:
@@ -258,16 +265,33 @@ def apply_pr_hygiene(
 
     pr_issue = client.get_issue(repo, ctx.number)
     status = project_status_for_event(ctx)
+    project_sync_note = "skipped because `GOVERNANCE_PAT` is not configured."
 
     sync_pr_metadata(client, repo, ctx, task, pr_issue, dry_run=dry_run)
-    sync_task_project_status(client, repo, project_number, task, status, owner=owner, dry_run=dry_run)
-    sync_parent_relationship(client, repo, task, dry_run=dry_run)
+    if project_client and project_number is not None:
+        sync_task_project_status(project_client, repo, project_number, task, status, owner=owner, dry_run=dry_run)
+        project_sync_note = "synced."
+    elif project_client and project_number is None:
+        project_sync_note = "skipped because `GOVERNANCE_PROJECT_NUMBER` is missing."
+
+    try:
+        sync_parent_relationship(client, repo, task, dry_run=dry_run)
+    except GitHubRequestError as exc:
+        if exc.status != 403:
+            raise
+        print(f"warning: token cannot sync sub-issue relationship: {exc}")
 
     if dry_run:
-        print(render_success_comment(ctx, task_number, status))
+        print(render_success_comment(ctx, task_number, status, project_sync_note))
     else:
         try:
-            upsert_marked_comment(client, repo, ctx.number, HYGIENE_MARKER, render_success_comment(ctx, task_number, status))
+            upsert_marked_comment(
+                client,
+                repo,
+                ctx.number,
+                HYGIENE_MARKER,
+                render_success_comment(ctx, task_number, status, project_sync_note),
+            )
         except GitHubRequestError as exc:
             if exc.status != 403:
                 raise
@@ -279,11 +303,20 @@ def apply_pr_hygiene_from_path(
     client: GitHubClient,
     repo: str,
     event_path: str,
-    project_number: int,
+    project_number: int | None,
+    project_client: GitHubClient | None = None,
     owner: str | None = None,
     dry_run: bool = False,
 ) -> int:
-    return apply_pr_hygiene(client, repo, load_event(event_path), project_number, owner=owner, dry_run=dry_run)
+    return apply_pr_hygiene(
+        client,
+        repo,
+        load_event(event_path),
+        project_number,
+        project_client=project_client,
+        owner=owner,
+        dry_run=dry_run,
+    )
 
 
 def project_number_arg(value: int | None) -> int:

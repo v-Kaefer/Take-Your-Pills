@@ -10,6 +10,7 @@ for path in "$workflow" "$workflow_map" "$guide" "governance_bootstrap/pr_autofi
 done
 
 grep -Fq "pull_request_target:" "$workflow"
+grep -Fq "pull-requests: write" "$workflow"
 grep -Fq "Autofill PR metadata from branch" "$workflow"
 grep -Fq "python -m governance_bootstrap pr autofill" "$workflow"
 grep -Fq -- '--backlog-file config/stories/backlog-manifest.json' "$workflow"
