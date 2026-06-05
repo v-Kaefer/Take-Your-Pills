@@ -10,6 +10,7 @@ enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 @onready var chunks: ChunkManager = $World/Chunks
 @onready var hud: GameHUD = $HUD
 @onready var collect_sfx_player: AudioStreamPlayer = $CollectSfxPlayer
+@onready var adverse_state_controller = $Controllers/AdverseStateController
 
 var current_state: GameState = GameState.MAIN_MENU
 var score: int = 0
@@ -27,17 +28,22 @@ func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
 	RunSignals.collectable_collected.connect(_on_collectable_collected)
+	RunSignals.speed_too_slow.connect(_on_speed_too_slow)
 	hud.connect_start(_on_start_button_pressed)
 	hud.connect_resume(_on_resume_button_pressed)
 	hud.connect_restart(_on_restart_button_pressed)
-	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED)
+	adverse_state_controller.chunk_manager = chunks
+	adverse_state_controller.base_speed = DEFAULT_SCROLL_SPEED
 	chunks.pause_run()
 	player.pause_run()
 	hud.show_main_menu()
+	RunSignals.run_booted.emit()
 	_update_hud()
 
 
 func _process(_delta: float) -> void:
+	if adverse_state_controller != null:
+		adverse_state_controller.tick(_delta)
 	if current_state == GameState.RUNNING:
 		var meters_scrolled := (chunks.scroll_speed * _delta) / SCORE_DISTANCE_DIVISOR
 		distance += meters_scrolled
@@ -133,10 +139,15 @@ func _set_game_over() -> void:
 	chunks.end_run()
 	player.end_run()
 	hud.show_game_over(score)
+	RunSignals.run_game_over.emit()
 	_update_hud()
 
 
 func _on_player_hit_obstacle(_obstacle: Node, _body: Node) -> void:
+	_set_game_over()
+
+
+func _on_speed_too_slow() -> void:
 	_set_game_over()
 
 
