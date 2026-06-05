@@ -10,9 +10,11 @@ from .issue_milestones import sync_issue_milestones
 from .issues import generate_issues
 from .labels import sync_labels
 from .milestones import sync_milestones
+from .pr_autofill import apply_pr_autofill_from_path
 from .project import create_project, sync_project
 from .pr_hygiene import apply_pr_hygiene_from_path, context_from_event, is_hotfix_pr, is_release_pr, load_event, project_number_arg
 from .release import (
+    detect_related_develop_prs,
     parse_name_status_lines,
     prepare_main_release,
     publish_hotfix_release,
@@ -85,12 +87,30 @@ def cmd_pr_hygiene(args) -> int:
     event = load_event(event_path)
     ctx = context_from_event(event)
     client = GitHubClient("") if is_release_pr(ctx) or is_hotfix_pr(ctx) else require_client()
+    project_token = (os.getenv("GOVERNANCE_PAT") or "").strip()
+    project_client = GitHubClient(project_token) if project_token else None
+    project_number = project_number_arg(args.project_number) if project_client else args.project_number
     return apply_pr_hygiene_from_path(
         client,
         repo_arg(args.repo),
         event_path,
-        project_number_arg(args.project_number),
+        project_number,
+        project_client=project_client,
         owner=args.owner,
+        dry_run=args.dry_run,
+    )
+
+
+def cmd_pr_autofill(args) -> int:
+    event_path = args.event_path or os.getenv("GITHUB_EVENT_PATH")
+    if not event_path:
+        raise SystemExit("Missing --event-path and GITHUB_EVENT_PATH")
+    client = require_client()
+    return apply_pr_autofill_from_path(
+        client,
+        repo_arg(args.repo),
+        event_path,
+        args.backlog_file,
         dry_run=args.dry_run,
     )
 
@@ -117,7 +137,14 @@ def cmd_release_prepare_main(args) -> int:
             body = f.read()
     body = body or os.getenv("PR_BODY")
     client = GitHubClient("") if args.dry_run else require_client()
-    return prepare_main_release(client, repo_arg(args.repo), args.pr_number, body, dry_run=args.dry_run)
+    return prepare_main_release(
+        client,
+        repo_arg(args.repo),
+        args.pr_number,
+        body,
+        dry_run=args.dry_run,
+        author=args.author or os.getenv("PR_AUTHOR") or None,
+    )
 
 
 def cmd_release_publish_hotfix(args) -> int:
@@ -260,6 +287,13 @@ def build_parser() -> argparse.ArgumentParser:
     pr_hygiene.add_argument("--dry-run", action="store_true")
     pr_hygiene.set_defaults(func=cmd_pr_hygiene)
 
+    pr_autofill = pr_sub.add_parser("autofill")
+    pr_autofill.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
+    pr_autofill.add_argument("--event-path", default=os.getenv("GITHUB_EVENT_PATH"))
+    pr_autofill.add_argument("--backlog-file", default="config/stories/backlog-manifest.json")
+    pr_autofill.add_argument("--dry-run", action="store_true")
+    pr_autofill.set_defaults(func=cmd_pr_autofill)
+
     release = sub.add_parser("release")
     release_sub = release.add_subparsers(dest="release_command", required=True)
 
@@ -281,6 +315,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_prepare_main.add_argument("--pr-number", type=int, required=True)
     release_prepare_main.add_argument("--body")
     release_prepare_main.add_argument("--body-file")
+    release_prepare_main.add_argument("--author", default=None, help="Filter auto-detected PRs by this GitHub login")
     release_prepare_main.add_argument("--dry-run", action="store_true")
     release_prepare_main.set_defaults(func=cmd_release_prepare_main)
 

@@ -98,6 +98,12 @@ class GitHubClient:
     def add_issue_assignees(self, repo: str, number: int, assignees: list[str]):
         return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/assignees", {"assignees": assignees})
 
+    def update_issue_body(self, repo: str, number: int, body: str):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"body": body})
+
+    def update_pull_request_body(self, repo: str, number: int, body: str):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/pulls/{number}", {"body": body})
+
     def update_issue_milestone(self, repo: str, number: int, milestone_number: int):
         return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"milestone": milestone_number})
 
@@ -110,6 +116,20 @@ class GitHubClient:
 
     def list_pull_request_files(self, repo: str, pr_number: int):
         return self.paginated(f"{API_BASE}/repos/{repo}/pulls/{pr_number}/files")
+
+    def list_pulls(
+        self,
+        repo: str,
+        *,
+        state: str = "open",
+        base: str | None = None,
+        sort: str = "updated",
+        direction: str = "desc",
+    ) -> list[dict[str, Any]]:
+        params: dict[str, str] = {"state": state, "sort": sort, "direction": direction, "per_page": "100"}
+        if base:
+            params["base"] = base
+        return self.paginated(f"{API_BASE}/repos/{repo}/pulls?{urllib.parse.urlencode(params)}")
 
     def get_release_by_tag(self, repo: str, tag: str):
         encoded_tag = urllib.parse.quote(tag, safe="")
