@@ -98,6 +98,9 @@ class GitHubClient:
     def add_issue_assignees(self, repo: str, number: int, assignees: list[str]):
         return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/assignees", {"assignees": assignees})
 
+    def update_issue_body(self, repo: str, number: int, body: str):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"body": body})
+
     def update_issue_milestone(self, repo: str, number: int, milestone_number: int):
         return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"milestone": milestone_number})
 

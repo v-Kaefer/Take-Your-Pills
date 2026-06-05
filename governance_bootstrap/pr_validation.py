@@ -43,6 +43,11 @@ class ValidationFinding:
     fix: str
 
 
+def load_issue_body(client: GitHubClient, repo: str, number: int) -> str:
+    issue = client.get_issue(repo, number)
+    return issue.get("body") or ""
+
+
 def normalize_header(header: str) -> str:
     normalized = unicodedata.normalize("NFKD", header)
     normalized = "".join(char for char in normalized if not unicodedata.combining(char))
@@ -82,8 +87,16 @@ def meaningful_lines(lines: list[str]) -> list[str]:
     return values
 
 
+def normalize_branch_for_validation(branch: str) -> str:
+    branch = branch.strip()
+    if "/" not in branch:
+        return branch.casefold()
+    prefix, remainder = branch.split("/", 1)
+    return f"{prefix}/{remainder.casefold()}"
+
+
 def is_hotfix_branch(branch: str | None) -> bool:
-    return bool(branch and HOTFIX_PATTERN.fullmatch(branch.strip()))
+    return bool(branch and HOTFIX_PATTERN.fullmatch(normalize_branch_for_validation(branch)))
 
 
 def validate_test_section(lines: list[str]) -> list[ValidationFinding]:
@@ -152,17 +165,20 @@ def validate_branch_name(
             )
         ]
 
-    branch = branch.strip()
-    if branch == "develop" and (base_ref or "").strip() == "main":
+    original_branch = branch.strip()
+    normalized_branch = normalize_branch_for_validation(original_branch)
+    normalized_base = (base_ref or "").strip().casefold()
+
+    if normalized_branch == "develop" and normalized_base == "main":
         return []
 
-    if BRANCH_PATTERN.fullmatch(branch):
+    if BRANCH_PATTERN.fullmatch(normalized_branch):
         return []
 
     return [
         ValidationFinding(
             section="Branch name",
-            problem=f"Nome da branch inválido `{branch}`.",
+            problem=f"Nome da branch inválido `{original_branch}`.",
             fix="Renomeie para o padrão do repositório, por exemplo: `feat/repo-governance-bootstrap` ou `task/phase-1/player-base`.",
         )
     ]
