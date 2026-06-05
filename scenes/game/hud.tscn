@@ -28,12 +28,12 @@ text = "Score: 000000"
 [node name="DistanceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Distance: 0m"
+text = "Distance: 0 m"
 
 [node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "State: MENU\nControls: Start: button"
+text = "State: MENU\nControls: Start: button / Space"
 
 [node name="MainMenu" type="Control" parent="."]
 anchors_preset = 15

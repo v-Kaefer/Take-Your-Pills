@@ -30,6 +30,7 @@ required=(
   "tests/test_release_version.sh"
   "tests/test_pull_request_template.sh"
   "tests/test_godot_ci.sh"
+  "scripts/validation/game_core_contract.sh"
   "scripts/validation/validate_pr_body.py"
   ".githooks/pre-push"
 )
