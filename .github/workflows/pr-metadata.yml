@@ -19,10 +19,22 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
+      - name: Autofill PR metadata from branch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -m governance_bootstrap pr autofill \
+            --repo "$GITHUB_REPOSITORY" \
+            --event-path "$GITHUB_EVENT_PATH" \
+            --backlog-file config/stories/backlog-manifest.json
+
       - name: Validate branch naming and PR metadata
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-          GITHUB_TOKEN: ${{ secrets.GOVERNANCE_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           REPO_NAME: ${{ github.repository }}
