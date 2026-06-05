@@ -7,12 +7,8 @@ It uses three project-area buckets so the same groups can be reused in the table
 
 | Path | Area | Trigger / entrypoint | Purpose | Key dependencies | Status |
 | --- | --- | --- | --- | --- | --- |
-<<<<<<< HEAD
-| `.github/workflows/pr-metadata.yml` | `infra` | `pull_request_target` on `opened`, `synchronize`, `reopened`, `edited` | Autofill the PR Linked Issue and Milestone from the branch US key, then validate branch naming and the PR body contract. | `governance_bootstrap.pr_autofill`, `scripts/validation/validate_pr_body.py`, PR template | Active |
-=======
-| `.github/workflows/pr-metadata.yml` | `infra` | `pull_request_target` on `opened`, `synchronize`, `reopened`, `edited` | Autofill the PR Linked Issue and Milestone from the branch US key, then validate branch naming and the PR body contract. | `governance_bootstrap.pr_autofill`, `scripts/validation/validate_pr_body.py`, PR template | Active |
->>>>>>> origin/main
-| `.github/workflows/pr-hygiene.yml` | `infra` | `pull_request_target` on PR lifecycle events | Sync PR labels, milestone, assignees, linked task relationship, and Project status from the linked task. Hotfix PRs are skipped. | `governance_bootstrap.pr_hygiene`, `GOVERNANCE_PAT`, `GOVERNANCE_PROJECT_NUMBER` | Active |
+| `.github/workflows/pr-metadata.yml` | `infra` | `pull_request_target` on `opened`, `synchronize`, `reopened`, `edited` | Autofill the PR Linked Issue and Milestone from the branch US key, then validate branch naming and the PR body contract. | `governance_bootstrap.pr_autofill`, `scripts/validation/validate_pr_body.py`, PR template, `github.token` with PR write permission | Active |
+| `.github/workflows/pr-hygiene.yml` | `infra` | `pull_request_target` on PR lifecycle events | Sync PR labels, milestone, assignees, linked task relationship, and Project status from the linked task. Hotfix PRs are skipped. | `governance_bootstrap.pr_hygiene`, `github.token`, optional `GOVERNANCE_PAT` for Project v2, `GOVERNANCE_PROJECT_NUMBER` | Active |
 | `.github/workflows/main-source-branch.yml` | `infra` | `pull_request` targeting `main` | Enforce that `main` is merged from `develop` or a `hotfix/...` branch in the same repository. | GitHub PR metadata only | Active |
 | `.github/workflows/release-version.yml` | `infra` | `pull_request_target` to `main`, plus `closed` merge handling | Plan releases from the PR body, update linked `develop` PRs, export Godot builds, create the tag and GitHub Release, and attach release assets. For `hotfix/...` merges, auto-bumps the latest release's patch version without requiring PR body metadata. | `governance_bootstrap.release`, `export_presets.cfg`, Godot export templates | Active |
 | `.github/workflows/quality-assurance.yml` | `infra` | `pull_request` on `opened`, `synchronize`, `reopened` | Check segment coverage for gameplay changes and upsert a sticky PR comment for same-repo PRs. | `.githooks/pre-push` coverage approval refs, `git diff --name-status`, `actions/github-script` | Active |
@@ -27,11 +23,8 @@ It uses three project-area buckets so the same groups can be reused in the table
 ### Notes
 
 - `pr-hygiene.yml` depends on PR bodies linking tasks with `Closes #N`, `Fixes #N`, or `Resolves #N`. Hotfix PRs are excluded from this check.
+- `pr-hygiene.yml` uses `github.token` for repo-scoped PR sync and only attempts Project v2 status updates when `GOVERNANCE_PAT` is available.
 - `pr-metadata.yml` now applies the branch-based autofill before validation, so the validation script reads the live PR body from GitHub when a token is available.
-<<<<<<< HEAD
-=======
-- `pr-metadata.yml` now applies the branch-based autofill before validation, so the validation script reads the live PR body from GitHub when a token is available.
->>>>>>> origin/main
 - `release-version.yml` depends on the release CLI path (`python -m governance_bootstrap release ...`) and `export_presets.cfg`. For release PRs, `## Related develop PRs` are auto-detected from develop PRs merged since the last release when not listed in the PR body.
 - `godot-smoke.yml` is only a bootstrap check; `game-tests.yml` is the refined gameplay suite.
 - `repo-quality.yml` is retired. The living baseline now sits in `scripts/validation/repo_quality.sh`.

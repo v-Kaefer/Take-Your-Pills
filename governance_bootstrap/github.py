@@ -101,6 +101,9 @@ class GitHubClient:
     def update_issue_body(self, repo: str, number: int, body: str):
         return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"body": body})
 
+    def update_pull_request_body(self, repo: str, number: int, body: str):
+        return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/pulls/{number}", {"body": body})
+
     def update_issue_milestone(self, repo: str, number: int, milestone_number: int):
         return self.request_json("PATCH", f"{API_BASE}/repos/{repo}/issues/{number}", {"milestone": milestone_number})
 
