@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import datetime
 from pathlib import Path
 import re
 
@@ -328,7 +329,13 @@ def render_change_summary_comment(summary: ChangeSummary, title: str | None = No
     return "\n".join([CHANGE_SUMMARY_MARKER, *_render_change_summary_lines(summary, title=title)])
 
 
-def render_release_context_comment(context: ReleaseContext, main_pr_number: int, state: str, release_url: str | None = None) -> str:
+def render_release_context_comment(
+    context: ReleaseContext,
+    main_pr_number: int,
+    state: str,
+    release_url: str | None = None,
+    auto_detected: bool = False,
+) -> str:
     lines = [RELEASE_PLAN_MARKER, "## Release plan", ""]
     if context.errors:
         lines.append("The release metadata is incomplete.")
@@ -346,7 +353,8 @@ def render_release_context_comment(context: ReleaseContext, main_pr_number: int,
     lines.append(f"- Release version: `{context.version.canonical}`")
     lines.append(f"- Main PR: #{main_pr_number}")
     if context.related_prs:
-        lines.append("- Related develop PRs:")
+        label = "Related develop PRs (auto-detected)" if auto_detected else "Related develop PRs"
+        lines.append(f"- {label}:")
         for pr_number in context.related_prs:
             lines.append(f"  - #{pr_number}")
     if release_url:
@@ -605,9 +613,58 @@ def publish_hotfix_release(
     return 0
 
 
-def prepare_main_release(client: GitHubClient, repo: str, pr_number: int, body: str | None, dry_run: bool = False) -> int:
+def detect_related_develop_prs(
+    client: GitHubClient,
+    repo: str,
+    since_iso: str | None = None,
+    author: str | None = None,
+) -> list[int]:
+    cutoff = since_iso
+    if not cutoff:
+        releases = client.list_releases(repo)
+        if releases:
+            cutoff = releases[0].get("published_at")
+    if not cutoff:
+        cutoff = (
+            datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    pulls = client.list_pulls(repo, state="closed", base="develop")
+    numbers: list[int] = []
+    for pr in pulls:
+        merged_at = pr.get("merged_at")
+        if not merged_at or merged_at < cutoff:
+            continue
+        if author and pr.get("user", {}).get("login") != author:
+            continue
+        numbers.append(pr["number"])
+    return sorted(numbers, reverse=True)
+
+
+def prepare_main_release(
+    client: GitHubClient,
+    repo: str,
+    pr_number: int,
+    body: str | None,
+    dry_run: bool = False,
+    author: str | None = None,
+) -> int:
     context = extract_release_context(body)
-    rendered = render_release_context_comment(context, pr_number, "planned")
+
+    auto_detected = False
+    if not context.related_prs and not dry_run:
+        detected = detect_related_develop_prs(client, repo, author=author)
+        if detected:
+            auto_detected = True
+            errors = [e for e in context.errors if "related develop" not in e.lower()]
+            context = ReleaseContext(
+                version=context.version,
+                related_prs=detected,
+                errors=errors,
+                raw_version=context.raw_version,
+            )
+
+    rendered = render_release_context_comment(context, pr_number, "planned", auto_detected=auto_detected)
     if dry_run:
         print(rendered)
         return 0 if not context.errors else 1
