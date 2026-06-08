@@ -85,14 +85,18 @@ def cmd_pr_hygiene(args) -> int:
     if not event_path:
         raise SystemExit("Missing --event-path and GITHUB_EVENT_PATH")
     event = load_event(event_path)
-    ctx = context_from_event(event)
-    client = GitHubClient("") if is_release_pr(ctx) or is_hotfix_pr(ctx) else require_client()
+    repo = repo_arg(args.repo)
+    if event.get("pull_request"):
+        ctx = context_from_event(event)
+        client = GitHubClient("") if is_release_pr(ctx) or is_hotfix_pr(ctx) else require_client()
+    else:
+        client = require_client()
     project_token = (os.getenv("GOVERNANCE_PAT") or "").strip()
     project_client = GitHubClient(project_token) if project_token else None
     project_number = project_number_arg(args.project_number) if project_client else args.project_number
     return apply_pr_hygiene_from_path(
         client,
-        repo_arg(args.repo),
+        repo,
         event_path,
         project_number,
         project_client=project_client,

@@ -15,6 +15,7 @@ from governance_bootstrap.pr_autofill import apply_pr_autofill, branch_story_num
 from governance_bootstrap.pr_validation import load_issue_body, render_failure_comment, validate_branch_name, validate_pr_body, validate_pull_request
 from governance_bootstrap.pr_hygiene import (
     apply_pr_hygiene,
+    context_from_event,
     is_hotfix_pr,
     linked_task_number,
     project_status_for_event,
@@ -561,6 +562,29 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(linked_task_number("Resolves #101"), 101)
         self.assertIsNone(linked_task_number("Related to #9"))
 
+    def test_pr_hygiene_loads_live_context_from_workflow_run(self):
+        client = Mock()
+        client.get_pull_request.return_value = {
+            "number": 33,
+            "body": "Closes #12",
+            "base": {"ref": "develop"},
+            "head": {"ref": "feat/US-10"},
+            "user": {"login": "alice"},
+            "draft": False,
+            "merged": False,
+        }
+
+        ctx = context_from_event(
+            {"workflow_run": {"pull_requests": [{"number": 33}]}},
+            client=client,
+            repo="owner/repo",
+        )
+
+        self.assertEqual(ctx.number, 33)
+        self.assertEqual(ctx.action, "synchronize")
+        self.assertEqual(ctx.head_ref, "feat/US-10")
+        client.get_pull_request.assert_called_once_with("owner/repo", 33)
+
     def test_pr_hygiene_status_mapping_respects_drafts_and_merge(self):
         base = {
             "number": 7,
@@ -697,6 +721,38 @@ class GovernanceBootstrapTests(unittest.TestCase):
         self.assertEqual(result, 0)
         sync_metadata.assert_called_once()
         sync_status.assert_called_once_with(project_client, "owner/repo", 4, task, "In review", owner=None, dry_run=False)
+        sync_relationship.assert_called_once()
+
+    def test_pr_hygiene_uses_live_pull_request_for_workflow_run(self):
+        event = {
+            "workflow_run": {
+                "pull_requests": [{"number": 33}],
+            }
+        }
+        task = {"number": 12, "labels": [], "milestone": None, "assignees": [], "body": ""}
+        pr_issue = {"number": 33, "labels": [], "milestone": None, "assignees": []}
+        client = Mock()
+        client.get_pull_request.return_value = {
+            "number": 33,
+            "body": "Closes #12",
+            "base": {"ref": "develop"},
+            "head": {"ref": "feat/US-10"},
+            "user": {"login": "alice"},
+            "draft": False,
+            "merged": False,
+        }
+        client.get_issue.side_effect = [task, pr_issue]
+
+        with (
+            patch("governance_bootstrap.pr_hygiene.sync_pr_metadata") as sync_metadata,
+            patch("governance_bootstrap.pr_hygiene.sync_parent_relationship") as sync_relationship,
+            patch("governance_bootstrap.pr_hygiene.upsert_marked_comment"),
+        ):
+            result = apply_pr_hygiene(client, "owner/repo", event, 4)
+
+        self.assertEqual(result, 0)
+        client.get_pull_request.assert_called_once_with("owner/repo", 33)
+        sync_metadata.assert_called_once()
         sync_relationship.assert_called_once()
 
     def test_pr_hygiene_skips_project_sync_without_governance_pat(self):

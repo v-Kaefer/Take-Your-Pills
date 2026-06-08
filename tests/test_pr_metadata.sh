@@ -11,6 +11,8 @@ done
 
 grep -Fq "pull_request_target:" "$workflow"
 grep -Fq "pull-requests: write" "$workflow"
+grep -Fq "concurrency:" "$workflow"
+grep -Fq "cancel-in-progress: true" "$workflow"
 grep -Fq "Autofill PR metadata from branch" "$workflow"
 grep -Fq "python -m governance_bootstrap pr autofill" "$workflow"
 grep -Fq -- '--backlog-file config/stories/backlog-manifest.json' "$workflow"
@@ -31,6 +33,7 @@ fi
 grep -Fq '.github/workflows/pr-metadata.yml' "$workflow_map"
 grep -Fq 'governance_bootstrap/pr_autofill.py' "$workflow_map"
 grep -Fq 'autofill before validation' "$workflow_map"
+grep -Fq 'cancel stale PR runs with concurrency' "$workflow_map"
 grep -Fq 'Branch-driven PR autofill for story-linked metadata and related task context.' "$guide"
 
 echo "PR metadata workflow contract OK"
