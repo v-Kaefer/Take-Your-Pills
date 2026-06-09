@@ -4,6 +4,7 @@ class_name GameHUD
 @onready var state_label: Label = $MarginContainer/VBoxContainer/StateLabel
 @onready var score_label: Label = $MarginContainer/VBoxContainer/ScoreLabel
 @onready var distance_label: Label = $MarginContainer/VBoxContainer/DistanceLabel
+@onready var boost_timer_label: Label = $BoostTimerLabel
 @onready var main_menu: Control = $MainMenu
 @onready var pause_menu: Control = $PauseMenu
 @onready var game_over_menu: Control = $GameOverMenu
@@ -13,18 +14,13 @@ class_name GameHUD
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
 @onready var game_over_restart_button: Button = $GameOverMenu/Panel/VBoxContainer/RestartButton
 
-var _score: int = 0
-var _distance: float = 0.0
+var _boost_timer: float = 0.0
+var _boost_active: bool = false
 
 
 func _ready() -> void:
-	RunSignals.run_booted.connect(_on_run_booted)
-	RunSignals.run_running.connect(_on_run_running)
-	RunSignals.run_paused.connect(_on_run_paused)
-	RunSignals.run_game_over.connect(_on_run_game_over)
-	RunSignals.score_changed.connect(_on_score_changed)
-	RunSignals.distance_changed.connect(_on_distance_changed)
-	_on_run_booted()
+	hide_menus()
+	_refresh_boost_timer_display()
 
 
 func update_state(state_text: String, control_note: String, extra_note: String = "") -> void:
@@ -45,25 +41,17 @@ func update_distance(distance: float) -> void:
 func show_main_menu() -> void:
 	hide_menus()
 	main_menu.show()
-	update_state("MENU", "Start: button / Space")
-
-
-func show_running_state() -> void:
-	hide_menus()
-	update_state("RUNNING", "Jump: Space | Esc: pause | Backspace: game over")
 
 
 func show_pause_menu() -> void:
 	hide_menus()
 	pause_menu.show()
-	update_state("PAUSED", "Resume: button / Esc | Restart: button")
 
 
 func show_game_over(score: int) -> void:
 	hide_menus()
 	final_score_label.text = "Final score: %06d" % score
 	game_over_menu.show()
-	update_state("GAME OVER", "Jump: restart | Restart: button")
 
 
 func hide_menus() -> void:
@@ -85,31 +73,16 @@ func connect_restart(callable: Callable) -> void:
 	game_over_restart_button.pressed.connect(callable)
 
 
-func _on_run_booted() -> void:
-	_score = 0
-	_distance = 0.0
-	update_score(_score)
-	update_distance(_distance)
-	show_main_menu()
+func update_boost_timer(boost_active: bool, boost_timer: float, _speed_multiplier: float) -> void:
+	_boost_timer = boost_timer
+	_boost_active = boost_active
+	_refresh_boost_timer_display()
 
 
-func _on_run_running() -> void:
-	show_running_state()
-
-
-func _on_run_paused() -> void:
-	show_pause_menu()
-
-
-func _on_run_game_over() -> void:
-	show_game_over(_score)
-
-
-func _on_score_changed(score: int) -> void:
-	_score = score
-	update_score(score)
-
-
-func _on_distance_changed(distance: float) -> void:
-	_distance = distance
-	update_distance(distance)
+func _refresh_boost_timer_display() -> void:
+	if _boost_active and _boost_timer > 0.0:
+		boost_timer_label.visible = true
+		boost_timer_label.text = "Boost: %.1fs" % maxf(0.0, _boost_timer)
+	else:
+		boost_timer_label.visible = false
+		boost_timer_label.text = ""

@@ -1,13 +1,12 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="Script" path="res://scenes/game/chunk_manager.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/game/hud.tscn" id="4"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/lesiakower-coin-collect-retro-8-bit-sound-effect-145251.mp3" id="5"]
-[ext_resource type="Script" path="res://scenes/game/controllers/run_session_controller.gd" id="6"]
-[ext_resource type="Script" path="res://scenes/game/controllers/run_score_controller.gd" id="7"]
-[ext_resource type="Script" path="res://scenes/game/controllers/collectable_audio_controller.gd" id="9"]
+[ext_resource type="Script" path="res://scenes/game/controllers/speed_up_boost_controller.gd" id="6"]
+[ext_resource type="Script" path="res://scenes/game/controllers/speed_down_boost_controller.gd" id="7"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
@@ -34,14 +33,11 @@ script = ExtResource("3")
 
 [node name="Controllers" type="Node" parent="."]
 
-[node name="RunSessionController" type="Node" parent="Controllers"]
+[node name="SpeedUpBoostController" type="Node" parent="Controllers"]
 script = ExtResource("6")
 
-[node name="RunScoreController" type="Node" parent="Controllers"]
+[node name="SpeedDownBoostController" type="Node" parent="Controllers"]
 script = ExtResource("7")
-
-[node name="CollectableAudioController" type="Node" parent="Controllers"]
-script = ExtResource("9")
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 
