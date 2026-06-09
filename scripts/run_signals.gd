@@ -9,5 +9,3 @@ signal run_booted
 signal run_game_over
 signal speed_up_collected
 signal speed_down_collected
-signal speed_state_changed(speed_up_charge: int, speed_down_charge: int, threshold: int, boost_active: bool)
-signal speed_too_slow

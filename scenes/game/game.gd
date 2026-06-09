@@ -10,7 +10,10 @@ enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 @onready var chunks: ChunkManager = $World/Chunks
 @onready var hud: GameHUD = $HUD
 @onready var collect_sfx_player: AudioStreamPlayer = $CollectSfxPlayer
-@onready var adverse_state_controller = $Controllers/AdverseStateController
+@onready var speed_up_controller := $Controllers/SpeedUpBoostController
+@onready var speed_down_controller := $Controllers/SpeedDownBoostController
+@onready var speed_up_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer
+@onready var speed_down_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer
 
 var current_state: GameState = GameState.MAIN_MENU
 var score: int = 0
@@ -18,6 +21,9 @@ var distance: float = 0.0
 var bonus_score: int = 0
 var score_accumulator: float = 0.0
 var _last_displayed_distance: int = -1
+var _speed_up_active: bool = false
+var _speed_up_multiplier: float = 1.0
+var _speed_down_multiplier: float = 1.0
 
 const BASE_SCORE_PER_METER := 10.0
 var current_scenario_multiplier: float = 1.0
@@ -28,22 +34,29 @@ func _ready() -> void:
 	_ensure_input_actions()
 	RunSignals.player_hit_obstacle.connect(_on_player_hit_obstacle)
 	RunSignals.collectable_collected.connect(_on_collectable_collected)
-	RunSignals.speed_too_slow.connect(_on_speed_too_slow)
 	hud.connect_start(_on_start_button_pressed)
 	hud.connect_resume(_on_resume_button_pressed)
 	hud.connect_restart(_on_restart_button_pressed)
-	adverse_state_controller.chunk_manager = chunks
-	adverse_state_controller.base_speed = DEFAULT_SCROLL_SPEED
+	speed_up_controller.bar_step.connect(speed_up_row.apply_charge)
+	speed_up_controller.bar_reset.connect(speed_up_row.reset_bar)
+	speed_down_controller.bar_step.connect(speed_down_row.apply_charge)
+	speed_down_controller.bar_reset.connect(speed_down_row.reset_bar)
+	speed_up_controller.boost_state_changed.connect(_on_speed_up_boost_state_changed)
+	speed_up_controller.boost_state_changed.connect(hud.update_boost_timer)
+	speed_up_controller.boost_state_changed.connect(speed_down_controller.on_speed_up_boost_state_changed)
+	speed_down_controller.slow_state_changed.connect(_on_speed_down_state_changed)
+	speed_down_controller.speed_too_slow.connect(_on_speed_too_slow)
 	chunks.pause_run()
 	player.pause_run()
 	hud.show_main_menu()
 	RunSignals.run_booted.emit()
+	_apply_scroll_speed()
 	_update_hud()
 
 
 func _process(_delta: float) -> void:
-	if adverse_state_controller != null:
-		adverse_state_controller.tick(_delta)
+	if speed_up_controller != null:
+		speed_up_controller.tick(_delta)
 	if current_state == GameState.RUNNING:
 		var meters_scrolled := (chunks.scroll_speed * _delta) / SCORE_DISTANCE_DIVISOR
 		distance += meters_scrolled
@@ -151,6 +164,17 @@ func _on_speed_too_slow() -> void:
 	_set_game_over()
 
 
+func _on_speed_up_boost_state_changed(active: bool, _remaining: float, speed_multiplier: float) -> void:
+	_speed_up_active = active
+	_speed_up_multiplier = speed_multiplier
+	_apply_scroll_speed()
+
+
+func _on_speed_down_state_changed(speed_multiplier: float) -> void:
+	_speed_down_multiplier = speed_multiplier
+	_apply_scroll_speed()
+
+
 func _on_collectable_collected(_collectable: Node, _body: Node, score_value: int) -> void:
 	if current_state != GameState.RUNNING:
 		return
@@ -196,6 +220,14 @@ func _update_hud() -> void:
 	hud.update_state(state_text, control_note)
 	hud.update_score(score)
 	hud.update_distance(distance)
+
+
+func _apply_scroll_speed() -> void:
+	var speed_multiplier := _speed_down_multiplier
+	if _speed_up_active:
+		speed_multiplier = _speed_up_multiplier
+
+	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED * speed_multiplier)
 
 
 func _ensure_input_actions() -> void:

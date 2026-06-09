@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/collectables/speed_down_collectable.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/icon/asset_speed_down.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(20, 20)
@@ -11,9 +12,9 @@ score_value = 0
 collectable_type = &"speed_down"
 z_index = 5
 
-[node name="Visual" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-10, -10, 10, -10, 10, 10, -10, 10)
-color = Color(0.42, 0.34, 0.9, 1)
+[node name="Visual" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.078125, 0.078125)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
