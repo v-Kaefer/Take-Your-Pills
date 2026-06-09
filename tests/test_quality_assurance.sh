@@ -39,5 +39,6 @@ fi
 grep -Fq '.github/workflows/quality-assurance.yml' "$workflow_map"
 grep -Fq 'infra,.github/workflows/quality-assurance.yml,1' "$workflow_map"
 grep -Fq '".github/workflows/quality-assurance.yml"' "$repo_quality"
+grep -Fq 'scripts/validation/game_core_contract.sh' "$repo_quality"
 
 echo "Quality assurance workflow contract OK"

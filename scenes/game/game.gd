@@ -57,20 +57,20 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if speed_up_controller != null:
 		speed_up_controller.tick(_delta)
-	if current_state == GameState.RUNNING:
-		var meters_scrolled := (chunks.scroll_speed * _delta) / SCORE_DISTANCE_DIVISOR
-		distance += meters_scrolled
-		
-		# Gained points this frame based on distance scrolled and current multipliers
-		var points_gained := meters_scrolled * BASE_SCORE_PER_METER * current_scenario_multiplier * current_speed_multiplier
-		score_accumulator += points_gained
-		
-		var current_dist_int := int(distance)
-		var new_score := int(score_accumulator) + bonus_score
-		
-		if new_score != score or current_dist_int != _last_displayed_distance:
-			score = new_score
-			_last_displayed_distance = current_dist_int
+		if current_state == GameState.RUNNING:
+			var meters_scrolled := (chunks.scroll_speed * _delta) / SCORE_DISTANCE_DIVISOR
+			distance += meters_scrolled
+
+			# Gained points this frame based on distance scrolled and current multipliers
+			var points_gained := meters_scrolled * BASE_SCORE_PER_METER * current_scenario_multiplier * current_speed_multiplier
+			score_accumulator += points_gained
+
+			var current_dist_int := int(distance)
+			var new_score := int(score_accumulator) + bonus_score
+
+			if new_score != score or current_dist_int != _last_displayed_distance:
+				score = new_score
+				_last_displayed_distance = current_dist_int
 			_update_hud()
 
 
@@ -227,6 +227,7 @@ func _apply_scroll_speed() -> void:
 	if _speed_up_active:
 		speed_multiplier = _speed_up_multiplier
 
+	current_speed_multiplier = speed_multiplier
 	chunks.set_scroll_speed(DEFAULT_SCROLL_SPEED * speed_multiplier)
 
 

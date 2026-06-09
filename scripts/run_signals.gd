@@ -9,3 +9,4 @@ signal run_booted
 signal run_game_over
 signal speed_up_collected
 signal speed_down_collected
+signal speed_too_slow
