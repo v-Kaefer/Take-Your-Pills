@@ -1,9 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://c5ox1uh8pjq0c"]
 
-[ext_resource type="Script" path="res://scenes/game/chunks/chunk.gd" id="1"]
+[ext_resource type="Script" uid="uid://c4x3k1a52yh6p" path="res://scenes/game/chunks/chunk.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_up_collectable.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_down_collectable.tscn" id="6"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(640, 96)
@@ -11,53 +13,59 @@ size = Vector2(640, 96)
 [sub_resource type="RectangleShape2D" id="2"]
 size = Vector2(24, 320)
 
-[node name="ChunkA" type="Node2D"]
+[node name="ChunkA" type="Node2D" unique_id=1793583262]
 script = ExtResource("1")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=684428790]
 
-[node name="Terrain" type="Node2D" parent="."]
+[node name="Terrain" type="Node2D" parent="." unique_id=946530678]
 
-[node name="Sky" type="Polygon2D" parent="Terrain"]
-polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
+[node name="Sky" type="Polygon2D" parent="Terrain" unique_id=874879054]
 color = Color(0.05, 0.07, 0.13, 1)
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
 
-[node name="TowerLeft" type="Polygon2D" parent="Terrain"]
-polygon = PackedVector2Array(72, 200, 144, 200, 144, 264, 72, 264)
+[node name="TowerLeft" type="Polygon2D" parent="Terrain" unique_id=1945572451]
 color = Color(0.14, 0.16, 0.23, 1)
+polygon = PackedVector2Array(72, 200, 144, 200, 144, 264, 72, 264)
 
-[node name="TowerRight" type="Polygon2D" parent="Terrain"]
+[node name="TowerRight" type="Polygon2D" parent="Terrain" unique_id=1767595318]
+color = Color(0.1, 0.12, 0.18, 1)
 polygon = PackedVector2Array(260, 168, 356, 168, 356, 264, 260, 264)
-color = Color(0.10, 0.12, 0.18, 1)
 
-[node name="GroundVisual" type="Polygon2D" parent="Terrain"]
-polygon = PackedVector2Array(0, 264, 640, 264, 640, 360, 0, 360)
+[node name="GroundVisual" type="Polygon2D" parent="Terrain" unique_id=1782367336]
 color = Color(0.13, 0.13, 0.15, 1)
+polygon = PackedVector2Array(0, 264, 640, 264, 640, 360, 0, 360)
 
-[node name="LaneStripe" type="Polygon2D" parent="Terrain"]
-polygon = PackedVector2Array(0, 252, 640, 252, 640, 256, 0, 256)
+[node name="LaneStripe" type="Polygon2D" parent="Terrain" unique_id=1953744536]
 color = Color(0.86, 0.78, 0.31, 1)
+polygon = PackedVector2Array(0, 252, 640, 252, 640, 256, 0, 256)
 
-[node name="GroundBody" type="StaticBody2D" parent="Terrain"]
+[node name="GroundBody" type="StaticBody2D" parent="Terrain" unique_id=2010288201]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GroundBody"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GroundBody" unique_id=2095044490]
 position = Vector2(320, 312)
 shape = SubResource("1")
 
-[node name="TriggerNext" type="Area2D" parent="."]
+[node name="TriggerNext" type="Area2D" parent="." unique_id=99351289]
 position = Vector2(512, 240)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerNext"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerNext" unique_id=2025896286]
 shape = SubResource("2")
 
-[node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
+[node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="." unique_id=399693923]
 rect = Rect2(0, 0, 640, 360)
 
-[node name="Obstacle" parent="." instance=ExtResource("2")]
+[node name="Obstacle" parent="." unique_id=928560857 instance=ExtResource("2")]
 position = Vector2(448, 248)
 
-[node name="PillCollectable" parent="." instance=ExtResource("3")]
+[node name="PillCollectable" parent="." unique_id=1458308925 instance=ExtResource("3")]
 position = Vector2(288, 224)
 
-[node name="BoxCollectable" parent="." instance=ExtResource("4")]
+[node name="BoxCollectable" parent="." unique_id=909563948 instance=ExtResource("4")]
 position = Vector2(560, 224)
+
+[node name="SpeedUpCollectable" parent="." unique_id=1423258545 instance=ExtResource("5")]
+position = Vector2(128, 224)
+
+[node name="SpeedDownCollectable" parent="." unique_id=116472199 instance=ExtResource("6")]
+position = Vector2(192, 192)

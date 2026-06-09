@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/hud.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/game/boost_bar_row.gd" id="2"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
@@ -20,6 +21,23 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 theme_override_constants/separation = 10
 
+[node name="BoostTimerLabel" type="Label" parent="."]
+anchors_preset = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -190.0
+offset_top = 18.0
+offset_right = -20.0
+offset_bottom = 40.0
+grow_horizontal = 0
+grow_vertical = 0
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+text = ""
+visible = false
+
 [node name="ScoreLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
@@ -28,12 +46,84 @@ text = "Score: 000000"
 [node name="DistanceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Distance: 0m"
+text = "Distance: 0 m"
+
+[node name="SpeedContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SpeedUpContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+script = ExtResource("2")
+icon_path = NodePath("SpeedUpIcon")
+stripes_path = NodePath("SpeedUpStripes")
+icon_texture_path = "res://assets/icon/asset_speed_up.png"
+filled_color = Color(0.25, 0.55, 1, 1)
+
+[node name="SpeedUpIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpeedUpStripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="SpeedUpStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedUpStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedUpStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedDownContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+script = ExtResource("2")
+icon_path = NodePath("SpeedDownIcon")
+stripes_path = NodePath("SpeedDownStripes")
+icon_texture_path = "res://assets/icon/asset_speed_down.png"
+filled_color = Color(1, 0.42, 0.2, 1)
+
+[node name="SpeedDownIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpeedDownStripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="SpeedDownStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedDownStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedDownStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "State: MENU\nControls: Start: button"
+text = "State: MENU\nControls: Start: button / Space"
 
 [node name="MainMenu" type="Control" parent="."]
 anchors_preset = 15
