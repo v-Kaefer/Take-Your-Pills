@@ -30,31 +30,64 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Distance: 0 m"
 
-[node name="SpeedContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="SpeedContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SpeedDownContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SpeedIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+[node name="SpeedDownIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(18, 18)
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Stripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+[node name="SpeedDownStripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Stripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+[node name="SpeedDownStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
 layout_mode = 2
 custom_minimum_size = Vector2(16, 6)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
-[node name="Stripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+[node name="SpeedDownStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
 layout_mode = 2
 custom_minimum_size = Vector2(16, 6)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
-[node name="Stripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/Stripes"]
+[node name="SpeedDownStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedUpContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpeedUpIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpeedUpStripes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="SpeedUpStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedUpStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 6)
+color = Color(0.25, 0.25, 0.3, 0.5)
+
+[node name="SpeedUpStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
 layout_mode = 2
 custom_minimum_size = Vector2(16, 6)
 color = Color(0.25, 0.25, 0.3, 0.5)
