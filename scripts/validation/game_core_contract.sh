@@ -3,19 +3,27 @@ set -euo pipefail
 
 game_script="scenes/game/game.gd"
 game_scene="scenes/game/game.tscn"
+run_signals="scripts/run_signals.gd"
 
 for path in "$game_script" "$game_scene"; do
   [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }
 done
+
+[[ -f "$run_signals" ]] || { echo "Missing required file: $run_signals" >&2; exit 1; }
 
 grep -Fq 'Controllers' "$game_scene"
 grep -Fq '[node name="RunSessionController" type="Node" parent="Controllers"]' "$game_scene"
 grep -Fq '[node name="RunScoreController" type="Node" parent="Controllers"]' "$game_scene"
 grep -Fq '[node name="CollectableAudioController" type="Node" parent="Controllers"]' "$game_scene"
 
-grep -Eq '^var current_state: .*:$' "$game_script"
-grep -Eq '^var score: .*:$' "$game_script"
-grep -Eq '^var distance: .*:$' "$game_script"
+grep -Fq 'signal run_running' "$run_signals"
+grep -Fq 'signal run_paused' "$run_signals"
+grep -Fq 'signal score_changed(score: int)' "$run_signals"
+grep -Fq 'signal distance_changed(distance: float)' "$run_signals"
+
+grep -Eq '^var current_state: [^=]+:$' "$game_script"
+grep -Eq '^var score: [^=]+:$' "$game_script"
+grep -Eq '^var distance: [^=]+:$' "$game_script"
 
 for banned in \
   'RunSignals.' \

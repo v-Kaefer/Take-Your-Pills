@@ -16,11 +16,22 @@ class_name GameHUD
 
 var _boost_timer: float = 0.0
 var _boost_active: bool = false
+var _last_score: int = 0
 
 
 func _ready() -> void:
 	hide_menus()
+	update_state("MENU", "Start: button / Space")
+	update_score(0)
+	update_distance(0.0)
+	show_main_menu()
 	_refresh_boost_timer_display()
+	RunSignals.run_booted.connect(_on_run_booted)
+	RunSignals.run_running.connect(_on_run_running)
+	RunSignals.run_paused.connect(_on_run_paused)
+	RunSignals.run_game_over.connect(_on_run_game_over)
+	RunSignals.score_changed.connect(update_score)
+	RunSignals.distance_changed.connect(update_distance)
 
 
 func update_state(state_text: String, control_note: String, extra_note: String = "") -> void:
@@ -31,6 +42,7 @@ func update_state(state_text: String, control_note: String, extra_note: String =
 
 
 func update_score(score: int) -> void:
+	_last_score = score
 	score_label.text = "Score: %06d" % score
 
 
@@ -86,3 +98,23 @@ func _refresh_boost_timer_display() -> void:
 	else:
 		boost_timer_label.visible = false
 		boost_timer_label.text = ""
+
+
+func _on_run_booted() -> void:
+	show_main_menu()
+	update_state("MENU", "Start: button / Space")
+
+
+func _on_run_running() -> void:
+	hide_menus()
+	update_state("RUNNING", "Jump: Space / Up | Esc: pause | Backspace: game over")
+
+
+func _on_run_paused() -> void:
+	show_pause_menu()
+	update_state("PAUSED", "Resume: button / Esc | Restart: button")
+
+
+func _on_run_game_over() -> void:
+	show_game_over(_last_score)
+	update_state("GAME OVER", "Jump: restart | Restart: button")
