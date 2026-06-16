@@ -21,7 +21,7 @@ var _last_score: int = 0
 
 func _ready() -> void:
 	hide_menus()
-	update_state("MENU", "Start: button / Space")
+	update_state("MENU", "Start: button / Space / Up")
 	update_score(0)
 	update_distance(0.0)
 	show_main_menu()
