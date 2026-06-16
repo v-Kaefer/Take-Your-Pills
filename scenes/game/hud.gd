@@ -102,7 +102,7 @@ func _refresh_boost_timer_display() -> void:
 
 func _on_run_booted() -> void:
 	show_main_menu()
-	update_state("MENU", "Start: button / Space")
+	update_state("MENU", "Start: button / Space / Up")
 
 
 func _on_run_running() -> void:
