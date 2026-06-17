@@ -4,6 +4,7 @@ set -euo pipefail
 required=(
   ".github/workflows/godot-smoke.yml"
   ".github/workflows/game-tests.yml"
+  "scripts/validation/game_core_contract.sh"
   "tests/godot/player_behavior_test.gd"
   "tests/godot/obstacle_behavior_test.gd"
   "tests/godot/chunk_manager_behavior_test.gd"
@@ -20,6 +21,7 @@ if grep -Fq "firebelley/setup-godot" .github/workflows/godot-smoke.yml; then
   echo "Godot smoke workflow must not use the unavailable firebelley setup action." >&2
   exit 1
 fi
+grep -Fq "./scripts/validation/game_core_contract.sh" .github/workflows/godot-smoke.yml
 grep -Fq 'if [ -f project.godot ]; then' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --version || true' .github/workflows/godot-smoke.yml
 grep -Fq 'godot --headless --quit' .github/workflows/godot-smoke.yml

@@ -70,7 +70,7 @@ func _flush_queued_slow_steps() -> void:
 
 func _apply_speed_down_step() -> bool:
 	if _slow_state >= SLOW_SPEED_MULTIPLIERS.size() - 1:
-		speed_too_slow.emit()
+		RunSignals.speed_too_slow.emit()
 		return true
 
 	_slow_state += 1

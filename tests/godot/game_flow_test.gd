@@ -13,6 +13,9 @@ func test_game_boots_in_main_menu_state() -> void:
 
 	var player := game.get_node("World/Player") as Player
 	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var session_controller := game.get_node("Controllers/RunSessionController")
+	var score_controller := game.get_node("Controllers/RunScoreController")
+	var audio_controller := game.get_node("Controllers/CollectableAudioController")
 	var main_menu := game.get_node("HUD/MainMenu") as Control
 	var pause_menu := game.get_node("HUD/PauseMenu") as Control
 	var game_over_menu := game.get_node("HUD/GameOverMenu") as Control
@@ -20,6 +23,9 @@ func test_game_boots_in_main_menu_state() -> void:
 	assert_int(game.current_state).is_equal(Game.GameState.MAIN_MENU)
 	assert_int(player.current_state).is_equal(Player.RunState.PAUSED)
 	assert_bool(chunks.scrolling_enabled).is_false()
+	assert_object(session_controller).is_not_null()
+	assert_object(score_controller).is_not_null()
+	assert_object(audio_controller).is_not_null()
 	assert_bool(main_menu.visible).is_true()
 	assert_bool(pause_menu.visible).is_false()
 	assert_bool(game_over_menu.visible).is_false()
