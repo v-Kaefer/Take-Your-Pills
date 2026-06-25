@@ -112,25 +112,18 @@ func test_ranking_entry_added_signal_emitted_on_game_over() -> void:
 	assert_object(game).is_not_null()
 	await runner.simulate_frames(1)
 
-	var signal_received := false
-	var received_position := -99
-
-	var callback := func(position: int, _entry: Dictionary) -> void:
-		signal_received = true
-		received_position = position
-
-	RunSignals.ranking_entry_added.connect(callback)
-
 	game.call("_start_run")
 	await runner.simulate_frames(1)
 
 	game.call("_set_game_over")
-	await runner.simulate_frames(1)
+	await runner.simulate_frames(2)
 
-	assert_bool(signal_received).is_true()
-	assert_int(received_position).is_equal(0)
+	var ranking := SaveManager.get_ranking()
+	assert_int(ranking.size()).is_equal(1)
 
-	RunSignals.ranking_entry_added.disconnect(callback)
+	var hud_label := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NewRecordLabel") as Label
+	assert_bool(hud_label.visible).is_true()
+	assert_str(hud_label.text).contains("#1")
 
 
 func test_new_record_label_shown_on_game_over() -> void:
@@ -141,13 +134,16 @@ func test_new_record_label_shown_on_game_over() -> void:
 	await runner.simulate_frames(1)
 
 	var new_record_label := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NewRecordLabel") as Label
+	assert_bool(new_record_label.visible).is_false()
 
 	game.call("_start_run")
 	await runner.simulate_frames(1)
 
 	game.call("_set_game_over")
-	await runner.simulate_frames(1)
+	await runner.simulate_frames(2)
 
+	var ranking := SaveManager.get_ranking()
+	assert_int(ranking.size()).is_greater(0)
 	assert_bool(new_record_label.visible).is_true()
 	assert_str(new_record_label.text).contains("#1")
 

@@ -115,6 +115,8 @@ func _on_run_booted() -> void:
 
 func _on_run_running() -> void:
 	hide_menus()
+	_last_ranking_position = -1
+	new_record_label.hide()
 	update_state("RUNNING", "Jump: Space / Up | Esc: pause | Backspace: game over")
 
 
@@ -124,8 +126,6 @@ func _on_run_paused() -> void:
 
 
 func _on_run_game_over() -> void:
-	_last_ranking_position = -1
-	new_record_label.hide()
 	show_game_over(_last_score)
 	update_state("GAME OVER", "Jump: restart | Restart: button")
 

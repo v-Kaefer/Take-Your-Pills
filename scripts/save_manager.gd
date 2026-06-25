@@ -55,6 +55,8 @@ func load_ranking() -> void:
 		_ranking = []
 		for item in json.data:
 			if item is Dictionary and item.has("score") and item.has("distance") and item.has("date"):
+				item["score"] = int(item["score"])
+				item["distance"] = int(item["distance"])
 				_ranking.append(item)
 		_sort_ranking()
 		if _ranking.size() > MAX_RANKING_ENTRIES:
