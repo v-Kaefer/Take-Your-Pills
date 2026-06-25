@@ -12,14 +12,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
 [node name="BoostTimerLabel" type="Label" parent="."]
 anchors_preset = 0
@@ -27,30 +27,30 @@ anchor_left = 1.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -190.0
-offset_top = 18.0
-offset_right = -20.0
-offset_bottom = 40.0
+offset_left = -120.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = 22.0
 grow_horizontal = 0
 grow_vertical = 0
 horizontal_alignment = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 10
 text = ""
 visible = false
 
 [node name="ScoreLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 12
 text = "Score: 000000"
 
 [node name="DistanceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 12
 text = "Distance: 0 m"
 
 [node name="SpeedContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 2
 
 [node name="SpeedUpContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
 layout_mode = 2
@@ -63,7 +63,7 @@ filled_color = Color(0.25, 0.55, 1, 1)
 
 [node name="SpeedUpIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(10, 10)
 expand_mode = 1
 stretch_mode = 5
 
@@ -73,17 +73,17 @@ theme_override_constants/separation = 3
 
 [node name="SpeedUpStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="SpeedUpStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="SpeedUpStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer/SpeedUpStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="SpeedDownContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SpeedContainer"]
@@ -97,7 +97,7 @@ filled_color = Color(1, 0.42, 0.2, 1)
 
 [node name="SpeedDownIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(10, 10)
 expand_mode = 1
 stretch_mode = 5
 
@@ -107,22 +107,22 @@ theme_override_constants/separation = 3
 
 [node name="SpeedDownStripe0" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="SpeedDownStripe1" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="SpeedDownStripe2" type="ColorRect" parent="MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer/SpeedDownStripes"]
 layout_mode = 2
-custom_minimum_size = Vector2(16, 6)
+custom_minimum_size = Vector2(10, 4)
 color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 10
 text = "State: MENU\nControls: Start: button / Space"
 
 [node name="MainMenu" type="Control" parent="."]
@@ -146,30 +146,31 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -96.0
-offset_right = 180.0
-offset_bottom = 96.0
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MainMenu/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="MainMenu/Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 16
 text = "Take Your Pills"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="MainMenu/Panel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 10
 text = "Ready to run"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="MainMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(100, 28)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Start"
@@ -196,31 +197,31 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -160.0
-offset_top = -86.0
-offset_right = 160.0
-offset_bottom = 86.0
+offset_left = -90.0
+offset_top = -55.0
+offset_right = 90.0
+offset_bottom = 55.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="PauseMenu/Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 14
 text = "Paused"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="PauseMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(160, 42)
+custom_minimum_size = Vector2(100, 26)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Resume"
 
 [node name="RestartButton" type="Button" parent="PauseMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(160, 42)
+custom_minimum_size = Vector2(100, 26)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Restart"
@@ -247,30 +248,31 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -96.0
-offset_right = 180.0
-offset_bottom = 96.0
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="GameOverMenu/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="GameOverMenu/Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 16
 text = "Game Over"
 horizontal_alignment = 1
 
 [node name="FinalScoreLabel" type="Label" parent="GameOverMenu/Panel/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 10
 text = "Final score: 000000"
 horizontal_alignment = 1
 
 [node name="RestartButton" type="Button" parent="GameOverMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(100, 28)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Restart"
