@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/hud.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/game/boost_bar_row.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/game/local_ranking_menu.tscn" id="3"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
@@ -174,6 +175,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Start"
 
+[node name="RankingButton" type="Button" parent="MainMenu/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Ranking"
+
 [node name="PauseMenu" type="Control" parent="."]
 visible = false
 anchors_preset = 15
@@ -269,8 +276,24 @@ layout_mode = 2
 text = "Final score: 000000"
 horizontal_alignment = 1
 
+[node name="NewRecordLabel" type="Label" parent="GameOverMenu/Panel/VBoxContainer"]
+layout_mode = 2
+visible = false
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+horizontal_alignment = 1
+
+[node name="RankingButton" type="Button" parent="GameOverMenu/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Ranking"
+
 [node name="RestartButton" type="Button" parent="GameOverMenu/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(180, 44)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Restart"
+
+[node name="LocalRankingMenu" parent="." instance=ExtResource("3")]
