@@ -9,6 +9,7 @@ class_name GameHUD
 @onready var pause_menu: Control = $PauseMenu
 @onready var game_over_menu: Control = $GameOverMenu
 @onready var start_button: Button = $MainMenu/Panel/VBoxContainer/StartButton
+@onready var menu_highscore_label: Label = $MainMenu/Panel/VBoxContainer/HighscoreLabel
 @onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
 @onready var pause_restart_button: Button = $PauseMenu/Panel/VBoxContainer/RestartButton
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
@@ -62,6 +63,7 @@ func update_distance(distance: float) -> void:
 
 func show_main_menu() -> void:
 	hide_menus()
+	_refresh_menu_highscore()
 	main_menu.show()
 
 
@@ -158,3 +160,12 @@ func _submit_name() -> void:
 	name_submitted.emit(player_name)
 	name_input_container.hide()
 	new_record_label.text = "RECORD SAVED!"
+
+
+func _refresh_menu_highscore() -> void:
+	var best_score := SaveManager.get_best_score()
+	var best_name := SaveManager.get_best_name()
+	if best_score > 0 and not best_name.is_empty():
+		menu_highscore_label.text = "Best: %s - %06d" % [best_name, best_score]
+	else:
+		menu_highscore_label.text = ""
