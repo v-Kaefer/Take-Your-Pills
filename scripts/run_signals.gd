@@ -14,3 +14,4 @@ signal distance_changed(distance: float)
 signal speed_up_collected
 signal speed_down_collected
 signal speed_too_slow
+signal highscore_checked(current_score: int, best_score: int, best_name: String, is_new_record: bool)

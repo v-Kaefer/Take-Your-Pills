@@ -13,6 +13,13 @@ class_name GameHUD
 @onready var pause_restart_button: Button = $PauseMenu/Panel/VBoxContainer/RestartButton
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
 @onready var game_over_restart_button: Button = $GameOverMenu/Panel/VBoxContainer/RestartButton
+@onready var best_score_label: Label = $GameOverMenu/Panel/VBoxContainer/BestScoreLabel
+@onready var new_record_label: Label = $GameOverMenu/Panel/VBoxContainer/NewRecordLabel
+@onready var name_input_container: HBoxContainer = $GameOverMenu/Panel/VBoxContainer/NameInputContainer
+@onready var name_input: LineEdit = $GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput
+@onready var save_button: Button = $GameOverMenu/Panel/VBoxContainer/NameInputContainer/SaveButton
+
+signal name_submitted(player_name: String)
 
 var _boost_timer: float = 0.0
 var _boost_active: bool = false
@@ -32,6 +39,9 @@ func _ready() -> void:
 	RunSignals.run_game_over.connect(_on_run_game_over)
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
+	RunSignals.highscore_checked.connect(_on_highscore_checked)
+	save_button.pressed.connect(_on_save_pressed)
+	name_input.text_submitted.connect(_on_name_text_submitted)
 
 
 func update_state(state_text: String, control_note: String, extra_note: String = "") -> void:
@@ -118,3 +128,33 @@ func _on_run_paused() -> void:
 func _on_run_game_over() -> void:
 	show_game_over(_last_score)
 	update_state("GAME OVER", "Jump: restart | Restart: button")
+
+
+func _on_highscore_checked(current_score: int, best_score: int, best_name: String, is_new_record: bool) -> void:
+	if is_new_record:
+		best_score_label.text = "Previous best: %s - %06d" % [best_name if not best_name.is_empty() else "---", best_score]
+		new_record_label.show()
+		name_input_container.show()
+		name_input.text = ""
+		name_input.grab_focus()
+	else:
+		best_score_label.text = "Best: %s - %06d" % [best_name if not best_name.is_empty() else "---", best_score]
+		new_record_label.hide()
+		name_input_container.hide()
+
+
+func _on_save_pressed() -> void:
+	_submit_name()
+
+
+func _on_name_text_submitted(_text: String) -> void:
+	_submit_name()
+
+
+func _submit_name() -> void:
+	var player_name := name_input.text.strip_edges()
+	if player_name.is_empty():
+		return
+	name_submitted.emit(player_name)
+	name_input_container.hide()
+	new_record_label.text = "RECORD SAVED!"
