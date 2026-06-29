@@ -18,6 +18,7 @@ Finalize systems and close presentation-ready build.
 ## Test criteria
 - Regression checklist
 - Manual quality/polish and balancing checks
+- Playtest 02 runbook and feedback log completion
 
 ## Phase DoD
 - Core scope complete
