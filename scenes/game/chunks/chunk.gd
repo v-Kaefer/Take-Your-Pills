@@ -11,6 +11,15 @@ func _ready() -> void:
 	trigger_next.body_entered.connect(_on_trigger_next_body_entered)
 	on_screen_notifier.screen_exited.connect(_on_screen_exited)
 
+	# Configure collision layer and mask dynamically
+	trigger_next.collision_layer = 0
+	trigger_next.collision_mask = 1 # Player layer
+
+	var ground_body = get_node_or_null("Terrain/GroundBody")
+	if ground_body is StaticBody2D:
+		ground_body.collision_layer = 2 # Ground / Platforms
+		ground_body.collision_mask = 0
+
 
 func _on_trigger_next_body_entered(body: Node) -> void:
 	if _requested_next_chunk:
