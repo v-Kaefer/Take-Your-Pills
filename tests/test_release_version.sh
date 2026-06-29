@@ -44,4 +44,10 @@ grep -Fq 'name="Linux/X11"' "$preset"
 grep -Fq 'export_path="build/release/take-your-pills-windows.exe"' "$preset"
 grep -Fq 'export_path="build/release/take-your-pills-linux.x86_64"' "$preset"
 
+embed_count="$(grep -Fc 'binary_format/embed_pck=true' "$preset")"
+if [[ "$embed_count" -ne 2 ]]; then
+  echo "Both release export presets must embed the PCK." >&2
+  exit 1
+fi
+
 echo "Release version workflow contract OK"

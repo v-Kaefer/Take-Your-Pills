@@ -10,6 +10,7 @@
 1. task -> phase
 2. phase -> develop
 3. develop -> main
+4. hotfix/... -> main  (correções de emergência; publica automaticamente um release de patch ao fazer merge)
 
 ## Convenção
 - Convenção padrão para feature: `feat/<escopo>`
