@@ -14,3 +14,5 @@ signal distance_changed(distance: float)
 signal speed_up_collected
 signal speed_down_collected
 signal speed_too_slow
+signal ranking_entry_added(position: int, entry: Dictionary)
+signal ranking_updated

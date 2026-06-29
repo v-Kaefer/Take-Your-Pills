@@ -12,11 +12,16 @@ class_name GameHUD
 @onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
 @onready var pause_restart_button: Button = $PauseMenu/Panel/VBoxContainer/RestartButton
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
+@onready var new_record_label: Label = $GameOverMenu/Panel/VBoxContainer/NewRecordLabel
 @onready var game_over_restart_button: Button = $GameOverMenu/Panel/VBoxContainer/RestartButton
+@onready var main_menu_ranking_button: Button = $MainMenu/Panel/VBoxContainer/RankingButton
+@onready var game_over_ranking_button: Button = $GameOverMenu/Panel/VBoxContainer/RankingButton
+@onready var local_ranking_menu: Control = $LocalRankingMenu
 
 var _boost_timer: float = 0.0
 var _boost_active: bool = false
 var _last_score: int = 0
+var _last_ranking_position: int = -1
 
 
 func _ready() -> void:
@@ -32,6 +37,9 @@ func _ready() -> void:
 	RunSignals.run_game_over.connect(_on_run_game_over)
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
+	RunSignals.ranking_entry_added.connect(_on_ranking_entry_added)
+	main_menu_ranking_button.pressed.connect(_on_main_menu_ranking_pressed)
+	game_over_ranking_button.pressed.connect(_on_game_over_ranking_pressed)
 
 
 func update_state(state_text: String, control_note: String, extra_note: String = "") -> void:
@@ -107,6 +115,8 @@ func _on_run_booted() -> void:
 
 func _on_run_running() -> void:
 	hide_menus()
+	_last_ranking_position = -1
+	new_record_label.hide()
 	update_state("RUNNING", "Jump: Space / Up | Esc: pause | Backspace: game over")
 
 
@@ -118,3 +128,18 @@ func _on_run_paused() -> void:
 func _on_run_game_over() -> void:
 	show_game_over(_last_score)
 	update_state("GAME OVER", "Jump: restart | Restart: button")
+
+
+func _on_ranking_entry_added(position: int, _entry: Dictionary) -> void:
+	_last_ranking_position = position
+	if position >= 0 and position < SaveManager.MAX_RANKING_ENTRIES:
+		new_record_label.text = "Novo Recorde! #%d" % (position + 1)
+		new_record_label.show()
+
+
+func _on_main_menu_ranking_pressed() -> void:
+	local_ranking_menu.show_ranking(-1)
+
+
+func _on_game_over_ranking_pressed() -> void:
+	local_ranking_menu.show_ranking(_last_ranking_position)
