@@ -5,6 +5,7 @@ const CHUNK_SCENES: Array[PackedScene] = [
 	preload("res://scenes/game/chunks/chunk_a.tscn"),
 	preload("res://scenes/game/chunks/chunk_b.tscn"),
 	preload("res://scenes/game/chunks/chunk_c.tscn"),
+	preload("res://scenes/game/chunks/chunk_lab.tscn"),
 ]
 
 @export var scroll_speed: float = 240.0
