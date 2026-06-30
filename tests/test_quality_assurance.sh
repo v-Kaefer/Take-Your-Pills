@@ -11,6 +11,8 @@ for path in "$workflow" "$metadata" "$workflow_map" "$repo_quality"; do
 done
 
 grep -Fq 'if: github.event.pull_request.head.repo.full_name == github.repository' "$workflow"
+grep -Fq 'concurrency:' "$workflow"
+grep -Fq 'cancel-in-progress: true' "$workflow"
 grep -Fq 'COVERAGE_COMMENT_FILE: ${{ runner.temp }}/coverage-comment.md' "$workflow"
 grep -Fq 'cat "$comment_file" >> "$GITHUB_STEP_SUMMARY"' "$workflow"
 grep -Fq "fs.readFileSync(process.env.COVERAGE_COMMENT_FILE, 'utf8')" "$workflow"

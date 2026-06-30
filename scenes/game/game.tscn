@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scenes/game/controllers/run_session_controller.gd" id="8"]
 [ext_resource type="Script" path="res://scenes/game/controllers/run_score_controller.gd" id="9"]
 [ext_resource type="Script" path="res://scenes/game/controllers/collectable_audio_controller.gd" id="10"]
+[ext_resource type="Script" path="res://scenes/game/controllers/local_ranking_controller.gd" id="11"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
@@ -49,6 +50,9 @@ script = ExtResource("6")
 
 [node name="SpeedDownBoostController" type="Node" parent="Controllers"]
 script = ExtResource("7")
+
+[node name="LocalRankingController" type="Node" parent="Controllers"]
+script = ExtResource("11")
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 

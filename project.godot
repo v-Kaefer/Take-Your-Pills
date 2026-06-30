@@ -21,6 +21,7 @@ config/features=PackedStringArray("4.7")
 [autoload]
 
 RunSignals="*res://scripts/run_signals.gd"
+SaveManager="*res://scripts/save_manager.gd"
 
 [display]
 
