@@ -78,6 +78,52 @@ func test_collectable_score_persists_after_next_frame() -> void:
 	assert_int(game.score).is_greater_equal(score_after_collect)
 
 
+func test_hud_scenario_badge_tracks_active_scenario() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var scenario_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScenarioLabel") as Label
+	assert_str(scenario_label.text).is_equal("Scenario: LAB SECTOR")
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+
+	assert_str(scenario_label.text).is_equal("Scenario: CITY LOOP")
+
+
+func test_scenario_transition_keeps_run_and_boost_state_active() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var boost_timer_label := game.get_node("HUD/BoostTimerLabel") as Label
+
+	RunSignals.speed_up_collected.emit()
+	RunSignals.speed_up_collected.emit()
+	RunSignals.speed_up_collected.emit()
+	await runner.simulate_frames(1)
+
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_bool(chunks.scrolling_enabled).is_true()
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+
+	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
+	assert_bool(chunks.scrolling_enabled).is_true()
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_str(String(chunks.active_scenario_id)).is_equal("default")
+
+
 func test_pause_and_resume_from_running_state() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game

@@ -42,3 +42,28 @@ func test_chunk_manager_starts_in_laboratory_scenario() -> void:
 
 	assert_str(String(chunks.active_scenario_id)).is_equal("laboratory")
 	assert_bool(first_chunk.name.begins_with("LabChunk")).is_true()
+
+
+func test_chunk_manager_switches_future_chunks_after_transition_score() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+
+	assert_str(String(chunks.active_scenario_id)).is_equal("default")
+
+	var first_chunk := chunks.get_child(0) as Node2D
+	first_chunk.position.x = -chunks.chunk_width - chunks.recycle_buffer_px - 10.0
+	chunks.call("_recycle_offscreen_chunks")
+	chunks.call("_ensure_chunk_buffer")
+	await runner.simulate_frames(1)
+
+	var newest_chunk := chunks.get_child(chunks.get_child_count() - 1) as Node2D
+	assert_bool(newest_chunk.name.begins_with("LabChunk")).is_false()
+	assert_bool(newest_chunk.name.begins_with("Chunk")).is_true()
