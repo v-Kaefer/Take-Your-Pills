@@ -265,6 +265,75 @@ func test_name_submission_updates_the_saved_highscore_entry() -> void:
 	assert_bool(name_input_container.visible).is_false()
 
 
+func test_ranking_menu_shows_saved_name() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+	SaveManager.update_entry_name(position, "KAEFR")
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking()
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_str(name_label.text).is_equal("KAEFR")
+
+
+func test_ranking_menu_shows_placeholder_for_legacy_unnamed_entry() -> void:
+	var file := FileAccess.open(RANKING_PATH, FileAccess.WRITE)
+	file.store_string("[{\"score\":1000,\"distance\":50,\"date\":\"2026-07-01T10:00:00\"}]")
+	file = null
+	SaveManager.load_ranking()
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking()
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_str(name_label.text).is_equal("---")
+
+
+func test_ranking_menu_highlight_applies_to_name_label() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+	SaveManager.update_entry_name(position, "KAEFR")
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking(0)
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_bool(name_label.has_theme_color_override("font_color")).is_true()
+	var font_color := name_label.get_theme_color("font_color")
+	assert_float(font_color.r).is_equal(1.0)
+	assert_float(font_color.g).is_equal(0.85)
+	assert_float(font_color.b).is_equal(0.0)
+
+
 func test_ranking_button_exists_in_menus() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
