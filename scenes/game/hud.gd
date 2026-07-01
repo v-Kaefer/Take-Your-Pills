@@ -29,6 +29,7 @@ var _boost_timer: float = 0.0
 var _boost_active: bool = false
 var _last_score: int = 0
 var _last_ranking_position: int = -1
+var _pickup_flash_tween: Tween = null
 
 
 func _ready() -> void:
@@ -44,6 +45,7 @@ func _ready() -> void:
 	RunSignals.run_game_over.connect(_on_run_game_over)
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
+	RunSignals.collectable_collected.connect(_on_collectable_collected)
 	RunSignals.ranking_entry_added.connect(_on_ranking_entry_added)
 	RunSignals.ranking_updated.connect(_refresh_menu_highscore)
 	RunSignals.highscore_name_requested.connect(_on_highscore_name_requested)
@@ -151,6 +153,23 @@ func _on_ranking_entry_added(position: int, _entry: Dictionary) -> void:
 	if position >= 0 and position < SaveManager.MAX_RANKING_ENTRIES:
 		new_record_label.text = "Novo Recorde! #%d" % (position + 1)
 		new_record_label.show()
+
+
+func _on_collectable_collected(_collectable: Node, _body: Node, _score_value: int) -> void:
+	_flash_pickup_feedback()
+
+
+func _flash_pickup_feedback() -> void:
+	if _pickup_flash_tween != null and _pickup_flash_tween.is_valid():
+		_pickup_flash_tween.kill()
+
+	var flash_color := Color(1.0, 0.92, 0.55, 1.0)
+	score_label.modulate = flash_color
+	distance_label.modulate = flash_color
+	_pickup_flash_tween = create_tween()
+	_pickup_flash_tween.set_parallel(true)
+	_pickup_flash_tween.tween_property(score_label, "modulate", Color.WHITE, 0.18)
+	_pickup_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.18)
 
 
 func _on_highscore_name_requested(_position: int, _score: int) -> void:
