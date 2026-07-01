@@ -22,7 +22,9 @@ func test_chunk_manager_spawns_buffer_and_recycles_offscreen_chunks() -> void:
 	var first_chunk := chunks.get_child(0) as Node2D
 	first_chunk.position.x = -chunks.chunk_width - chunks.recycle_buffer_px - 10.0
 	chunks.call("_recycle_offscreen_chunks")
+	chunks.call("_ensure_chunk_buffer")
 	await runner.simulate_frames(1)
 
 	assert_bool(is_instance_valid(first_chunk)).is_false()
-	assert_bool(chunks.get_child_count() >= chunks.initial_chunk_count).is_true()
+	var right_edge_after := float(chunks.call("_get_rightmost_edge"))
+	assert_bool(right_edge_after >= viewport_width + chunks.spawn_buffer_px).is_true()

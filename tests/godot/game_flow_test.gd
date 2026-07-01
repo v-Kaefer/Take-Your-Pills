@@ -2,6 +2,7 @@ class_name GameFlowTestSuite
 extends GdUnitTestSuite
 
 const GAME_SCENE := "res://scenes/game/game.tscn"
+const RANKING_PATH := "user://ranking.json"
 
 
 func test_game_boots_in_main_menu_state() -> void:
@@ -127,6 +128,41 @@ func test_game_over_shows_game_over_menu() -> void:
 	assert_str(state_label.text).contains("State: GAME OVER")
 	assert_str(state_label.text).contains("Jump: restart")
 	assert_str(state_label.text).contains("Restart: button")
+
+
+func test_space_restart_path_remains_available_when_highscore_prompt_is_visible() -> void:
+	if FileAccess.file_exists(RANKING_PATH):
+		DirAccess.remove_absolute(RANKING_PATH)
+	SaveManager._ranking = []
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+	var tree := game.get_tree()
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_input := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput") as LineEdit
+	var event := InputEventKey.new()
+	event.keycode = KEY_SPACE
+	event.pressed = true
+
+	assert_bool(name_input.has_focus()).is_false()
+	game.call("_unhandled_input", event)
+	await runner.simulate_frames(2)
+
+	var reloaded_game := tree.current_scene as Game
+	assert_object(reloaded_game).is_not_null()
+	assert_int(reloaded_game.current_state).is_equal(Game.GameState.MAIN_MENU)
 
 
 func test_speed_hud_rows_bind_to_matching_collectables() -> void:

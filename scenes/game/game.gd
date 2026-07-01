@@ -14,7 +14,7 @@ enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 @onready var audio_controller = $Controllers/CollectableAudioController
 @onready var speed_up_controller := $Controllers/SpeedUpBoostController
 @onready var speed_down_controller := $Controllers/SpeedDownBoostController
-@onready var ranking_controller: LocalRankingController = $Controllers/LocalRankingController
+@onready var ranking_controller = $Controllers/LocalRankingController
 @onready var speed_up_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer
 @onready var speed_down_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer
 
@@ -49,6 +49,7 @@ func _ready() -> void:
 	speed_up_controller.boost_state_changed.connect(session_controller.on_speed_up_boost_state_changed)
 	speed_up_controller.boost_state_changed.connect(speed_down_controller.on_speed_up_boost_state_changed)
 	speed_down_controller.slow_state_changed.connect(session_controller.on_speed_down_state_changed)
+	ranking_controller.score_controller = score_controller
 	hud.name_submitted.connect(ranking_controller.save_record)
 	session_controller.boot()
 

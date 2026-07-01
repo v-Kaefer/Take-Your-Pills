@@ -92,6 +92,9 @@ class GitHubClient:
     def get_issue(self, repo: str, number: int) -> dict[str, Any]:
         return self.request_json("GET", f"{API_BASE}/repos/{repo}/issues/{number}")
 
+    def get_pull_request(self, repo: str, number: int) -> dict[str, Any]:
+        return self.request_json("GET", f"{API_BASE}/repos/{repo}/pulls/{number}")
+
     def add_issue_labels(self, repo: str, number: int, labels: list[str]):
         return self.request_json("POST", f"{API_BASE}/repos/{repo}/issues/{number}/labels", {"labels": labels})
 

@@ -42,13 +42,10 @@ def load_event(path: str) -> dict:
         return json.load(f)
 
 
-def context_from_event(event: dict) -> PullRequestContext:
-    pr = event.get("pull_request")
-    if not pr:
-        raise RuntimeError("Unsupported event payload: expected pull_request")
+def context_from_pull_request(pr: dict, action: str = "") -> PullRequestContext:
     return PullRequestContext(
         number=int(pr["number"]),
-        action=event.get("action", ""),
+        action=action,
         body=pr.get("body") or "",
         base_ref=pr.get("base", {}).get("ref", ""),
         head_ref=pr.get("head", {}).get("ref", ""),
@@ -56,6 +53,32 @@ def context_from_event(event: dict) -> PullRequestContext:
         draft=bool(pr.get("draft")),
         merged=bool(pr.get("merged")),
     )
+
+
+def context_from_event(
+    event: dict,
+    *,
+    client: GitHubClient | None = None,
+    repo: str | None = None,
+) -> PullRequestContext:
+    pr = event.get("pull_request")
+    if pr:
+        return context_from_pull_request(pr, event.get("action", ""))
+
+    workflow_run = event.get("workflow_run")
+    if workflow_run:
+        if client is None or not repo:
+            raise RuntimeError("Workflow-run PR hygiene requires a GitHub client and repository name")
+        related_pull_requests = workflow_run.get("pull_requests") or []
+        if not related_pull_requests:
+            raise RuntimeError("Unsupported workflow_run payload: no associated pull request")
+        pr_number = related_pull_requests[0].get("number")
+        if pr_number is None:
+            raise RuntimeError("Unsupported workflow_run payload: missing associated pull request number")
+        live_pr = client.get_pull_request(repo, int(pr_number))
+        return context_from_pull_request(live_pr, "synchronize")
+
+    raise RuntimeError("Unsupported event payload: expected pull_request or workflow_run")
 
 
 def linked_task_number(body: str) -> int | None:
@@ -237,7 +260,7 @@ def apply_pr_hygiene(
     owner: str | None = None,
     dry_run: bool = False,
 ) -> int:
-    ctx = context_from_event(event)
+    ctx = context_from_event(event, client=client, repo=repo)
     if is_release_pr(ctx):
         print("Skipping PR hygiene for develop -> main release PR.")
         return 0
