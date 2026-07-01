@@ -2,6 +2,7 @@ extends Node
 
 const RANKING_PATH := "user://ranking.json"
 const MAX_RANKING_ENTRIES := 10
+const MAX_NAME_LENGTH := 5
 
 var _ranking: Array[Dictionary] = []
 
@@ -11,7 +12,21 @@ func _ready() -> void:
 
 
 func get_ranking() -> Array[Dictionary]:
-	return _ranking.duplicate()
+	return _ranking.duplicate(true)
+
+
+func get_best_entry() -> Dictionary:
+	if _ranking.is_empty():
+		return {}
+
+	return _ranking[0].duplicate(true)
+
+
+func is_new_highscore(score: int) -> bool:
+	if _ranking.is_empty():
+		return true
+
+	return score > int(_ranking[0].get("score", 0))
 
 
 func add_entry(score: int, distance: int) -> int:
@@ -19,6 +34,7 @@ func add_entry(score: int, distance: int) -> int:
 		"score": score,
 		"distance": distance,
 		"date": Time.get_datetime_string_from_system(false, true),
+		"name": "",
 	}
 	_ranking.append(entry)
 	_sort_ranking()
@@ -29,6 +45,19 @@ func add_entry(score: int, distance: int) -> int:
 		return -1
 	save_ranking()
 	return position
+
+
+func update_entry_name(position: int, player_name: String) -> bool:
+	if position < 0 or position >= _ranking.size():
+		return false
+
+	var trimmed := player_name.strip_edges().left(MAX_NAME_LENGTH)
+	if trimmed.is_empty():
+		return false
+
+	_ranking[position]["name"] = trimmed
+	save_ranking()
+	return true
 
 
 func save_ranking() -> void:
@@ -55,9 +84,12 @@ func load_ranking() -> void:
 		_ranking = []
 		for item in json.data:
 			if item is Dictionary and item.has("score") and item.has("distance") and item.has("date"):
-				item["score"] = int(item["score"])
-				item["distance"] = int(item["distance"])
-				_ranking.append(item)
+				_ranking.append({
+					"score": int(item["score"]),
+					"distance": int(item["distance"]),
+					"date": str(item["date"]),
+					"name": str(item.get("name", "")).left(MAX_NAME_LENGTH),
+				})
 		_sort_ranking()
 		if _ranking.size() > MAX_RANKING_ENTRIES:
 			_ranking.resize(MAX_RANKING_ENTRIES)

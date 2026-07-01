@@ -60,8 +60,9 @@ func test_low_score_not_in_full_ranking_returns_minus_one() -> void:
 
 
 func test_ranking_persists_across_save_load() -> void:
-	SaveManager.add_entry(5000, 200)
+	var pos_first := SaveManager.add_entry(5000, 200)
 	SaveManager.add_entry(3000, 150)
+	SaveManager.update_entry_name(pos_first, "AAAAA")
 	SaveManager.save_ranking()
 
 	SaveManager._ranking = []
@@ -71,6 +72,7 @@ func test_ranking_persists_across_save_load() -> void:
 	assert_int(ranking.size()).is_equal(2)
 	assert_int(ranking[0]["score"]).is_equal(5000)
 	assert_int(ranking[1]["score"]).is_equal(3000)
+	assert_str(ranking[0]["name"]).is_equal("AAAAA")
 
 
 func test_corrupt_file_handled_gracefully() -> void:
@@ -82,6 +84,42 @@ func test_corrupt_file_handled_gracefully() -> void:
 	var ranking := SaveManager.get_ranking()
 
 	assert_array(ranking).is_empty()
+
+
+func test_load_ranking_backfills_missing_name_field() -> void:
+	var file := FileAccess.open(RANKING_PATH, FileAccess.WRITE)
+	file.store_string("[{\"score\":1000,\"distance\":50,\"date\":\"2026-07-01T10:00:00\"}]")
+	file = null
+
+	SaveManager.load_ranking()
+	var ranking := SaveManager.get_ranking()
+
+	assert_int(ranking.size()).is_equal(1)
+	assert_str(ranking[0]["name"]).is_equal("")
+
+
+func test_update_entry_name_applies_length_rules() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+
+	assert_bool(SaveManager.update_entry_name(position, "A")).is_true()
+	assert_str(SaveManager.get_ranking()[0]["name"]).is_equal("A")
+
+	assert_bool(SaveManager.update_entry_name(position, "ABCDE")).is_true()
+	assert_str(SaveManager.get_ranking()[0]["name"]).is_equal("ABCDE")
+
+	assert_bool(SaveManager.update_entry_name(position, "ABCDEF")).is_true()
+	assert_str(SaveManager.get_ranking()[0]["name"]).is_equal("ABCDE")
+
+	assert_bool(SaveManager.update_entry_name(position, "   ")).is_false()
+	assert_str(SaveManager.get_ranking()[0]["name"]).is_equal("ABCDE")
+
+
+func test_is_new_highscore_uses_score_only() -> void:
+	SaveManager.add_entry(1000, 10)
+
+	assert_bool(SaveManager.is_new_highscore(1001)).is_true()
+	assert_bool(SaveManager.is_new_highscore(1000)).is_false()
+	assert_bool(SaveManager.is_new_highscore(999)).is_false()
 
 
 func test_game_over_creates_ranking_entry() -> void:
@@ -146,6 +184,154 @@ func test_new_record_label_shown_on_game_over() -> void:
 	assert_int(ranking.size()).is_greater(0)
 	assert_bool(new_record_label.visible).is_true()
 	assert_str(new_record_label.text).contains("#1")
+
+
+func test_game_over_prompts_for_name_on_new_highscore_without_focusing_input() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_prompt := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NamePromptLabel") as Label
+	var name_input_container := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer") as HBoxContainer
+	var name_input := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput") as LineEdit
+
+	assert_bool(name_prompt.visible).is_true()
+	assert_bool(name_input_container.visible).is_true()
+	assert_bool(name_input.has_focus()).is_false()
+
+
+func test_equal_best_score_does_not_prompt_for_name() -> void:
+	SaveManager.add_entry(500, 50)
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_prompt := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NamePromptLabel") as Label
+	var name_input_container := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer") as HBoxContainer
+
+	assert_bool(name_prompt.visible).is_false()
+	assert_bool(name_input_container.visible).is_false()
+
+
+func test_name_submission_updates_the_saved_highscore_entry() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_prompt := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NamePromptLabel") as Label
+	var name_input_container := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer") as HBoxContainer
+	var name_input := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput") as LineEdit
+
+	name_input.text = "ABCDEF"
+	name_input.emit_signal("text_submitted", name_input.text)
+	await runner.simulate_frames(1)
+
+	var ranking := SaveManager.get_ranking()
+	assert_str(ranking[0]["name"]).is_equal("ABCDE")
+	assert_bool(name_prompt.visible).is_false()
+	assert_bool(name_input_container.visible).is_false()
+
+
+func test_ranking_menu_shows_saved_name() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+	SaveManager.update_entry_name(position, "KAEFR")
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking()
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_str(name_label.text).is_equal("KAEFR")
+
+
+func test_ranking_menu_shows_placeholder_for_legacy_unnamed_entry() -> void:
+	var file := FileAccess.open(RANKING_PATH, FileAccess.WRITE)
+	file.store_string("[{\"score\":1000,\"distance\":50,\"date\":\"2026-07-01T10:00:00\"}]")
+	file = null
+	SaveManager.load_ranking()
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking()
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_str(name_label.text).is_equal("---")
+
+
+func test_ranking_menu_highlight_applies_to_name_label() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+	SaveManager.update_entry_name(position, "KAEFR")
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var local_ranking_menu := game.get_node("HUD/LocalRankingMenu")
+	local_ranking_menu.show_ranking(0)
+	await runner.simulate_frames(1)
+
+	var ranking_list := game.get_node("HUD/LocalRankingMenu/Panel/VBoxContainer/RankingList") as VBoxContainer
+	var row := ranking_list.get_child(0) as HBoxContainer
+	var name_label := row.get_child(1) as Label
+
+	assert_bool(name_label.has_theme_color_override("font_color")).is_true()
+	var font_color := name_label.get_theme_color("font_color")
+	assert_float(font_color.r).is_equal(1.0)
+	assert_float(font_color.g).is_equal(0.85)
+	assert_float(font_color.b).is_equal(0.0)
 
 
 func test_ranking_button_exists_in_menus() -> void:
