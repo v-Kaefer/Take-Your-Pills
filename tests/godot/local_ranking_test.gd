@@ -265,6 +265,84 @@ func test_name_submission_updates_the_saved_highscore_entry() -> void:
 	assert_bool(name_input_container.visible).is_false()
 
 
+func test_main_menu_hides_highscore_label_without_saved_entries() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var menu_highscore_label := game.get_node("HUD/MainMenu/Panel/VBoxContainer/HighscoreLabel") as Label
+
+	assert_str(menu_highscore_label.text).is_equal("")
+
+
+func test_main_menu_shows_saved_best_entry_name_and_score() -> void:
+	var position := SaveManager.add_entry(1000, 50)
+	SaveManager.update_entry_name(position, "KAEFR")
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var menu_highscore_label := game.get_node("HUD/MainMenu/Panel/VBoxContainer/HighscoreLabel") as Label
+
+	assert_str(menu_highscore_label.text).is_equal("Best: KAEFR - 001000")
+
+
+func test_main_menu_shows_placeholder_for_legacy_unnamed_best_entry() -> void:
+	var file := FileAccess.open(RANKING_PATH, FileAccess.WRITE)
+	file.store_string("[{\"score\":1000,\"distance\":50,\"date\":\"2026-07-01T10:00:00\"}]")
+	file = null
+	SaveManager.load_ranking()
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var menu_highscore_label := game.get_node("HUD/MainMenu/Panel/VBoxContainer/HighscoreLabel") as Label
+
+	assert_str(menu_highscore_label.text).is_equal("Best: --- - 001000")
+
+
+func test_main_menu_shows_saved_name_after_highscore_submission_and_reload() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_input := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput") as LineEdit
+	name_input.text = "KAEFR"
+	name_input.emit_signal("text_submitted", name_input.text)
+	await runner.simulate_frames(1)
+
+	SaveManager.load_ranking()
+
+	var reloaded_runner := scene_runner(GAME_SCENE)
+	var reloaded_game := reloaded_runner.scene() as Game
+
+	assert_object(reloaded_game).is_not_null()
+	await reloaded_runner.simulate_frames(1)
+
+	var menu_highscore_label := reloaded_game.get_node("HUD/MainMenu/Panel/VBoxContainer/HighscoreLabel") as Label
+
+	assert_str(menu_highscore_label.text).is_equal("Best: KAEFR - 000500")
+
+
 func test_ranking_menu_shows_saved_name() -> void:
 	var position := SaveManager.add_entry(1000, 50)
 	SaveManager.update_entry_name(position, "KAEFR")

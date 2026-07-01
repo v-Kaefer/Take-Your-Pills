@@ -11,6 +11,7 @@ signal name_submitted(player_name: String)
 @onready var pause_menu: Control = $PauseMenu
 @onready var game_over_menu: Control = $GameOverMenu
 @onready var start_button: Button = $MainMenu/Panel/VBoxContainer/StartButton
+@onready var menu_highscore_label: Label = $MainMenu/Panel/VBoxContainer/HighscoreLabel
 @onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
 @onready var pause_restart_button: Button = $PauseMenu/Panel/VBoxContainer/RestartButton
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
@@ -44,6 +45,7 @@ func _ready() -> void:
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
 	RunSignals.ranking_entry_added.connect(_on_ranking_entry_added)
+	RunSignals.ranking_updated.connect(_refresh_menu_highscore)
 	RunSignals.highscore_name_requested.connect(_on_highscore_name_requested)
 	main_menu_ranking_button.pressed.connect(_on_main_menu_ranking_pressed)
 	game_over_ranking_button.pressed.connect(_on_game_over_ranking_pressed)
@@ -69,6 +71,7 @@ func update_distance(distance: float) -> void:
 
 func show_main_menu() -> void:
 	hide_menus()
+	_refresh_menu_highscore()
 	main_menu.show()
 
 
@@ -175,6 +178,20 @@ func _submit_name() -> void:
 	name_input.release_focus()
 	name_input_container.hide()
 	name_prompt_label.hide()
+
+
+func _refresh_menu_highscore() -> void:
+	var best_entry := SaveManager.get_best_entry()
+	if best_entry.is_empty():
+		menu_highscore_label.text = ""
+		return
+
+	var best_score := int(best_entry.get("score", 0))
+	var best_name := str(best_entry.get("name", "")).strip_edges()
+	if best_name.is_empty():
+		best_name = "---"
+
+	menu_highscore_label.text = "Best: %s - %06d" % [best_name, best_score]
 
 
 func _on_main_menu_ranking_pressed() -> void:
