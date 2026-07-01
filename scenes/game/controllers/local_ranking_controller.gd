@@ -1,24 +1,40 @@
 extends Node
 class_name LocalRankingController
 
-var _last_score: int = 0
+var score_controller = null
+var _pending_highscore_position := -1
 
 
 func _ready() -> void:
-	RunSignals.score_changed.connect(_on_score_changed)
 	RunSignals.run_game_over.connect(_on_run_game_over)
 
 
-func _on_score_changed(score: int) -> void:
-	_last_score = score
-
-
 func _on_run_game_over() -> void:
-	var best_score := SaveManager.get_best_score()
-	var best_name := SaveManager.get_best_name()
-	var is_new := SaveManager.is_new_record(_last_score)
-	RunSignals.highscore_checked.emit.call_deferred(_last_score, best_score, best_name, is_new)
+	if score_controller == null:
+		return
+
+	var final_score: int = score_controller.score
+	var final_distance: int = int(score_controller.distance)
+	var should_prompt_name := SaveManager.is_new_highscore(final_score)
+	var position := SaveManager.add_entry(final_score, final_distance)
+	var entry := {
+		"score": final_score,
+		"distance": final_distance,
+		"name": "",
+	}
+
+	_pending_highscore_position = -1
+	RunSignals.ranking_entry_added.emit(position, entry)
+	RunSignals.ranking_updated.emit()
+
+	if should_prompt_name and position >= 0:
+		_pending_highscore_position = position
+		RunSignals.highscore_name_requested.emit(position, final_score)
 
 
 func save_record(player_name: String) -> void:
-	SaveManager.save_highscore(player_name, _last_score)
+	if not SaveManager.update_entry_name(_pending_highscore_position, player_name):
+		return
+
+	_pending_highscore_position = -1
+	RunSignals.ranking_updated.emit()

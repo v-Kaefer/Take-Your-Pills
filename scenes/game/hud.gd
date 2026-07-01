@@ -1,6 +1,8 @@
 extends CanvasLayer
 class_name GameHUD
 
+signal name_submitted(player_name: String)
+
 @onready var state_label: Label = $MarginContainer/VBoxContainer/StateLabel
 @onready var score_label: Label = $MarginContainer/VBoxContainer/ScoreLabel
 @onready var distance_label: Label = $MarginContainer/VBoxContainer/DistanceLabel
@@ -13,18 +15,20 @@ class_name GameHUD
 @onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
 @onready var pause_restart_button: Button = $PauseMenu/Panel/VBoxContainer/RestartButton
 @onready var final_score_label: Label = $GameOverMenu/Panel/VBoxContainer/FinalScoreLabel
-@onready var game_over_restart_button: Button = $GameOverMenu/Panel/VBoxContainer/RestartButton
-@onready var best_score_label: Label = $GameOverMenu/Panel/VBoxContainer/BestScoreLabel
 @onready var new_record_label: Label = $GameOverMenu/Panel/VBoxContainer/NewRecordLabel
+@onready var game_over_restart_button: Button = $GameOverMenu/Panel/VBoxContainer/RestartButton
+@onready var name_prompt_label: Label = $GameOverMenu/Panel/VBoxContainer/NamePromptLabel
 @onready var name_input_container: HBoxContainer = $GameOverMenu/Panel/VBoxContainer/NameInputContainer
 @onready var name_input: LineEdit = $GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput
 @onready var save_button: Button = $GameOverMenu/Panel/VBoxContainer/NameInputContainer/SaveButton
-
-signal name_submitted(player_name: String)
+@onready var main_menu_ranking_button: Button = $MainMenu/Panel/VBoxContainer/RankingButton
+@onready var game_over_ranking_button: Button = $GameOverMenu/Panel/VBoxContainer/RankingButton
+@onready var local_ranking_menu: Control = $LocalRankingMenu
 
 var _boost_timer: float = 0.0
 var _boost_active: bool = false
 var _last_score: int = 0
+var _last_ranking_position: int = -1
 
 
 func _ready() -> void:
@@ -40,7 +44,11 @@ func _ready() -> void:
 	RunSignals.run_game_over.connect(_on_run_game_over)
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
-	RunSignals.highscore_checked.connect(_on_highscore_checked)
+	RunSignals.ranking_entry_added.connect(_on_ranking_entry_added)
+	RunSignals.ranking_updated.connect(_refresh_menu_highscore)
+	RunSignals.highscore_name_requested.connect(_on_highscore_name_requested)
+	main_menu_ranking_button.pressed.connect(_on_main_menu_ranking_pressed)
+	game_over_ranking_button.pressed.connect(_on_game_over_ranking_pressed)
 	save_button.pressed.connect(_on_save_pressed)
 	name_input.text_submitted.connect(_on_name_text_submitted)
 
@@ -119,6 +127,12 @@ func _on_run_booted() -> void:
 
 func _on_run_running() -> void:
 	hide_menus()
+	_last_ranking_position = -1
+	new_record_label.hide()
+	name_prompt_label.hide()
+	name_input_container.hide()
+	name_input.text = ""
+	name_input.release_focus()
 	update_state("RUNNING", "Jump: Space / Up | Esc: pause | Backspace: game over")
 
 
@@ -132,17 +146,18 @@ func _on_run_game_over() -> void:
 	update_state("GAME OVER", "Jump: restart | Restart: button")
 
 
-func _on_highscore_checked(current_score: int, best_score: int, best_name: String, is_new_record: bool) -> void:
-	if is_new_record:
-		best_score_label.text = "Previous best: %s - %06d" % [best_name if not best_name.is_empty() else "---", best_score]
+func _on_ranking_entry_added(position: int, _entry: Dictionary) -> void:
+	_last_ranking_position = position
+	if position >= 0 and position < SaveManager.MAX_RANKING_ENTRIES:
+		new_record_label.text = "Novo Recorde! #%d" % (position + 1)
 		new_record_label.show()
-		name_input_container.show()
-		name_input.text = ""
-		name_input.grab_focus()
-	else:
-		best_score_label.text = "Best: %s - %06d" % [best_name if not best_name.is_empty() else "---", best_score]
-		new_record_label.hide()
-		name_input_container.hide()
+
+
+func _on_highscore_name_requested(_position: int, _score: int) -> void:
+	name_prompt_label.text = "Name (max 5):"
+	name_prompt_label.show()
+	name_input_container.show()
+	name_input.text = ""
 
 
 func _on_save_pressed() -> void:
@@ -157,15 +172,31 @@ func _submit_name() -> void:
 	var player_name := name_input.text.strip_edges()
 	if player_name.is_empty():
 		return
+
 	name_submitted.emit(player_name)
+	name_input.text = ""
+	name_input.release_focus()
 	name_input_container.hide()
-	new_record_label.text = "RECORD SAVED!"
+	name_prompt_label.hide()
 
 
 func _refresh_menu_highscore() -> void:
-	var best_score := SaveManager.get_best_score()
-	var best_name := SaveManager.get_best_name()
-	if best_score > 0 and not best_name.is_empty():
-		menu_highscore_label.text = "Best: %s - %06d" % [best_name, best_score]
-	else:
+	var best_entry := SaveManager.get_best_entry()
+	if best_entry.is_empty():
 		menu_highscore_label.text = ""
+		return
+
+	var best_score := int(best_entry.get("score", 0))
+	var best_name := str(best_entry.get("name", "")).strip_edges()
+	if best_name.is_empty():
+		best_name = "---"
+
+	menu_highscore_label.text = "Best: %s - %06d" % [best_name, best_score]
+
+
+func _on_main_menu_ranking_pressed() -> void:
+	local_ranking_menu.show_ranking(-1)
+
+
+func _on_game_over_ranking_pressed() -> void:
+	local_ranking_menu.show_ranking(_last_ranking_position)
