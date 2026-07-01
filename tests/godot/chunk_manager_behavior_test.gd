@@ -28,3 +28,17 @@ func test_chunk_manager_spawns_buffer_and_recycles_offscreen_chunks() -> void:
 	assert_bool(is_instance_valid(first_chunk)).is_false()
 	var right_edge_after := float(chunks.call("_get_rightmost_edge"))
 	assert_bool(right_edge_after >= viewport_width + chunks.spawn_buffer_px).is_true()
+
+
+func test_chunk_manager_starts_in_laboratory_scenario() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var first_chunk := chunks.get_child(0) as Node2D
+
+	assert_str(String(chunks.active_scenario_id)).is_equal("laboratory")
+	assert_bool(first_chunk.name.begins_with("LabChunk")).is_true()
