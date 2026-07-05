@@ -1,26 +1,29 @@
 extends Node2D
 class_name ChunkManager
 
-const CHUNK_SCENES: Array[PackedScene] = [
-	preload("res://scenes/game/chunks/chunk_a.tscn"),
-	preload("res://scenes/game/chunks/chunk_b.tscn"),
-	preload("res://scenes/game/chunks/chunk_c.tscn"),
-	preload("res://scenes/game/chunks/chunk_lab.tscn"),
-]
-
 @export var scroll_speed: float = 240.0
 @export var chunk_width: float = 640.0
 @export var chunk_overlap_px: float = 32.0
 @export var spawn_buffer_px: float = 256.0
 @export var recycle_buffer_px: float = 128.0
 @export var initial_chunk_count: int = 3
+@export var starting_scenario_id: StringName = &"laboratory"
+@export var laboratory_chunk_scenes: Array[PackedScene] = []
+@export var default_chunk_scenes: Array[PackedScene] = []
+@export var spawn_patterns: Array[SpawnPattern] = []
+@export var spawn_seed: int = 241
 
 var scrolling_enabled: bool = false
+var active_scenario_id: StringName = &"laboratory"
+var active_chunk_scenes: Array[PackedScene] = []
 var _active_chunks: Array[Node2D] = []
 var _spawn_cursor: int = 0
+var _current_score: int = 0
+var _pattern_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	RunSignals.score_changed.connect(_on_score_changed)
 	reset_run()
 
 
@@ -39,6 +42,9 @@ func end_run() -> void:
 func reset_run() -> void:
 	scrolling_enabled = false
 	_spawn_cursor = 0
+	_current_score = 0
+	_pattern_rng.seed = spawn_seed
+	_set_active_scenario(starting_scenario_id)
 	_clear_chunks()
 	var chunk_count: int = initial_chunk_count
 	var required_chunks: int = _required_initial_chunks()
@@ -47,6 +53,15 @@ func reset_run() -> void:
 	for index in range(chunk_count):
 		_spawn_chunk(Vector2(chunk_width * index, 0.0))
 	_ensure_chunk_buffer()
+	RunSignals.scenario_changed.emit(active_scenario_id)
+
+
+func switch_to_scenario(scenario_id: StringName) -> void:
+	if scenario_id == active_scenario_id:
+		return
+
+	_set_active_scenario(scenario_id)
+	RunSignals.scenario_changed.emit(active_scenario_id)
 
 
 func set_scroll_speed(value: float) -> void:
@@ -66,19 +81,22 @@ func _physics_process(delta: float) -> void:
 
 
 func _spawn_chunk(spawn_position: Vector2) -> void:
-	if CHUNK_SCENES.is_empty():
+	if active_chunk_scenes.is_empty():
 		return
 
-	var scene_index := _spawn_cursor % CHUNK_SCENES.size()
-	var chunk := CHUNK_SCENES[scene_index].instantiate() as Node2D
+	var scene_index := _spawn_cursor % active_chunk_scenes.size()
+	var chunk := active_chunk_scenes[scene_index].instantiate() as Node2D
 	_spawn_cursor += 1
 	chunk.position = spawn_position
+	var pattern := _select_spawn_pattern()
+	if pattern != null:
+		_apply_spawn_pattern(chunk, pattern)
 	add_child(chunk)
 	_active_chunks.append(chunk)
 
 
 func _ensure_chunk_buffer() -> void:
-	if CHUNK_SCENES.is_empty():
+	if active_chunk_scenes.is_empty():
 		return
 
 	var viewport_width := _get_viewport_width()
@@ -132,3 +150,57 @@ func _required_initial_chunks() -> int:
 	var viewport_width := _get_viewport_width()
 	var required_width := viewport_width + spawn_buffer_px
 	return int(ceil(required_width / chunk_width)) + 1
+
+
+func _set_active_scenario(scenario_id: StringName) -> void:
+	active_scenario_id = scenario_id
+	if active_scenario_id == &"laboratory":
+		active_chunk_scenes = laboratory_chunk_scenes.duplicate()
+		if not active_chunk_scenes.is_empty():
+			return
+
+	active_chunk_scenes = default_chunk_scenes.duplicate()
+
+
+func _on_score_changed(score: int) -> void:
+	_current_score = score
+
+
+func _select_spawn_pattern() -> SpawnPattern:
+	var eligible_patterns: Array[SpawnPattern] = []
+	var total_weight: int = 0
+
+	for pattern in spawn_patterns:
+		if pattern == null or not pattern.matches(active_scenario_id, _current_score):
+			continue
+
+		var weight := maxi(pattern.weight, 1)
+		total_weight += weight
+		eligible_patterns.append(pattern)
+
+	if eligible_patterns.is_empty() or total_weight <= 0:
+		return null
+
+	var ticket := _pattern_rng.randi_range(1, total_weight)
+	for pattern in eligible_patterns:
+		ticket -= maxi(pattern.weight, 1)
+		if ticket <= 0:
+			return pattern
+
+	return eligible_patterns.back()
+
+
+func _apply_spawn_pattern(chunk: Node2D, pattern: SpawnPattern) -> void:
+	chunk.set_meta("spawn_pattern_id", String(pattern.pattern_id))
+	chunk.set_meta("scenario_id", String(active_scenario_id))
+
+	for entry in pattern.entries:
+		if entry == null or entry.scene == null:
+			continue
+
+		var node := entry.scene.instantiate() as Node2D
+		if node == null:
+			continue
+
+		node.position = entry.position
+		chunk.add_child(node)

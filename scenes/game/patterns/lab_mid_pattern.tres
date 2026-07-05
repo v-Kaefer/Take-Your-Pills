@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SpawnPattern" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/spawn_pattern.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/game/spawn_pattern_entry.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_down_collectable.tscn" id="6"]
+
+[sub_resource type="Resource" id="1"]
+script = ExtResource("2")
+scene = ExtResource("3")
+position = Vector2(384, 248)
+
+[sub_resource type="Resource" id="2"]
+script = ExtResource("2")
+scene = ExtResource("4")
+position = Vector2(224, 192)
+
+[sub_resource type="Resource" id="3"]
+script = ExtResource("2")
+scene = ExtResource("5")
+position = Vector2(128, 224)
+
+[sub_resource type="Resource" id="4"]
+script = ExtResource("2")
+scene = ExtResource("6")
+position = Vector2(544, 192)
+
+[resource]
+script = ExtResource("1")
+pattern_id = &"lab_mid_pattern"
+scenario_id = &"laboratory"
+min_score = 10000
+max_score = 19999
+weight = 1
+difficulty = 2
+entries = [SubResource("1"), SubResource("2"), SubResource("3"), SubResource("4")]

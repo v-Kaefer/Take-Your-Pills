@@ -1,12 +1,6 @@
 [gd_scene format=3 uid="uid://c5ox1uh8pjq0c"]
 
 [ext_resource type="Script" uid="uid://c4x3k1a52yh6p" path="res://scenes/game/chunks/chunk.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_up_collectable.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_down_collectable.tscn" id="6"]
-
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(640, 96)
 
@@ -54,18 +48,3 @@ shape = SubResource("2")
 
 [node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="." unique_id=399693923]
 rect = Rect2(0, 0, 640, 360)
-
-[node name="Obstacle" parent="." unique_id=928560857 instance=ExtResource("2")]
-position = Vector2(448, 248)
-
-[node name="PillCollectable" parent="." unique_id=1458308925 instance=ExtResource("3")]
-position = Vector2(288, 224)
-
-[node name="BoxCollectable" parent="." unique_id=909563948 instance=ExtResource("4")]
-position = Vector2(560, 224)
-
-[node name="SpeedUpCollectable" parent="." unique_id=1423258545 instance=ExtResource("5")]
-position = Vector2(128, 224)
-
-[node name="SpeedDownCollectable" parent="." unique_id=116472199 instance=ExtResource("6")]
-position = Vector2(192, 192)

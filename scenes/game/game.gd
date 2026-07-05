@@ -15,6 +15,7 @@ enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 @onready var speed_up_controller := $Controllers/SpeedUpBoostController
 @onready var speed_down_controller := $Controllers/SpeedDownBoostController
 @onready var ranking_controller = $Controllers/LocalRankingController
+@onready var scenario_transition_controller = $Controllers/ScenarioTransitionController
 @onready var speed_up_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedUpContainer
 @onready var speed_down_row := $HUD/MarginContainer/VBoxContainer/SpeedContainer/SpeedDownContainer
 
@@ -41,6 +42,7 @@ func _ready() -> void:
 	session_controller.default_scroll_speed = DEFAULT_SCROLL_SPEED
 	score_controller.chunks = chunks
 	audio_controller.audio_player = collect_sfx_player
+	scenario_transition_controller.chunks = chunks
 	speed_up_controller.bar_step.connect(speed_up_row.apply_charge)
 	speed_up_controller.bar_reset.connect(speed_up_row.reset_bar)
 	speed_down_controller.bar_step.connect(speed_down_row.apply_charge)
