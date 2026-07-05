@@ -55,6 +55,38 @@ func test_start_transitions_to_running_state() -> void:
 	assert_str(state_label.text).contains("State: RUNNING")
 
 
+func test_run_pace_scales_across_opening_mid_and_post_transition_ranges() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var pacing_controller := game.get_node("Controllers/RunPacingController")
+
+	assert_float(pacing_controller.current_base_scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+
+	RunSignals.score_changed.emit(9000)
+	await runner.simulate_frames(1)
+	assert_float(pacing_controller.current_base_scroll_speed).is_equal(235.0)
+	assert_float(chunks.scroll_speed).is_equal(235.0)
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+	assert_float(pacing_controller.current_base_scroll_speed).is_equal(255.0)
+	assert_float(chunks.scroll_speed).is_equal(255.0)
+
+	RunSignals.score_changed.emit(33000)
+	await runner.simulate_frames(1)
+	assert_float(pacing_controller.current_base_scroll_speed).is_equal(270.0)
+	assert_float(chunks.scroll_speed).is_equal(270.0)
+
+
 func test_collectable_score_persists_after_next_frame() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
@@ -280,7 +312,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.35)
 	assert_float(speed_up_first_stripe.color.r).is_equal(initial_speed_up_color.r)
 	assert_float(speed_up_first_stripe.color.g).is_equal(initial_speed_up_color.g)
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
@@ -292,7 +324,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 2.0)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.6)
 	assert_float(speed_up_first_stripe.color.r).is_equal(initial_speed_up_color.r)
 	assert_float(speed_up_first_stripe.color.g).is_equal(initial_speed_up_color.g)
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
@@ -300,7 +332,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	assert_str(boost_timer_label.text).contains("10.0")
 
 	controller.tick(5.9)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 2.0)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.6)
 	assert_bool(boost_timer_label.visible).is_true()
 
 	controller.tick(4.2)
@@ -331,7 +363,7 @@ func test_speed_down_collects_queue_until_boost_ends() -> void:
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.35)
 	assert_bool(boost_timer_label.visible).is_true()
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
@@ -340,13 +372,13 @@ func test_speed_down_collects_queue_until_boost_ends() -> void:
 	RunSignals.speed_down_collected.emit()
 	RunSignals.speed_down_collected.emit()
 	RunSignals.speed_down_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.35)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)
 
 	controller.tick(8.1)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.75)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.85)
 	assert_bool(boost_timer_label.visible).is_false()
 
 
@@ -381,7 +413,7 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 
 	RunSignals.speed_down_collected.emit()
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.75)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.85)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)
@@ -392,7 +424,7 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 	assert_float(speed_down_first_stripe.color.r).is_greater(speed_down_first_stripe.color.b)
 	RunSignals.speed_down_collected.emit()
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.5)
+	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.7)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)

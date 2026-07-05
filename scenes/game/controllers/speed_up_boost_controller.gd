@@ -4,7 +4,7 @@ class_name SpeedUpBoostController
 const SPEED_THRESHOLD: int = 3
 const BOOST_DURATION: float = 8.0
 const BOOST_TIMER_MULTIPLIER: float = 1.25
-const BOOST_MULTIPLIERS: Array[float] = [1.0, 1.5, 2.0]
+const BOOST_MULTIPLIERS: Array[float] = [1.0, 1.35, 1.6]
 
 signal bar_step(charge: int)
 signal bar_reset
