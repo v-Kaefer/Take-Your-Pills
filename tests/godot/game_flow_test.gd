@@ -32,6 +32,22 @@ func test_game_boots_in_main_menu_state() -> void:
 	assert_bool(game_over_menu.visible).is_false()
 
 
+func test_hud_scenario_badge_tracks_active_scenario() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var scenario_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScenarioLabel") as Label
+	assert_str(scenario_label.text).is_equal("Scenario: LAB SECTOR")
+
+	RunSignals.scenario_changed.emit(&"default")
+	await runner.simulate_frames(1)
+
+	assert_str(scenario_label.text).is_equal("Scenario: CITY LOOP")
+
+
 func test_start_transitions_to_running_state() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game

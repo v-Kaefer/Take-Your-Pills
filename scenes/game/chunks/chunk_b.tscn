@@ -20,6 +20,10 @@ script = ExtResource("1")
 polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
 color = Color(0.06, 0.08, 0.15, 1)
 
+[node name="CloudGlow" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(0, 52, 640, 52, 640, 138, 0, 138)
+color = Color(0.14, 0.20, 0.32, 0.4)
+
 [node name="TowerLeft" type="Polygon2D" parent="Terrain"]
 polygon = PackedVector2Array(96, 192, 176, 192, 176, 264, 96, 264)
 color = Color(0.16, 0.18, 0.25, 1)
@@ -27,6 +31,18 @@ color = Color(0.16, 0.18, 0.25, 1)
 [node name="TowerRight" type="Polygon2D" parent="Terrain"]
 polygon = PackedVector2Array(328, 160, 424, 160, 424, 264, 328, 264)
 color = Color(0.11, 0.13, 0.19, 1)
+
+[node name="TransitTower" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(216, 132, 276, 132, 276, 264, 216, 264)
+color = Color(0.21, 0.25, 0.35, 1)
+
+[node name="WindowBand" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(226, 152, 266, 152, 266, 164, 226, 164)
+color = Color(0.33, 0.87, 0.95, 1)
+
+[node name="NeonTotem" type="Polygon2D" parent="Terrain"]
+polygon = PackedVector2Array(472, 164, 506, 164, 506, 264, 472, 264)
+color = Color(0.92, 0.22, 0.48, 1)
 
 [node name="GroundVisual" type="Polygon2D" parent="Terrain"]
 polygon = PackedVector2Array(0, 264, 640, 264, 640, 360, 0, 360)

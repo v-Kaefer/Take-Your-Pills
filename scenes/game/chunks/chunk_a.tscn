@@ -18,6 +18,10 @@ script = ExtResource("1")
 color = Color(0.05, 0.07, 0.13, 1)
 polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
 
+[node name="SkyGlow" type="Polygon2D" parent="Terrain"]
+color = Color(0.17, 0.13, 0.28, 0.35)
+polygon = PackedVector2Array(0, 28, 640, 28, 640, 144, 0, 144)
+
 [node name="TowerLeft" type="Polygon2D" parent="Terrain" unique_id=1945572451]
 color = Color(0.14, 0.16, 0.23, 1)
 polygon = PackedVector2Array(72, 200, 144, 200, 144, 264, 72, 264)
@@ -25,6 +29,14 @@ polygon = PackedVector2Array(72, 200, 144, 200, 144, 264, 72, 264)
 [node name="TowerRight" type="Polygon2D" parent="Terrain" unique_id=1767595318]
 color = Color(0.1, 0.12, 0.18, 1)
 polygon = PackedVector2Array(260, 168, 356, 168, 356, 264, 260, 264)
+
+[node name="TransitBridge" type="Polygon2D" parent="Terrain"]
+color = Color(0.26, 0.30, 0.41, 1)
+polygon = PackedVector2Array(316, 148, 486, 148, 486, 176, 316, 176)
+
+[node name="Billboard" type="Polygon2D" parent="Terrain"]
+color = Color(0.86, 0.31, 0.55, 1)
+polygon = PackedVector2Array(468, 166, 576, 166, 576, 218, 468, 218)
 
 [node name="GroundVisual" type="Polygon2D" parent="Terrain" unique_id=1782367336]
 color = Color(0.13, 0.13, 0.15, 1)
