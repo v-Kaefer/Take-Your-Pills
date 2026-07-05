@@ -79,3 +79,7 @@ Record links or paths for the session evidence.
 - The moderator questions are answered for each participant.
 - Evidence links are saved.
 - Follow-up bugs or adjustments are created before closing the story.
+
+## Recorded session handoff
+- The Playtest 02 session was executed jointly with the professor and its outcome feeds the final MS4 fix pass.
+- Keep this runbook as the canonical checklist if the session needs to be replayed or extended before release.
