@@ -49,6 +49,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Distance: 0 m"
 
+[node name="ScenarioLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.34, 0.84, 0.93, 1)
+text = "Scenario: LAB SECTOR"
+
 [node name="SpeedContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 2
