@@ -27,6 +27,8 @@ Run this after applying the critical fixes raised by Playtest 02.
 ## Presentation
 - [ ] Visible game area uses the full intended screen space.
 - [ ] Main gameplay elements remain readable at speed.
+- [ ] Score, boost, and slowdown information remain readable while speed changes.
+- [ ] Color transitions do not cause distracting ghosting or visual fatigue over repeated runs.
 - [ ] Highscore flow, if present in the build, still works after playtest fixes.
 
 ## Evidence

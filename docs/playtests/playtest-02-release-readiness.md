@@ -15,6 +15,9 @@ Complete this after triaging the Playtest 02 findings.
 | --- | --- | --- |
 | Critical playtest bugs fixed or explicitly waived |  |  |
 | Regression checklist completed |  |  |
+| Speed-change readability accepted |  |  |
+| Score and boost visibility accepted |  |  |
+| Ghosting and visual fatigue reduced to acceptable level |  |  |
 | Known risks documented |  |  |
 | Release build exported successfully |  |  |
 | Final presentation build selected |  |  |
