@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scenes/game/controllers/collectable_audio_controller.gd" id="10"]
 [ext_resource type="Script" path="res://scenes/game/controllers/local_ranking_controller.gd" id="11"]
 [ext_resource type="Script" path="res://scenes/game/controllers/scenario_transition_controller.gd" id="12"]
+[ext_resource type="Script" path="res://scenes/game/controllers/run_pacing_controller.gd" id="22"]
 [ext_resource type="PackedScene" path="res://scenes/game/chunks/chunk_lab_a.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://scenes/game/chunks/chunk_lab_b.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://scenes/game/chunks/chunk_lab_c.tscn" id="15"]
@@ -64,6 +65,9 @@ script = ExtResource("6")
 
 [node name="SpeedDownBoostController" type="Node" parent="Controllers"]
 script = ExtResource("7")
+
+[node name="RunPacingController" type="Node" parent="Controllers"]
+script = ExtResource("22")
 
 [node name="LocalRankingController" type="Node" parent="Controllers"]
 script = ExtResource("11")

@@ -2,7 +2,7 @@ extends Node
 class_name SpeedDownBoostController
 
 const SPEED_THRESHOLD: int = 3
-const SLOW_SPEED_MULTIPLIERS: Array[float] = [1.0, 0.75, 0.5]
+const SLOW_SPEED_MULTIPLIERS: Array[float] = [1.0, 0.85, 0.7]
 
 signal bar_step(charge: int)
 signal bar_reset

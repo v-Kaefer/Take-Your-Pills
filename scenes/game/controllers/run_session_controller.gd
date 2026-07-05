@@ -114,6 +114,11 @@ func on_speed_down_state_changed(speed_multiplier: float) -> void:
 	_apply_scroll_speed()
 
 
+func set_base_scroll_speed(value: float) -> void:
+	default_scroll_speed = maxf(value, 0.0)
+	_apply_scroll_speed()
+
+
 func _on_player_hit_obstacle(_obstacle: Node, _body: Node) -> void:
 	if is_running():
 		end_run()

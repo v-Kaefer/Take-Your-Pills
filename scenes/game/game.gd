@@ -1,7 +1,7 @@
 extends Node2D
 class_name Game
 
-const DEFAULT_SCROLL_SPEED := 240.0
+const DEFAULT_SCROLL_SPEED := 220.0
 
 enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
@@ -12,6 +12,7 @@ enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 @onready var session_controller = $Controllers/RunSessionController
 @onready var score_controller = $Controllers/RunScoreController
 @onready var audio_controller = $Controllers/CollectableAudioController
+@onready var pacing_controller = $Controllers/RunPacingController
 @onready var speed_up_controller := $Controllers/SpeedUpBoostController
 @onready var speed_down_controller := $Controllers/SpeedDownBoostController
 @onready var ranking_controller = $Controllers/LocalRankingController
@@ -42,6 +43,7 @@ func _ready() -> void:
 	session_controller.default_scroll_speed = DEFAULT_SCROLL_SPEED
 	score_controller.chunks = chunks
 	audio_controller.audio_player = collect_sfx_player
+	pacing_controller.session_controller = session_controller
 	scenario_transition_controller.chunks = chunks
 	speed_up_controller.bar_step.connect(speed_up_row.apply_charge)
 	speed_up_controller.bar_reset.connect(speed_up_row.reset_bar)
