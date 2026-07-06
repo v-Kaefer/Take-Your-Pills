@@ -13,8 +13,14 @@ grep -Fq "publish-release:" "$workflow"
 grep -Fq "contents: read" "$workflow"
 grep -Fq "contents: write" "$workflow"
 grep -Fq "issues: write" "$workflow"
+grep -Fq "pull-requests: write" "$workflow"
 grep -Fq 'GITHUB_TOKEN: ${{ github.token }}' "$workflow"
 grep -Fq 'GH_TOKEN: ${{ github.token }}' "$workflow"
+
+if grep -Fq "pull-requests: read" "$workflow"; then
+  echo "Release workflow must keep pull-request permissions writable for release comments." >&2
+  exit 1
+fi
 
 if grep -Fq 'secrets.GOVERNANCE_PAT' "$workflow"; then
   echo "Release workflow must use the built-in Actions token, not GOVERNANCE_PAT." >&2
