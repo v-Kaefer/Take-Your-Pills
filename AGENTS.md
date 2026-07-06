@@ -12,6 +12,13 @@ channel between systems. Nodes emit signals; other nodes subscribe.
 **Direct node references across systems are forbidden** outside the composition root
 (`scenes/game/game.gd`) — use signals instead.
 
+Gameplay pacing/economy numbers (speed multipliers, boost durations, score
+values, spawn buffers, etc.) live in one place: the `Balance` autoload
+(`scripts/balance_manager.gd`), which loads a typed `BalanceConfig` resource
+(`scripts/balance/default_balance.tres`) exposed as `Balance.config.*`. Do not
+reintroduce local `const`/`@export` duplicates of these values — add new
+tunables to `BalanceConfig` instead. See `docs/balance/balance-values.md`.
+
 ```
 RunSignals (autoload singleton)
     ├── collectable_collected(collectable, body, score_value)  ← CollectableBase
@@ -130,7 +137,7 @@ Run this after every change to any game scene or script:
 - [ ] **Spacebar jumps** while running
 - [ ] **Spacebar restarts** from the game-over screen
 - [ ] Collecting 3 red-orange squares: HUD stripes turn blue one-by-one, then all red + speed increases
-- [ ] After 8 seconds: speed returns to normal, stripes reset to grey
+- [ ] After 6 seconds (base boost duration, see `Balance.config.speed_up_boost_duration`): speed returns to normal, stripes reset to grey
 - [ ] Hitting an obstacle ends the run and shows the game-over screen
 - [ ] Score and distance increment during the run
 - [ ] Pause (Esc) and resume work correctly

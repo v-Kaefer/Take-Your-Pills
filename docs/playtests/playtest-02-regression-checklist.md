@@ -23,6 +23,9 @@ Run this after applying the critical fixes raised by Playtest 02.
 - [ ] Spawn distribution still creates usable risk/reward choices.
 - [ ] Scenario progression, if present in the build, preserves run state.
 - [ ] Platforms or floor changes do not create invisible collisions.
+- [ ] Speed-up boost tiers (1.4x / 1.8x) read as a clearer, less jarring speed curve than before.
+- [ ] Speed-down bottom tier (0.6x) no longer feels like an abrupt cliff right before game over.
+- [ ] Wider spawn buffer gives enough reaction time to obstacles at default speed.
 
 ## Presentation
 - [ ] Visible game area uses the full intended screen space.
