@@ -46,10 +46,19 @@ func reset_run() -> void:
 	for index in range(chunk_count):
 		_spawn_chunk(Vector2(chunk_width * index, 0.0))
 	_ensure_chunk_buffer()
+	RunSignals.scenario_changed.emit(active_scenario_id)
 
 
 func set_scroll_speed(value: float) -> void:
 	scroll_speed = maxf(value, 0.0)
+
+
+func switch_to_scenario(scenario_id: StringName) -> void:
+	if scenario_id == active_scenario_id:
+		return
+
+	_set_active_scenario(scenario_id)
+	RunSignals.scenario_changed.emit(active_scenario_id)
 
 
 func _physics_process(delta: float) -> void:
