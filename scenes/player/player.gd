@@ -16,6 +16,8 @@ var _grounded: bool = true
 
 func _ready() -> void:
 	floor_snap_length = ground_snap_length
+	collision_layer = 1
+	collision_mask = 2
 
 
 func start_run() -> void:

@@ -2,6 +2,7 @@ class_name GameFlowTestSuite
 extends GdUnitTestSuite
 
 const GAME_SCENE := "res://scenes/game/game.tscn"
+const RANKING_PATH := "user://ranking.json"
 
 
 func test_game_boots_in_main_menu_state() -> void:
@@ -77,6 +78,72 @@ func test_collectable_score_persists_after_next_frame() -> void:
 	assert_int(game.score).is_greater_equal(score_after_collect)
 
 
+func test_hud_scenario_badge_tracks_active_scenario() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	var scenario_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScenarioLabel") as Label
+	assert_str(scenario_label.text).is_equal("Scenario: LAB SECTOR")
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+
+	assert_str(scenario_label.text).is_equal("Scenario: CITY LOOP")
+
+
+func test_scenario_transition_keeps_run_and_boost_state_active() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var boost_timer_label := game.get_node("HUD/BoostTimerLabel") as Label
+
+	RunSignals.speed_up_collected.emit()
+	RunSignals.speed_up_collected.emit()
+	RunSignals.speed_up_collected.emit()
+	await runner.simulate_frames(1)
+
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_bool(chunks.scrolling_enabled).is_true()
+
+	RunSignals.score_changed.emit(20000)
+	await runner.simulate_frames(1)
+
+	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
+	assert_bool(chunks.scrolling_enabled).is_true()
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_str(String(chunks.active_scenario_id)).is_equal("default")
+
+
+func test_collectable_flash_feedback_highlights_score_and_distance_labels() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var score_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScoreLabel") as Label
+	var distance_label := game.get_node("HUD/MarginContainer/VBoxContainer/DistanceLabel") as Label
+
+	RunSignals.collectable_collected.emit(null, game.player, 100)
+	await runner.simulate_frames(1)
+
+	assert_float(score_label.modulate.g).is_less(1.0)
+	assert_float(distance_label.modulate.g).is_less(1.0)
+
+
 func test_pause_and_resume_from_running_state() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
@@ -127,6 +194,41 @@ func test_game_over_shows_game_over_menu() -> void:
 	assert_str(state_label.text).contains("State: GAME OVER")
 	assert_str(state_label.text).contains("Jump: restart")
 	assert_str(state_label.text).contains("Restart: button")
+
+
+func test_space_restart_path_remains_available_when_highscore_prompt_is_visible() -> void:
+	if FileAccess.file_exists(RANKING_PATH):
+		DirAccess.remove_absolute(RANKING_PATH)
+	SaveManager._ranking = []
+
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+	var tree := game.get_tree()
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	RunSignals.collectable_collected.emit(null, game.player, 500)
+	await runner.simulate_frames(1)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(2)
+
+	var name_input := game.get_node("HUD/GameOverMenu/Panel/VBoxContainer/NameInputContainer/NameInput") as LineEdit
+	var event := InputEventKey.new()
+	event.keycode = KEY_SPACE
+	event.pressed = true
+
+	assert_bool(name_input.has_focus()).is_false()
+	game.call("_unhandled_input", event)
+	await runner.simulate_frames(2)
+
+	var reloaded_game := tree.current_scene as Game
+	assert_object(reloaded_game).is_not_null()
+	assert_int(reloaded_game.current_state).is_equal(Game.GameState.MAIN_MENU)
 
 
 func test_speed_hud_rows_bind_to_matching_collectables() -> void:

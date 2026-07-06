@@ -6,6 +6,8 @@ var _triggered: bool = false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	collision_layer = 0
+	collision_mask = 1 # Player layer
 
 
 func _on_body_entered(body: Node) -> void:
