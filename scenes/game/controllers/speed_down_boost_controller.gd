@@ -7,7 +7,7 @@ signal slow_state_changed(speed_multiplier: float)
 signal speed_too_slow
 
 var _speed_threshold: int = 3
-var _slow_speed_multipliers: Array[float] = [1.0, 0.75, 0.5]
+var _slow_speed_multipliers: Array[float] = [1.0, 0.85, 0.7]
 
 var _speed_down_charge: int = 0
 var _slow_state: int = 0

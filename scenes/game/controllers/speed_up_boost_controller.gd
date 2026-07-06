@@ -8,7 +8,7 @@ signal boost_state_changed(active: bool, remaining: float, speed_multiplier: flo
 var _speed_threshold: int = 3
 var _boost_duration: float = 8.0
 var _boost_timer_multiplier: float = 1.25
-var _boost_multipliers: Array[float] = [1.0, 1.5, 2.0]
+var _boost_multipliers: Array[float] = [1.0, 1.35, 1.6]
 
 var _speed_up_charge: int = 0
 var _boost_active: bool = false

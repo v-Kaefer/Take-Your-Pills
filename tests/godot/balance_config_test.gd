@@ -15,6 +15,10 @@ func test_speed_multiplier_tiers_are_fully_populated() -> void:
 
 func test_core_pacing_values_are_positive() -> void:
 	assert_float(Balance.config.default_scroll_speed).is_greater(0.0)
+	assert_float(Balance.config.mid_scroll_speed).is_greater(Balance.config.default_scroll_speed)
+	assert_float(Balance.config.transition_scroll_speed).is_greater(Balance.config.mid_scroll_speed)
+	assert_float(Balance.config.late_scroll_speed).is_greater(Balance.config.transition_scroll_speed)
 	assert_float(Balance.config.speed_up_boost_duration).is_greater(0.0)
-	assert_int(Balance.config.transition_score).is_greater(0)
-	assert_float(Balance.config.spawn_buffer_px).is_greater(0.0)
+	assert_int(Balance.config.mid_score_threshold).is_greater(0)
+	assert_int(Balance.config.transition_score).is_greater(Balance.config.mid_score_threshold)
+	assert_int(Balance.config.late_score_threshold).is_greater(Balance.config.transition_score)

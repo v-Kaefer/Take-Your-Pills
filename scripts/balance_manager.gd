@@ -3,8 +3,9 @@ class_name BalanceManager
 
 const DEFAULT_CONFIG_PATH := "res://scripts/balance/default_balance.tres"
 
-var config: BalanceConfig
+var config = load(DEFAULT_CONFIG_PATH)
 
 
 func _ready() -> void:
-	config = load(DEFAULT_CONFIG_PATH) as BalanceConfig
+	if config == null:
+		config = load(DEFAULT_CONFIG_PATH)

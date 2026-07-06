@@ -4,20 +4,18 @@
 
 [resource]
 script = ExtResource("1")
-default_scroll_speed = 240.0
+default_scroll_speed = 220.0
+mid_scroll_speed = 235.0
+transition_scroll_speed = 255.0
+late_scroll_speed = 270.0
+mid_score_threshold = 8000
 speed_up_threshold = 3
-speed_up_boost_duration = 6.0
+speed_up_boost_duration = 8.0
 speed_up_timer_multiplier = 1.25
-speed_up_multipliers = Array[float]([1.0, 1.4, 1.8])
+speed_up_multipliers = Array[float]([1.0, 1.35, 1.6])
 speed_down_threshold = 3
-speed_down_multipliers = Array[float]([1.0, 0.8, 0.6])
+speed_down_multipliers = Array[float]([1.0, 0.85, 0.7])
 base_score_per_meter = 10.0
 score_distance_divisor = 10.0
-score_box = 250
-score_pill = 120
-score_speed_up = 50
-score_speed_down = 0
 transition_score = 20000
-spawn_buffer_px = 320.0
-recycle_buffer_px = 128.0
-chunk_overlap_px = 32.0
+late_score_threshold = 32000

@@ -1,75 +1,61 @@
 # Balance values (US-16 / #83)
 
-All gameplay pacing/economy numbers used to live scattered across `const`/`@export`
-fields in ~6 different scripts and `.tscn` scenes. They are now centralized in
-`scripts/balance/balance_config.gd` (a typed `Resource`), instanced as
-`scripts/balance/default_balance.tres`, and exposed at runtime through the
-`Balance` autoload (`scripts/balance_manager.gd`) as `Balance.config.*`.
+`US-16` keeps one useful piece of the older balancing pass: runtime pacing and
+boost knobs should live in one config resource instead of being duplicated
+across controllers. Those values now live in
+`scripts/balance/default_balance.tres` and are exposed through the `Balance`
+autoload as `Balance.config.*`.
 
-Editing gameplay balance no longer requires touching GDScript: open
-`default_balance.tres` in the Godot Inspector and adjust the exported fields.
+This centralization is intentionally limited to values that are actually read by
+runtime controllers. It does not replace scene-authored collectable scores or
+chunk spawn buffers, which stay owned by their existing gameplay/level data.
 
-## Values (old → new)
+## Runtime values
 
-| Parameter | Old | New | Read by |
-|---|---|---|---|
-| `default_scroll_speed` | 240.0 | 240.0 (unchanged) | `game.gd`, `run_session_controller.gd` |
-| `speed_up_threshold` | 3 | 3 (unchanged) | `speed_up_boost_controller.gd` |
-| `speed_up_boost_duration` | 8.0 | **6.0** | `speed_up_boost_controller.gd` |
-| `speed_up_timer_multiplier` | 1.25 | 1.25 (unchanged) | `speed_up_boost_controller.gd` |
-| `speed_up_multipliers` | `[1.0, 1.5, 2.0]` | **`[1.0, 1.4, 1.8]`** | `speed_up_boost_controller.gd` |
-| `speed_down_threshold` | 3 | 3 (unchanged) | `speed_down_boost_controller.gd` |
-| `speed_down_multipliers` | `[1.0, 0.75, 0.5]` | **`[1.0, 0.8, 0.6]`** | `speed_down_boost_controller.gd` |
-| `base_score_per_meter` | 10.0 | 10.0 (unchanged) | `run_score_controller.gd` |
-| `score_distance_divisor` | 10.0 | 10.0 (unchanged) | `run_score_controller.gd` |
-| `score_box` | 250 | 250 (unchanged) | `box_collectable.tscn` (documented source of truth) |
-| `score_pill` | 100 | **120** | `pill_collectable.tscn` (documented source of truth) |
-| `score_speed_up` | 50 | 50 (unchanged) | `speed_up_collectable.tscn` (documented source of truth) |
-| `score_speed_down` | 0 | 0 (unchanged) | `speed_down_collectable.tscn` (documented source of truth) |
-| `transition_score` | 20000 | 20000 (unchanged, deliberate) | `scenario_transition_controller.gd` |
-| `spawn_buffer_px` | 256.0 | **320.0** | `chunk_manager.gd` |
-| `recycle_buffer_px` | 128.0 | 128.0 (unchanged) | `chunk_manager.gd` |
-| `chunk_overlap_px` | 32.0 | 32.0 (unchanged) | `chunk_manager.gd` |
+| Parameter | Value | Read by |
+|---|---|---|
+| `default_scroll_speed` | `220.0` | `run_session_controller.gd`, `run_pacing_controller.gd` |
+| `mid_scroll_speed` | `235.0` | `run_pacing_controller.gd` |
+| `transition_scroll_speed` | `255.0` | `run_pacing_controller.gd` |
+| `late_scroll_speed` | `270.0` | `run_pacing_controller.gd` |
+| `mid_score_threshold` | `8000` | `run_pacing_controller.gd` |
+| `transition_score` | `20000` | `run_pacing_controller.gd`, `scenario_transition_controller.gd` |
+| `late_score_threshold` | `32000` | `run_pacing_controller.gd` |
+| `speed_up_threshold` | `3` | `speed_up_boost_controller.gd` |
+| `speed_up_boost_duration` | `8.0` | `speed_up_boost_controller.gd` |
+| `speed_up_timer_multiplier` | `1.25` | `speed_up_boost_controller.gd` |
+| `speed_up_multipliers` | `[1.0, 1.35, 1.6]` | `speed_up_boost_controller.gd`, `run_session_controller.gd` |
+| `speed_down_threshold` | `3` | `speed_down_boost_controller.gd` |
+| `speed_down_multipliers` | `[1.0, 0.85, 0.7]` | `speed_down_boost_controller.gd`, `run_session_controller.gd` |
+| `base_score_per_meter` | `10.0` | `run_score_controller.gd` |
+| `score_distance_divisor` | `10.0` | `run_score_controller.gd` |
 
-Collectable `score_value` fields remain per-instance overrides authored in each
-`.tscn` (legitimate per-scene data). The matching `score_*` fields in
-`BalanceConfig` are the documented source of truth for those numbers and must
-be kept in sync by hand whenever a collectable's value is retuned.
+## Explicit non-goals
 
-## Rationale (mapped to backlog tasks T-16.1..T-16.4)
+- Collectable `score_value` remains authored in each collectable `.tscn`.
+- Chunk spawn and recycle buffers remain in `chunk_manager.gd`.
+- `US-16` does not redefine scenario patterns or chunk distribution.
 
-- **T-16.1 (obstacle spawn balance)**: raised `spawn_buffer_px` 256→320 to give
-  the player more forward visibility/reaction time before an obstacle enters
-  the screen, without touching hand-authored chunk content or the round-robin
-  chunk selection (both out of scope for this pass).
-- **T-16.2 (item spawn / economy balance)**: `score_pill` 100→120, a small bump
-  to keep the base pickup relevant against the unchanged `transition_score`.
-  `score_box`/`score_speed_up`/`score_speed_down` kept as-is.
-- **T-16.3 (boost/slowdown cost/effect balance)**: Playtest 2 (PT2-01) reported
-  that players lose orientation as speed increases — the 2.0x top speed-up
-  tier was the likely culprit. Softened to `[1.0, 1.4, 1.8]` and shortened the
-  base `BOOST_DURATION` (8.0→6.0s) so a single pickup burst is calmer by
-  default, while stacking (`speed_up_timer_multiplier=1.25`) still rewards
-  repeated collection. Slowdown's bottom tier (adjacent to the fail state) was
-  softened `0.5→0.6` to make the "almost dead" speed less jarring.
-- **T-16.4 (adverse-state frequency/impact)**: impact addressed by the 0.6
-  slowdown floor above. Frequency is otherwise a function of speed-down pickup
-  density in hand-authored chunks (out of scope) and `speed_down_threshold`
-  (kept at 3). If manual playtesting shows the fail state still triggers too
-  eagerly, raising `speed_down_threshold` to 4 is the next safe knob — left
-  as a follow-up rather than applied speculatively.
-- **`transition_score`**: kept at 20000 — no Playtest 2 finding points at
-  transition timing itself as a problem, so it wasn't touched this pass.
+That split is deliberate: it keeps this PR aligned with the later pacing and
+scenario decisions instead of creating a second, conflicting source of truth.
 
-These are starting points to validate against
-`docs/playtests/playtest-02-regression-checklist.md` in a manual playtest
-pass, not final numbers.
+## Rationale
+
+- Opening speed starts at `220.0` to make the first seconds less abrupt.
+- The base pace ramps at `8000`, `20000`, and `32000` score so the run gains
+  pressure gradually instead of jumping straight to the old faster baseline.
+- Speed-up tiers use `[1.0, 1.35, 1.6]` and keep the `8.0s` duration, matching
+  the later approved pacing curve instead of the harsher intermediate retune.
+- Speed-down tiers use `[1.0, 0.85, 0.7]`, softening the slowdown penalty
+  without removing the failure state.
+- `transition_score` stays at `20000` and doubles as the scenario swap trigger
+  and the third pacing band threshold, keeping those systems aligned.
 
 ## Adding a new tunable
 
-1. Add the `@export` field to `scripts/balance/balance_config.gd` (pick the
-   right `@export_group`).
-2. Set its value on `scripts/balance/default_balance.tres` (or via the Godot
-   Inspector).
-3. Read it from `Balance.config.<field>` at `_ready()` in the consuming
-   script — cache it into a local var if it's read every frame/tick.
+1. Add the `@export` field to `scripts/balance/balance_config.gd`.
+2. Set the default in `scripts/balance/default_balance.tres`.
+3. Read it from `Balance.config.<field>` in the controller that owns the
+   behavior.
+4. Do not add mirror values in unrelated scenes or controllers unless that data
+   is intentionally scene-authored.
