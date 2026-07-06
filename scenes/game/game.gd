@@ -51,6 +51,7 @@ func _ready() -> void:
 	speed_up_controller.boost_state_changed.connect(session_controller.on_speed_up_boost_state_changed)
 	speed_up_controller.boost_state_changed.connect(speed_down_controller.on_speed_up_boost_state_changed)
 	speed_down_controller.slow_state_changed.connect(session_controller.on_speed_down_state_changed)
+	speed_down_controller.slow_state_changed.connect(hud.update_slow_state)
 	ranking_controller.score_controller = score_controller
 	hud.name_submitted.connect(ranking_controller.save_record)
 	session_controller.boot()

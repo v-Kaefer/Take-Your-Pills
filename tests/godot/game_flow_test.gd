@@ -451,3 +451,44 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 	assert_bool(game_over_menu.visible).is_true()
 	assert_str(state_label.text).contains("State: GAME OVER")
 	assert_str(state_label.text).contains("Jump: restart")
+
+
+func test_slow_state_shows_hud_indicator_during_slowdown() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var slow_timer_label := game.get_node("HUD/SlowTimerLabel") as Label
+	assert_bool(slow_timer_label.visible).is_false()
+
+	RunSignals.speed_down_collected.emit()
+	RunSignals.speed_down_collected.emit()
+	RunSignals.speed_down_collected.emit()
+	await runner.simulate_frames(1)
+
+	assert_bool(slow_timer_label.visible).is_true()
+	assert_str(slow_timer_label.text).contains("Slow:")
+
+
+func test_defeat_flash_pulses_on_game_over() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var defeat_flash := game.get_node("HUD/DefeatFlash") as ColorRect
+	assert_float(defeat_flash.color.a).is_equal(0.0)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(1)
+
+	assert_float(defeat_flash.color.a).is_greater(0.0)
