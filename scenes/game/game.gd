@@ -1,8 +1,6 @@
 extends Node2D
 class_name Game
 
-const DEFAULT_SCROLL_SPEED := 240.0
-
 enum GameState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
 @onready var player: Player = $World/Player
@@ -39,7 +37,7 @@ func _ready() -> void:
 	hud.connect_restart(_on_restart_button_pressed)
 	session_controller.player = player
 	session_controller.chunks = chunks
-	session_controller.default_scroll_speed = DEFAULT_SCROLL_SPEED
+	session_controller.default_scroll_speed = Balance.config.default_scroll_speed
 	score_controller.chunks = chunks
 	scenario_transition_controller.chunks = chunks
 	audio_controller.audio_player = collect_sfx_player

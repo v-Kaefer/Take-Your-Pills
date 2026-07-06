@@ -19,6 +19,9 @@ var _spawn_cursor: int = 0
 
 
 func _ready() -> void:
+	chunk_overlap_px = Balance.config.chunk_overlap_px
+	spawn_buffer_px = Balance.config.spawn_buffer_px
+	recycle_buffer_px = Balance.config.recycle_buffer_px
 	reset_run()
 
 

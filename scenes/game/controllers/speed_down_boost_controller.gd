@@ -1,13 +1,13 @@
 extends Node
 class_name SpeedDownBoostController
 
-const SPEED_THRESHOLD: int = 3
-const SLOW_SPEED_MULTIPLIERS: Array[float] = [1.0, 0.75, 0.5]
-
 signal bar_step(charge: int)
 signal bar_reset
 signal slow_state_changed(speed_multiplier: float)
 signal speed_too_slow
+
+var _speed_threshold: int = 3
+var _slow_speed_multipliers: Array[float] = [1.0, 0.75, 0.5]
 
 var _speed_down_charge: int = 0
 var _slow_state: int = 0
@@ -16,6 +16,8 @@ var _queued_slow_steps: int = 0
 
 
 func _ready() -> void:
+	_speed_threshold = Balance.config.speed_down_threshold
+	_slow_speed_multipliers = Balance.config.speed_down_multipliers
 	RunSignals.run_booted.connect(_on_run_booted)
 	RunSignals.run_game_over.connect(_on_run_game_over)
 	RunSignals.speed_down_collected.connect(_on_speed_down_collected)
@@ -38,8 +40,8 @@ func _on_run_game_over() -> void:
 
 
 func _on_speed_down_collected() -> void:
-	_speed_down_charge = clampi(_speed_down_charge + 1, 0, SPEED_THRESHOLD)
-	if _speed_down_charge < SPEED_THRESHOLD:
+	_speed_down_charge = clampi(_speed_down_charge + 1, 0, _speed_threshold)
+	if _speed_down_charge < _speed_threshold:
 		bar_step.emit(_speed_down_charge)
 		return
 
@@ -69,7 +71,7 @@ func _flush_queued_slow_steps() -> void:
 
 
 func _apply_speed_down_step() -> bool:
-	if _slow_state >= SLOW_SPEED_MULTIPLIERS.size() - 1:
+	if _slow_state >= _slow_speed_multipliers.size() - 1:
 		RunSignals.speed_too_slow.emit()
 		return true
 
@@ -88,4 +90,4 @@ func _reset_state() -> void:
 
 
 func _emit_slow_state() -> void:
-	slow_state_changed.emit(SLOW_SPEED_MULTIPLIERS[min(_slow_state, SLOW_SPEED_MULTIPLIERS.size() - 1)])
+	slow_state_changed.emit(_slow_speed_multipliers[min(_slow_state, _slow_speed_multipliers.size() - 1)])

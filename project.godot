@@ -22,6 +22,7 @@ config/features=PackedStringArray("4.7")
 
 RunSignals="*res://scripts/run_signals.gd"
 SaveManager="*res://scripts/save_manager.gd"
+Balance="*res://scripts/balance_manager.gd"
 
 [display]
 

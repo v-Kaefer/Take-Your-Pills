@@ -8,7 +8,7 @@ height = 28.0
 
 [node name="PillCollectable" type="Area2D"]
 script = ExtResource("1")
-score_value = 100
+score_value = 120
 collectable_type = &"pill"
 z_index = 5
 

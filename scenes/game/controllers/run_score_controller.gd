@@ -1,12 +1,11 @@
 extends Node
 
-const BASE_SCORE_PER_METER: float = 10.0
-const SCORE_DISTANCE_DIVISOR: float = 10.0
-
 var chunks: ChunkManager = null
 var score: int = 0
 var distance: float = 0.0
 
+var _base_score_per_meter: float = 10.0
+var _score_distance_divisor: float = 10.0
 var _bonus_score: int = 0
 var _score_accumulator: float = 0.0
 var _last_displayed_distance: int = -1
@@ -14,6 +13,8 @@ var _running: bool = false
 
 
 func _ready() -> void:
+	_base_score_per_meter = Balance.config.base_score_per_meter
+	_score_distance_divisor = Balance.config.score_distance_divisor
 	RunSignals.run_booted.connect(_on_run_booted)
 	RunSignals.run_running.connect(_on_run_running)
 	RunSignals.run_paused.connect(_on_run_paused)
@@ -25,9 +26,9 @@ func tick(delta: float) -> void:
 	if not _running or chunks == null:
 		return
 
-	var meters_scrolled := (chunks.scroll_speed * delta) / SCORE_DISTANCE_DIVISOR
+	var meters_scrolled := (chunks.scroll_speed * delta) / _score_distance_divisor
 	distance += meters_scrolled
-	_score_accumulator += meters_scrolled * BASE_SCORE_PER_METER
+	_score_accumulator += meters_scrolled * _base_score_per_meter
 
 	var current_dist_int := int(distance)
 	var new_score := int(_score_accumulator) + _bonus_score
