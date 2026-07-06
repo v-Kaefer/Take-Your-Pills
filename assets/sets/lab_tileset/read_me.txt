@@ -7,7 +7,7 @@ If you like them or use them why not consider visiting or supporting the site.
 You can use these assets in your commercial products you don't have to credit me at all but if you do I would really appreciate if you credit www.gamedeveloperstudio.com  if you would like to credit me with a link please link to https://www.gamedeveloperstudio.com
 
 
-Thanks 
+Thanks
 
 Robert Brooks
 

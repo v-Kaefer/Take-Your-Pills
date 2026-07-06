@@ -10,15 +10,20 @@ class_name ChunkManager
 @export var starting_scenario_id: StringName = &"laboratory"
 @export var laboratory_chunk_scenes: Array[PackedScene] = []
 @export var default_chunk_scenes: Array[PackedScene] = []
+@export var spawn_patterns: Array = []
+@export var spawn_seed: int = 241
 
 var scrolling_enabled: bool = false
 var active_scenario_id: StringName = &"laboratory"
 var active_chunk_scenes: Array[PackedScene] = []
 var _active_chunks: Array[Node2D] = []
 var _spawn_cursor: int = 0
+var _current_score: int = 0
+var _pattern_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	RunSignals.score_changed.connect(_on_score_changed)
 	reset_run()
 
 
@@ -37,6 +42,8 @@ func end_run() -> void:
 func reset_run() -> void:
 	scrolling_enabled = false
 	_spawn_cursor = 0
+	_current_score = 0
+	_pattern_rng.seed = spawn_seed
 	_set_active_scenario(starting_scenario_id)
 	_clear_chunks()
 	var chunk_count: int = initial_chunk_count
@@ -81,6 +88,9 @@ func _spawn_chunk(spawn_position: Vector2) -> void:
 	var chunk := active_chunk_scenes[scene_index].instantiate() as Node2D
 	_spawn_cursor += 1
 	chunk.position = spawn_position
+	var pattern = _select_spawn_pattern()
+	if pattern != null:
+		_apply_spawn_pattern(chunk, pattern)
 	add_child(chunk)
 	_active_chunks.append(chunk)
 
@@ -150,3 +160,47 @@ func _set_active_scenario(scenario_id: StringName) -> void:
 			return
 
 	active_chunk_scenes = default_chunk_scenes.duplicate()
+
+
+func _on_score_changed(score: int) -> void:
+	_current_score = score
+
+
+func _select_spawn_pattern():
+	var eligible_patterns: Array = []
+	var total_weight: int = 0
+
+	for pattern in spawn_patterns:
+		if pattern == null or not pattern.matches(active_scenario_id, _current_score):
+			continue
+
+		var weight := maxi(pattern.weight, 1)
+		total_weight += weight
+		eligible_patterns.append(pattern)
+
+	if eligible_patterns.is_empty() or total_weight <= 0:
+		return null
+
+	var ticket := _pattern_rng.randi_range(1, total_weight)
+	for pattern in eligible_patterns:
+		ticket -= maxi(pattern.weight, 1)
+		if ticket <= 0:
+			return pattern
+
+	return eligible_patterns.back()
+
+
+func _apply_spawn_pattern(chunk: Node2D, pattern) -> void:
+	chunk.set_meta("spawn_pattern_id", String(pattern.pattern_id))
+	chunk.set_meta("scenario_id", String(active_scenario_id))
+
+	for entry in pattern.entries:
+		if entry == null or entry.scene == null:
+			continue
+
+		var node := entry.scene.instantiate() as Node2D
+		if node == null:
+			continue
+
+		node.position = entry.position
+		chunk.add_child(node)

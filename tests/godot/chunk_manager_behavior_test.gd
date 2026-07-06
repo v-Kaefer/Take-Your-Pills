@@ -30,7 +30,7 @@ func test_chunk_manager_spawns_buffer_and_recycles_offscreen_chunks() -> void:
 	assert_bool(right_edge_after >= viewport_width + chunks.spawn_buffer_px).is_true()
 
 
-func test_chunk_manager_starts_in_laboratory_scenario() -> void:
+func test_chunk_manager_starts_in_laboratory_scenario_with_opening_pattern() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
 
@@ -42,9 +42,14 @@ func test_chunk_manager_starts_in_laboratory_scenario() -> void:
 
 	assert_str(String(chunks.active_scenario_id)).is_equal("laboratory")
 	assert_bool(first_chunk.name.begins_with("LabChunk")).is_true()
+	assert_str(String(first_chunk.get_meta("scenario_id"))).is_equal("laboratory")
+	assert_str(String(first_chunk.get_meta("spawn_pattern_id"))).is_equal("lab_opening_pattern")
+	assert_object(first_chunk.find_child("PillCollectable", true, false)).is_not_null()
+	assert_object(first_chunk.find_child("BoxCollectable", true, false)).is_not_null()
+	assert_object(first_chunk.find_child("SpeedUpCollectable", true, false)).is_not_null()
 
 
-func test_chunk_manager_switches_future_chunks_after_transition_score() -> void:
+func test_chunk_manager_switches_future_chunks_after_scenario_transition() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
 
@@ -65,5 +70,8 @@ func test_chunk_manager_switches_future_chunks_after_transition_score() -> void:
 	await runner.simulate_frames(1)
 
 	var newest_chunk := chunks.get_child(chunks.get_child_count() - 1) as Node2D
-	assert_bool(newest_chunk.name.begins_with("LabChunk")).is_false()
 	assert_bool(newest_chunk.name.begins_with("Chunk")).is_true()
+	assert_str(String(newest_chunk.get_meta("scenario_id"))).is_equal("default")
+	assert_str(String(newest_chunk.get_meta("spawn_pattern_id"))).is_equal("city_transition_pattern")
+	assert_object(newest_chunk.find_child("Obstacle", true, false)).is_not_null()
+	assert_object(newest_chunk.find_child("SpeedDownCollectable", true, false)).is_not_null()
