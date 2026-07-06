@@ -9,6 +9,8 @@ name: Release version
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
@@ -23,7 +25,7 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - name: Checkout base commit
         uses: actions/checkout@v4
@@ -64,7 +66,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - name: Checkout merged commit
         uses: actions/checkout@v4
@@ -119,7 +121,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-      pull-requests: read
+      pull-requests: write
     steps:
       - name: Checkout merged commit
         uses: actions/checkout@v4

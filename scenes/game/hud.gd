@@ -6,6 +6,7 @@ signal name_submitted(player_name: String)
 @onready var state_label: Label = $MarginContainer/VBoxContainer/StateLabel
 @onready var score_label: Label = $MarginContainer/VBoxContainer/ScoreLabel
 @onready var distance_label: Label = $MarginContainer/VBoxContainer/DistanceLabel
+@onready var scenario_label: Label = $MarginContainer/VBoxContainer/ScenarioLabel
 @onready var boost_timer_label: Label = $BoostTimerLabel
 @onready var main_menu: Control = $MainMenu
 @onready var pause_menu: Control = $PauseMenu
@@ -37,6 +38,7 @@ func _ready() -> void:
 	update_state("MENU", "Start: button / Space / Up")
 	update_score(0)
 	update_distance(0.0)
+	_on_scenario_changed(&"laboratory")
 	show_main_menu()
 	_refresh_boost_timer_display()
 	RunSignals.run_booted.connect(_on_run_booted)
@@ -46,6 +48,7 @@ func _ready() -> void:
 	RunSignals.score_changed.connect(update_score)
 	RunSignals.distance_changed.connect(update_distance)
 	RunSignals.collectable_collected.connect(_on_collectable_collected)
+	RunSignals.scenario_changed.connect(_on_scenario_changed)
 	RunSignals.ranking_entry_added.connect(_on_ranking_entry_added)
 	RunSignals.ranking_updated.connect(_refresh_menu_highscore)
 	RunSignals.highscore_name_requested.connect(_on_highscore_name_requested)
@@ -170,6 +173,16 @@ func _flash_pickup_feedback() -> void:
 	_pickup_flash_tween.set_parallel(true)
 	_pickup_flash_tween.tween_property(score_label, "modulate", Color.WHITE, 0.18)
 	_pickup_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.18)
+
+
+func _on_scenario_changed(scenario_id: StringName) -> void:
+	if scenario_id == &"laboratory":
+		scenario_label.text = "Scenario: LAB SECTOR"
+		scenario_label.add_theme_color_override("font_color", Color(0.34, 0.84, 0.93, 1.0))
+		return
+
+	scenario_label.text = "Scenario: CITY LOOP"
+	scenario_label.add_theme_color_override("font_color", Color(0.95, 0.76, 0.26, 1.0))
 
 
 func _on_highscore_name_requested(_position: int, _score: int) -> void:

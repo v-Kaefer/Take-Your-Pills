@@ -10,7 +10,7 @@ class_name ChunkManager
 @export var starting_scenario_id: StringName = &"laboratory"
 @export var laboratory_chunk_scenes: Array[PackedScene] = []
 @export var default_chunk_scenes: Array[PackedScene] = []
-@export var spawn_patterns: Array[SpawnPattern] = []
+@export var spawn_patterns: Array = []
 @export var spawn_seed: int = 241
 
 var scrolling_enabled: bool = false
@@ -56,16 +56,16 @@ func reset_run() -> void:
 	RunSignals.scenario_changed.emit(active_scenario_id)
 
 
+func set_scroll_speed(value: float) -> void:
+	scroll_speed = maxf(value, 0.0)
+
+
 func switch_to_scenario(scenario_id: StringName) -> void:
 	if scenario_id == active_scenario_id:
 		return
 
 	_set_active_scenario(scenario_id)
 	RunSignals.scenario_changed.emit(active_scenario_id)
-
-
-func set_scroll_speed(value: float) -> void:
-	scroll_speed = maxf(value, 0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -88,7 +88,7 @@ func _spawn_chunk(spawn_position: Vector2) -> void:
 	var chunk := active_chunk_scenes[scene_index].instantiate() as Node2D
 	_spawn_cursor += 1
 	chunk.position = spawn_position
-	var pattern := _select_spawn_pattern()
+	var pattern = _select_spawn_pattern()
 	if pattern != null:
 		_apply_spawn_pattern(chunk, pattern)
 	add_child(chunk)
@@ -166,8 +166,8 @@ func _on_score_changed(score: int) -> void:
 	_current_score = score
 
 
-func _select_spawn_pattern() -> SpawnPattern:
-	var eligible_patterns: Array[SpawnPattern] = []
+func _select_spawn_pattern():
+	var eligible_patterns: Array = []
 	var total_weight: int = 0
 
 	for pattern in spawn_patterns:
@@ -190,7 +190,7 @@ func _select_spawn_pattern() -> SpawnPattern:
 	return eligible_patterns.back()
 
 
-func _apply_spawn_pattern(chunk: Node2D, pattern: SpawnPattern) -> void:
+func _apply_spawn_pattern(chunk: Node2D, pattern) -> void:
 	chunk.set_meta("spawn_pattern_id", String(pattern.pattern_id))
 	chunk.set_meta("scenario_id", String(active_scenario_id))
 

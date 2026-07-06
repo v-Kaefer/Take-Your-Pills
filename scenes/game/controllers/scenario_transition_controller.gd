@@ -2,7 +2,6 @@ extends Node
 class_name ScenarioTransitionController
 
 @export var transition_score: int = 20000
-@export var starting_scenario_id: StringName = &"laboratory"
 @export var destination_scenario_id: StringName = &"default"
 
 var chunks: ChunkManager = null
@@ -16,15 +15,15 @@ func _ready() -> void:
 
 func _on_run_booted() -> void:
 	_transition_done = false
-	if chunks != null:
-		chunks.switch_to_scenario(starting_scenario_id)
 
 
 func _on_score_changed(score: int) -> void:
-	if _transition_done or score < transition_score:
+	if _transition_done:
+		return
+
+	if score < transition_score:
 		return
 
 	_transition_done = true
 	if chunks != null:
 		chunks.switch_to_scenario(destination_scenario_id)
-

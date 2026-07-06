@@ -1,0 +1,86 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/chunks/lab/lab_chunk.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/game/obstacles/obstacle.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/pill_collectable.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/box_collectable.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_up_collectable.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/game/collectables/speed_down_collectable.tscn" id="6"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(640, 96)
+
+[sub_resource type="RectangleShape2D" id="2"]
+size = Vector2(24, 320)
+
+[node name="LabChunkA" type="Node2D"]
+script = ExtResource("1")
+layout_id = &"lab_a"
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+scale = Vector2(0.25, 0.25)
+z_index = -1
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="Backdrop" type="Polygon2D" parent="Terrain"]
+color = Color(0.04, 0.06, 0.1, 1)
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
+
+[node name="MonitorWall" type="Polygon2D" parent="Terrain"]
+color = Color(0.11, 0.15, 0.2, 0.92)
+polygon = PackedVector2Array(64, 84, 224, 84, 224, 196, 64, 196)
+
+[node name="MonitorGlass" type="Polygon2D" parent="Terrain"]
+color = Color(0.32, 0.74, 0.8, 0.55)
+polygon = PackedVector2Array(80, 100, 208, 100, 208, 180, 80, 180)
+
+[node name="DiagnosticsStrip" type="Polygon2D" parent="Terrain"]
+color = Color(0.86, 0.6, 0.18, 0.85)
+polygon = PackedVector2Array(256, 132, 420, 132, 420, 152, 256, 152)
+
+[node name="ConsoleBase" type="Polygon2D" parent="Terrain"]
+color = Color(0.18, 0.21, 0.24, 1)
+polygon = PackedVector2Array(424, 192, 566, 192, 566, 264, 424, 264)
+
+[node name="ConsoleScreen" type="Polygon2D" parent="Terrain"]
+color = Color(0.35, 0.86, 0.82, 0.7)
+polygon = PackedVector2Array(446, 150, 536, 150, 550, 192, 432, 192)
+
+[node name="CeilingPipe" type="Polygon2D" parent="Terrain"]
+color = Color(0.63, 0.47, 0.17, 1)
+polygon = PackedVector2Array(0, 74, 640, 74, 640, 88, 0, 88)
+
+[node name="PipeSupport" type="Polygon2D" parent="Terrain"]
+color = Color(0.18, 0.2, 0.24, 1)
+polygon = PackedVector2Array(472, 88, 488, 88, 488, 184, 472, 184)
+
+[node name="GroundBody" type="StaticBody2D" parent="Terrain"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Terrain/GroundBody"]
+position = Vector2(320, 312)
+shape = SubResource("1")
+
+[node name="TriggerNext" type="Area2D" parent="."]
+position = Vector2(512, 240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerNext"]
+shape = SubResource("2")
+
+[node name="OnScreenNotifier" type="VisibleOnScreenNotifier2D" parent="."]
+rect = Rect2(0, 0, 640, 360)
+
+[node name="Obstacle" parent="." instance=ExtResource("2")]
+position = Vector2(448, 248)
+
+[node name="PillCollectable" parent="." instance=ExtResource("3")]
+position = Vector2(288, 224)
+
+[node name="BoxCollectable" parent="." instance=ExtResource("4")]
+position = Vector2(560, 224)
+
+[node name="SpeedUpCollectable" parent="." instance=ExtResource("5")]
+position = Vector2(128, 224)
+
+[node name="SpeedDownCollectable" parent="." instance=ExtResource("6")]
+position = Vector2(192, 192)
