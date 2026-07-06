@@ -78,6 +78,26 @@ func test_collectable_score_persists_after_next_frame() -> void:
 	assert_int(game.score).is_greater_equal(score_after_collect)
 
 
+func test_collectable_flash_feedback_highlights_score_and_distance_labels() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var score_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScoreLabel") as Label
+	var distance_label := game.get_node("HUD/MarginContainer/VBoxContainer/DistanceLabel") as Label
+
+	RunSignals.collectable_collected.emit(null, game.player, 100)
+	await runner.simulate_frames(1)
+
+	assert_float(score_label.modulate.g).is_less(1.0)
+	assert_float(distance_label.modulate.g).is_less(1.0)
+
+
 func test_pause_and_resume_from_running_state() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
