@@ -31,6 +31,8 @@ class_name Platform
 @onready var visual: Polygon2D = $Visual
 @onready var stripe: Polygon2D = $Stripe
 
+var _collision_shape_is_unique: bool = false
+
 
 func _ready() -> void:
 	_update_platform()
@@ -47,9 +49,13 @@ func _update_platform() -> void:
 	if collision_shape:
 		collision_shape.one_way_collision = one_way
 		if collision_shape.shape is RectangleShape2D:
-			# Ensure shape is unique per instance to allow different widths/heights
-			collision_shape.shape = collision_shape.shape.duplicate()
-			collision_shape.shape.size = Vector2(width, height)
+			var rectangle_shape := collision_shape.shape as RectangleShape2D
+			if not _collision_shape_is_unique:
+				rectangle_shape = rectangle_shape.duplicate() as RectangleShape2D
+				collision_shape.shape = rectangle_shape
+				_collision_shape_is_unique = true
+
+			rectangle_shape.size = Vector2(width, height)
 			collision_shape.position = Vector2(width / 2.0, height / 2.0)
 
 	if visual:

@@ -156,17 +156,17 @@ func _flash_slow_feedback() -> void:
 	slow_timer_label.modulate = warn_color
 	_slow_flash_tween = create_tween()
 	_slow_flash_tween.set_parallel(true)
-	_slow_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.25)
-	_slow_flash_tween.tween_property(slow_timer_label, "modulate", Color.WHITE, 0.25)
+	_slow_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.18)
+	_slow_flash_tween.tween_property(slow_timer_label, "modulate", Color.WHITE, 0.18)
 
 
 func _flash_defeat_feedback() -> void:
 	if _defeat_flash_tween != null and _defeat_flash_tween.is_valid():
 		_defeat_flash_tween.kill()
 
-	defeat_flash.color = Color(0.85, 0.12, 0.12, 0.55)
+	defeat_flash.color = Color(0.85, 0.12, 0.12, 0.42)
 	_defeat_flash_tween = create_tween()
-	_defeat_flash_tween.tween_property(defeat_flash, "color:a", 0.0, 0.4)
+	_defeat_flash_tween.tween_property(defeat_flash, "color:a", 0.0, 0.24)
 
 
 func _on_run_booted() -> void:
@@ -218,8 +218,8 @@ func _flash_pickup_feedback() -> void:
 	distance_label.modulate = flash_color
 	_pickup_flash_tween = create_tween()
 	_pickup_flash_tween.set_parallel(true)
-	_pickup_flash_tween.tween_property(score_label, "modulate", Color.WHITE, 0.18)
-	_pickup_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.18)
+	_pickup_flash_tween.tween_property(score_label, "modulate", Color.WHITE, 0.12)
+	_pickup_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.12)
 
 
 func _on_scenario_changed(scenario_id: StringName) -> void:

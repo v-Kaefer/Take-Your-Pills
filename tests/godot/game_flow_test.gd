@@ -386,6 +386,27 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
 
 
+func test_speed_up_stacks_continue_beyond_the_third_tier() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var boost_timer_label := game.get_node("HUD/BoostTimerLabel") as Label
+
+	for _step in range(9):
+		RunSignals.speed_up_collected.emit()
+
+	assert_float(chunks.scroll_speed).is_greater(Balance.config.default_scroll_speed * 1.6)
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_str(boost_timer_label.text).contains("Boost:")
+
+
 func test_speed_down_collects_queue_until_boost_ends() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
