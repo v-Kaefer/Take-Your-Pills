@@ -53,7 +53,7 @@ func test_chunk_manager_switches_future_chunks_after_transition_score() -> void:
 
 	var chunks := game.get_node("World/Chunks") as ChunkManager
 
-	RunSignals.score_changed.emit(20000)
+	RunSignals.score_changed.emit(Balance.config.transition_score)
 	await runner.simulate_frames(1)
 
 	assert_str(String(chunks.active_scenario_id)).is_equal("default")

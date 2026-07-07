@@ -8,6 +8,8 @@ signal name_submitted(player_name: String)
 @onready var distance_label: Label = $MarginContainer/VBoxContainer/DistanceLabel
 @onready var scenario_label: Label = $MarginContainer/VBoxContainer/ScenarioLabel
 @onready var boost_timer_label: Label = $BoostTimerLabel
+@onready var slow_timer_label: Label = $SlowTimerLabel
+@onready var defeat_flash: ColorRect = $DefeatFlash
 @onready var main_menu: Control = $MainMenu
 @onready var pause_menu: Control = $PauseMenu
 @onready var game_over_menu: Control = $GameOverMenu
@@ -28,9 +30,12 @@ signal name_submitted(player_name: String)
 
 var _boost_timer: float = 0.0
 var _boost_active: bool = false
+var _slow_active: bool = false
 var _last_score: int = 0
 var _last_ranking_position: int = -1
 var _pickup_flash_tween: Tween = null
+var _slow_flash_tween: Tween = null
+var _defeat_flash_tween: Tween = null
 
 
 func _ready() -> void:
@@ -41,6 +46,7 @@ func _ready() -> void:
 	_on_scenario_changed(&"laboratory")
 	show_main_menu()
 	_refresh_boost_timer_display()
+	update_slow_state(1.0)
 	RunSignals.run_booted.connect(_on_run_booted)
 	RunSignals.run_running.connect(_on_run_running)
 	RunSignals.run_paused.connect(_on_run_paused)
@@ -125,6 +131,44 @@ func _refresh_boost_timer_display() -> void:
 		boost_timer_label.text = ""
 
 
+func update_slow_state(speed_multiplier: float) -> void:
+	var is_slow := speed_multiplier < 1.0
+	if is_slow:
+		slow_timer_label.visible = true
+		slow_timer_label.text = "Slow: x%.2f" % speed_multiplier
+	else:
+		slow_timer_label.visible = false
+		slow_timer_label.text = ""
+
+	# Only pulse when the run just entered (or deepened) a slowdown, so the
+	# adverse event is reinforced without looping while the state persists.
+	if is_slow and not _slow_active:
+		_flash_slow_feedback()
+	_slow_active = is_slow
+
+
+func _flash_slow_feedback() -> void:
+	if _slow_flash_tween != null and _slow_flash_tween.is_valid():
+		_slow_flash_tween.kill()
+
+	var warn_color := Color(1.0, 0.42, 0.2, 1.0)
+	distance_label.modulate = warn_color
+	slow_timer_label.modulate = warn_color
+	_slow_flash_tween = create_tween()
+	_slow_flash_tween.set_parallel(true)
+	_slow_flash_tween.tween_property(distance_label, "modulate", Color.WHITE, 0.25)
+	_slow_flash_tween.tween_property(slow_timer_label, "modulate", Color.WHITE, 0.25)
+
+
+func _flash_defeat_feedback() -> void:
+	if _defeat_flash_tween != null and _defeat_flash_tween.is_valid():
+		_defeat_flash_tween.kill()
+
+	defeat_flash.color = Color(0.85, 0.12, 0.12, 0.55)
+	_defeat_flash_tween = create_tween()
+	_defeat_flash_tween.tween_property(defeat_flash, "color:a", 0.0, 0.4)
+
+
 func _on_run_booted() -> void:
 	show_main_menu()
 	update_state("MENU", "Start: button / Space / Up")
@@ -138,6 +182,7 @@ func _on_run_running() -> void:
 	name_input_container.hide()
 	name_input.text = ""
 	name_input.release_focus()
+	update_slow_state(1.0)
 	update_state("RUNNING", "Jump: Space / Up | Esc: pause | Backspace: game over")
 
 
@@ -147,6 +192,8 @@ func _on_run_paused() -> void:
 
 
 func _on_run_game_over() -> void:
+	update_slow_state(1.0)
+	_flash_defeat_feedback()
 	show_game_over(_last_score)
 	update_state("GAME OVER", "Jump: restart | Restart: button")
 

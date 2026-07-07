@@ -19,10 +19,12 @@ Run this after applying the critical fixes raised by Playtest 02.
 - [ ] Obstacle collision ends the run exactly once.
 
 ## Level flow
-- [ ] Opening run pacing is readable and not immediately punishing.
+- [ ] Opening run pacing starts readable at `220` and ramps cleanly through the later score bands.
 - [ ] Spawn distribution still creates usable risk/reward choices.
 - [ ] Scenario progression, if present in the build, preserves run state.
 - [ ] Platforms or floor changes do not create invisible collisions.
+- [ ] Speed-up boost tiers (1.35x / 1.6x) read as a clearer, less jarring speed curve than before.
+- [ ] Speed-down tiers (0.85x / 0.7x) no longer feel like an abrupt cliff right before game over.
 
 ## Presentation
 - [ ] Visible game area uses the full intended screen space.
