@@ -19,6 +19,7 @@ Finalize systems and close presentation-ready build.
 - Regression checklist
 - Manual quality/polish and balancing checks
 - Playtest 02 findings consolidation, regression, and release-readiness completion
+- Balance parameters centralized and documented (see `docs/balance/balance-values.md`, US-16)
 
 ## Phase DoD
 - Core scope complete

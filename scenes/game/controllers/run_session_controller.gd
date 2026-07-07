@@ -4,7 +4,7 @@ enum RunState { MAIN_MENU, RUNNING, PAUSED, GAME_OVER }
 
 var player: Player = null
 var chunks: ChunkManager = null
-var default_scroll_speed: float = 240.0
+var default_scroll_speed: float = 220.0
 var current_state: RunState = RunState.MAIN_MENU
 var _speed_up_active: bool = false
 var _speed_up_multiplier: float = 1.0
@@ -111,6 +111,11 @@ func on_speed_up_boost_state_changed(active: bool, _remaining: float, speed_mult
 
 func on_speed_down_state_changed(speed_multiplier: float) -> void:
 	_speed_down_multiplier = maxf(speed_multiplier, 0.0)
+	_apply_scroll_speed()
+
+
+func set_base_scroll_speed(value: float) -> void:
+	default_scroll_speed = maxf(value, 0.0)
 	_apply_scroll_speed()
 
 

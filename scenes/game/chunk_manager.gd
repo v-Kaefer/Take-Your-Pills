@@ -14,11 +14,18 @@ class_name ChunkManager
 var scrolling_enabled: bool = false
 var active_scenario_id: StringName = &"laboratory"
 var active_chunk_scenes: Array[PackedScene] = []
+var _spawn_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _spawn_order: Array[int] = []
+var _spawn_order_cursor: int = 0
 var _active_chunks: Array[Node2D] = []
 var _spawn_cursor: int = 0
+var _last_spawn_scene_index: int = -1
 
 
 func _ready() -> void:
+	if Balance != null and Balance.config != null:
+		scroll_speed = Balance.config.default_scroll_speed
+	_spawn_rng.randomize()
 	reset_run()
 
 
@@ -38,6 +45,7 @@ func reset_run() -> void:
 	scrolling_enabled = false
 	_spawn_cursor = 0
 	_set_active_scenario(starting_scenario_id)
+	_rebuild_spawn_order()
 	_clear_chunks()
 	var chunk_count: int = initial_chunk_count
 	var required_chunks: int = _required_initial_chunks()
@@ -58,6 +66,7 @@ func switch_to_scenario(scenario_id: StringName) -> void:
 		return
 
 	_set_active_scenario(scenario_id)
+	_rebuild_spawn_order()
 	RunSignals.scenario_changed.emit(active_scenario_id)
 
 
@@ -74,15 +83,19 @@ func _physics_process(delta: float) -> void:
 
 
 func _spawn_chunk(spawn_position: Vector2) -> void:
-	if active_chunk_scenes.is_empty():
+	var chunk_scene := _next_chunk_scene()
+	if chunk_scene == null:
 		return
 
-	var scene_index := _spawn_cursor % active_chunk_scenes.size()
-	var chunk := active_chunk_scenes[scene_index].instantiate() as Node2D
+	var layout_seed := int(_spawn_rng.randi()) ^ _spawn_cursor
+	var chunk := chunk_scene.instantiate() as Node2D
 	_spawn_cursor += 1
 	chunk.position = spawn_position
 	add_child(chunk)
 	_active_chunks.append(chunk)
+
+	if chunk is Chunk:
+		(chunk as Chunk).configure_layout(layout_seed, scroll_speed)
 
 
 func _ensure_chunk_buffer() -> void:
@@ -144,9 +157,49 @@ func _required_initial_chunks() -> int:
 
 func _set_active_scenario(scenario_id: StringName) -> void:
 	active_scenario_id = scenario_id
+	_last_spawn_scene_index = -1
 	if active_scenario_id == &"laboratory":
 		active_chunk_scenes = laboratory_chunk_scenes.duplicate()
 		if not active_chunk_scenes.is_empty():
 			return
 
 	active_chunk_scenes = default_chunk_scenes.duplicate()
+
+
+func _rebuild_spawn_order() -> void:
+	_spawn_order.clear()
+	_spawn_order_cursor = 0
+
+	for index in range(active_chunk_scenes.size()):
+		_spawn_order.append(index)
+
+	if _spawn_order.size() <= 1:
+		return
+
+	for index in range(_spawn_order.size() - 1, 0, -1):
+		var swap_index := _spawn_rng.randi_range(0, index)
+		var temp := _spawn_order[index]
+		_spawn_order[index] = _spawn_order[swap_index]
+		_spawn_order[swap_index] = temp
+
+	if _last_spawn_scene_index >= 0 and _spawn_order[0] == _last_spawn_scene_index:
+		var swap_index := _spawn_rng.randi_range(1, _spawn_order.size() - 1)
+		var temp := _spawn_order[0]
+		_spawn_order[0] = _spawn_order[swap_index]
+		_spawn_order[swap_index] = temp
+
+
+func _next_chunk_scene() -> PackedScene:
+	if active_chunk_scenes.is_empty():
+		return null
+
+	if _spawn_order_cursor >= _spawn_order.size():
+		_rebuild_spawn_order()
+
+	if _spawn_order.is_empty():
+		return null
+
+	var scene_index := _spawn_order[_spawn_order_cursor]
+	_spawn_order_cursor += 1
+	_last_spawn_scene_index = scene_index
+	return active_chunk_scenes[scene_index]

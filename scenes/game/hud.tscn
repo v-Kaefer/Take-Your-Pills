@@ -35,24 +35,53 @@ offset_bottom = 22.0
 grow_horizontal = 0
 grow_vertical = 0
 horizontal_alignment = 2
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.4, 0.72, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = ""
+visible = false
+
+[node name="SlowTimerLabel" type="Label" parent="."]
+anchors_preset = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -120.0
+offset_top = 22.0
+offset_right = -8.0
+offset_bottom = 38.0
+grow_horizontal = 0
+grow_vertical = 0
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.22, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
 text = ""
 visible = false
 
 [node name="ScoreLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 14
 text = "Score: 000000"
 
 [node name="DistanceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 12
 text = "Distance: 0 m"
 
 [node name="ScenarioLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.34, 0.84, 0.93, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
 text = "Scenario: LAB SECTOR"
 
 [node name="SpeedContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
@@ -129,6 +158,8 @@ color = Color(0.25, 0.25, 0.3, 0.5)
 
 [node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 10
 text = "State: MENU\nControls: Start: button / Space"
 
@@ -336,3 +367,12 @@ size_flags_horizontal = 4
 text = "Restart"
 
 [node name="LocalRankingMenu" parent="." instance=ExtResource("3")]
+
+[node name="DefeatFlash" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.85, 0.12, 0.12, 0)

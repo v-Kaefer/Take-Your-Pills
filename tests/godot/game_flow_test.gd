@@ -55,6 +55,33 @@ func test_start_transitions_to_running_state() -> void:
 	assert_str(state_label.text).contains("State: RUNNING")
 
 
+func test_run_pacing_curve_updates_scroll_speed_by_score_range() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed)
+
+	RunSignals.score_changed.emit(Balance.config.mid_score_threshold)
+	await runner.simulate_frames(1)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.mid_scroll_speed)
+
+	RunSignals.score_changed.emit(Balance.config.transition_score)
+	await runner.simulate_frames(1)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.transition_scroll_speed)
+
+	RunSignals.score_changed.emit(Balance.config.late_score_threshold)
+	await runner.simulate_frames(1)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.late_scroll_speed)
+
+
 func test_collectable_score_persists_after_next_frame() -> void:
 	var runner := scene_runner(GAME_SCENE)
 	var game := runner.scene() as Game
@@ -88,7 +115,7 @@ func test_hud_scenario_badge_tracks_active_scenario() -> void:
 	var scenario_label := game.get_node("HUD/MarginContainer/VBoxContainer/ScenarioLabel") as Label
 	assert_str(scenario_label.text).is_equal("Scenario: LAB SECTOR")
 
-	RunSignals.score_changed.emit(20000)
+	RunSignals.score_changed.emit(Balance.config.transition_score)
 	await runner.simulate_frames(1)
 
 	assert_str(scenario_label.text).is_equal("Scenario: CITY LOOP")
@@ -114,14 +141,16 @@ func test_scenario_transition_keeps_run_and_boost_state_active() -> void:
 
 	assert_bool(boost_timer_label.visible).is_true()
 	assert_bool(chunks.scrolling_enabled).is_true()
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.35)
 
-	RunSignals.score_changed.emit(20000)
+	RunSignals.score_changed.emit(Balance.config.transition_score)
 	await runner.simulate_frames(1)
 
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
 	assert_bool(chunks.scrolling_enabled).is_true()
 	assert_bool(boost_timer_label.visible).is_true()
 	assert_str(String(chunks.active_scenario_id)).is_equal("default")
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.transition_scroll_speed * 1.35)
 
 
 func test_collectable_flash_feedback_highlights_score_and_distance_labels() -> void:
@@ -318,7 +347,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	var initial_speed_up_color := speed_up_first_stripe.color
 
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed)
 	assert_object(speed_up_icon.texture).is_not_null()
 	assert_float(speed_up_first_stripe.color.b).is_greater(speed_up_first_stripe.color.r)
 	assert_float(speed_up_first_stripe.color.b).is_greater(initial_speed_up_color.b)
@@ -326,7 +355,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.35)
 	assert_float(speed_up_first_stripe.color.r).is_equal(initial_speed_up_color.r)
 	assert_float(speed_up_first_stripe.color.g).is_equal(initial_speed_up_color.g)
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
@@ -338,7 +367,7 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 2.0)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.6)
 	assert_float(speed_up_first_stripe.color.r).is_equal(initial_speed_up_color.r)
 	assert_float(speed_up_first_stripe.color.g).is_equal(initial_speed_up_color.g)
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
@@ -346,15 +375,36 @@ func test_speed_up_collects_stack_boost_and_extend_latest_timer() -> void:
 	assert_str(boost_timer_label.text).contains("10.0")
 
 	controller.tick(5.9)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 2.0)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.6)
 	assert_bool(boost_timer_label.visible).is_true()
 
 	controller.tick(4.2)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed)
 	assert_bool(boost_timer_label.visible).is_false()
 	assert_float(speed_up_first_stripe.color.r).is_equal(initial_speed_up_color.r)
 	assert_float(speed_up_first_stripe.color.g).is_equal(initial_speed_up_color.g)
 	assert_float(speed_up_first_stripe.color.b).is_equal(initial_speed_up_color.b)
+
+
+func test_speed_up_stacks_continue_beyond_the_third_tier() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var chunks := game.get_node("World/Chunks") as ChunkManager
+	var boost_timer_label := game.get_node("HUD/BoostTimerLabel") as Label
+
+	for _step in range(9):
+		RunSignals.speed_up_collected.emit()
+
+	assert_float(chunks.scroll_speed).is_greater(Balance.config.default_scroll_speed * 1.6)
+	assert_bool(boost_timer_label.visible).is_true()
+	assert_str(boost_timer_label.text).contains("Boost:")
 
 
 func test_speed_down_collects_queue_until_boost_ends() -> void:
@@ -377,7 +427,7 @@ func test_speed_down_collects_queue_until_boost_ends() -> void:
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
 	RunSignals.speed_up_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.35)
 	assert_bool(boost_timer_label.visible).is_true()
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
@@ -386,13 +436,13 @@ func test_speed_down_collects_queue_until_boost_ends() -> void:
 	RunSignals.speed_down_collected.emit()
 	RunSignals.speed_down_collected.emit()
 	RunSignals.speed_down_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 1.5)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 1.35)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)
 
 	controller.tick(8.1)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.75)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 0.85)
 	assert_bool(boost_timer_label.visible).is_false()
 
 
@@ -417,17 +467,17 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 
 	RunSignals.speed_down_collected.emit()
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed)
 	assert_object(speed_down_icon.texture).is_not_null()
 	assert_float(speed_down_first_stripe.color.r).is_greater(speed_down_first_stripe.color.b)
 
 	RunSignals.speed_down_collected.emit()
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed)
 	assert_float(speed_down_first_stripe.color.r).is_greater(speed_down_first_stripe.color.b)
 
 	RunSignals.speed_down_collected.emit()
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.75)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 0.85)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)
@@ -438,7 +488,7 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 	assert_float(speed_down_first_stripe.color.r).is_greater(speed_down_first_stripe.color.b)
 	RunSignals.speed_down_collected.emit()
 	assert_int(game.current_state).is_equal(Game.GameState.RUNNING)
-	assert_float(chunks.scroll_speed).is_equal(Game.DEFAULT_SCROLL_SPEED * 0.5)
+	assert_float(chunks.scroll_speed).is_equal(Balance.config.default_scroll_speed * 0.7)
 	assert_float(speed_down_first_stripe.color.r).is_equal(speed_down_initial_color.r)
 	assert_float(speed_down_first_stripe.color.g).is_equal(speed_down_initial_color.g)
 	assert_float(speed_down_first_stripe.color.b).is_equal(speed_down_initial_color.b)
@@ -451,3 +501,44 @@ func test_speed_down_collects_apply_only_after_three_picks_and_finish_the_run_at
 	assert_bool(game_over_menu.visible).is_true()
 	assert_str(state_label.text).contains("State: GAME OVER")
 	assert_str(state_label.text).contains("Jump: restart")
+
+
+func test_slow_state_shows_hud_indicator_during_slowdown() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var slow_timer_label := game.get_node("HUD/SlowTimerLabel") as Label
+	assert_bool(slow_timer_label.visible).is_false()
+
+	RunSignals.speed_down_collected.emit()
+	RunSignals.speed_down_collected.emit()
+	RunSignals.speed_down_collected.emit()
+	await runner.simulate_frames(1)
+
+	assert_bool(slow_timer_label.visible).is_true()
+	assert_str(slow_timer_label.text).contains("Slow:")
+
+
+func test_defeat_flash_pulses_on_game_over() -> void:
+	var runner := scene_runner(GAME_SCENE)
+	var game := runner.scene() as Game
+
+	assert_object(game).is_not_null()
+	await runner.simulate_frames(1)
+
+	game.call("_start_run")
+	await runner.simulate_frames(1)
+
+	var defeat_flash := game.get_node("HUD/DefeatFlash") as ColorRect
+	assert_float(defeat_flash.color.a).is_equal(0.0)
+
+	game.call("_set_game_over")
+	await runner.simulate_frames(1)
+
+	assert_float(defeat_flash.color.a).is_greater(0.0)
