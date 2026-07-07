@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/game/chunks/chunk_b.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/game/chunks/chunk_c.tscn" id="18"]
 [ext_resource type="Script" path="res://scenes/game/controllers/scenario_transition_controller.gd" id="19"]
+[ext_resource type="Script" path="res://scenes/game/controllers/run_pacing_controller.gd" id="20"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
@@ -52,6 +53,9 @@ script = ExtResource("8")
 
 [node name="RunScoreController" type="Node" parent="Controllers"]
 script = ExtResource("9")
+
+[node name="RunPacingController" type="Node" parent="Controllers"]
+script = ExtResource("20")
 
 [node name="CollectableAudioController" type="Node" parent="Controllers"]
 script = ExtResource("10")
